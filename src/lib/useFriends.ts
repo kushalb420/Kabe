@@ -15,7 +15,7 @@ export function useFriends() {
   const tracker = useTracker();
   const client = cloud.client && cloud.user ? cloud.client : null;
   const today = toDateKey(new Date());
-  const totals = useMemo(() => weeklyTotals(today, tracker.steps, tracker.activities, kabe.entries.map((e) => e.date)), [today, tracker.steps, tracker.activities, kabe.entries]);
+  const totals = useMemo(() => weeklyTotals(today, tracker.steps, tracker.activities, kabe.entries.map((e) => e.date), kabe.workouts), [today, tracker.steps, tracker.activities, kabe.entries, kabe.workouts]);
   const [me, setMe] = useState<{ name: string; code: string } | null>(null);
   const [board, setBoard] = useState<BoardRow[]>([]);
   const [loading, setLoading] = useState(false);

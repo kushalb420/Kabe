@@ -53,17 +53,59 @@ export const kcalBurned = (a: Pick<Activity, 'type' | 'minutes' | 'km' | 'effort
 /** Sessions that count as "training" for rest-day purposes: runs/rides/cardio/other ≥ 20 min, walks ≥ 90 min. Easy walks are active recovery. */
 export const isHardSession = (a: Activity) => (a.type === 'walk' ? a.minutes >= 90 : a.minutes >= 20);
 
+// ---- active minutes and distance: ONE definition used everywhere (Activity, Insights, charts, friends, badges, coach)
+/** Steps beyond this many a day count as walking for exercise (the first ones are ordinary moving about the house). */
+export const STEP_BASELINE = 3000;
+/** The usual pace of moderate walking, which is what the WHO guideline measures. */
+export const STEPS_PER_MIN = 100;
+export const KM_PER_STEP = 0.00075; // an average stride of 75 cm
+
+export type Session = { date: string; minutes: number; km?: number };
+
+/** Minutes of walking that the steps of a day imply. */
+export const walkingMinutes = (steps: number): number => (steps > STEP_BASELINE ? Math.round((steps - STEP_BASELINE) / STEPS_PER_MIN) : 0);
+export const stepsKm = (steps: number): number => Math.round(steps * KM_PER_STEP * 10) / 10;
+
+/** A finished workout is a session of its own length. */
+export const workoutSessions = (workouts: { date: string; durationSec?: number }[]): Session[] =>
+  workouts.filter((w) => (w.durationSec ?? 0) > 0).map((w) => ({ date: w.date, minutes: Math.max(1, Math.round((w.durationSec ?? 0) / 60)) }));
+
+/**
+ * One day's active minutes and km: the sessions you logged (walks, runs, workouts) or, when larger, what your steps imply.
+ * The larger one is used, never the sum, so a logged walk that also made steps is not counted twice.
+ */
+export function dayTotals(sessions: Session[], steps: Record<string, number>, date: string): { minutes: number; km: number } {
+  let minutes = 0;
+  let km = 0;
+  for (const x of sessions) {
+    if (x.date !== date) continue;
+    minutes += x.minutes;
+    km += x.km ?? 0;
+  }
+  const st = steps[date] ?? 0;
+  return { minutes: Math.max(minutes, walkingMinutes(st)), km: Math.round(Math.max(km, stepsKm(st)) * 10) / 10 };
+}
+
+/** Every date that has any active minutes, for charts (date + minutes). */
+export function activeMinuteItems(sessions: Session[], steps: Record<string, number>): { date: string; value: number }[] {
+  const dates = new Set<string>([...sessions.map((x) => x.date), ...Object.keys(steps)]);
+  return [...dates].map((date) => ({ date, value: dayTotals(sessions, steps, date).minutes })).filter((x) => x.value > 0);
+}
+
 export type WeekSummary = { activeMinutes: number; km: number; sessions: number; kcal: number; avgSteps: number | null; stepDays: number; goalDays: number };
 
 /** The 7 days ending `today`. activeMinutes counts walks too (moderate activity is what the WHO guideline measures). */
-export function weekSummary(activities: Activity[], steps: Record<string, number>, today: string, weightKg: number, stepGoal: number): WeekSummary {
+export function weekSummary(activities: Activity[], steps: Record<string, number>, today: string, weightKg: number, stepGoal: number, workouts: { date: string; durationSec?: number }[] = []): WeekSummary {
   const days = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
   const acts = activities.filter((a) => days.includes(a.date));
+  const wks = workouts.filter((w) => days.includes(w.date));
+  const sessions: Session[] = [...acts, ...workoutSessions(wks)];
+  const totals = days.map((d) => dayTotals(sessions, steps, d));
   const stepVals = days.map((d) => steps[d]).filter((v): v is number => typeof v === 'number' && v > 0);
   return {
-    activeMinutes: acts.reduce((s, a) => s + a.minutes, 0),
-    km: Math.round(acts.reduce((s, a) => s + (a.km ?? 0), 0) * 10) / 10,
-    sessions: acts.length,
+    activeMinutes: totals.reduce((s, x) => s + x.minutes, 0),
+    km: Math.round(totals.reduce((s, x) => s + x.km, 0) * 10) / 10,
+    sessions: acts.length + wks.length,
     kcal: acts.reduce((s, a) => s + kcalBurned(a, weightKg), 0),
     avgSteps: stepVals.length ? Math.round(stepVals.reduce((a, b) => a + b, 0) / stepVals.length) : null,
     stepDays: stepVals.length,
@@ -72,10 +114,11 @@ export function weekSummary(activities: Activity[], steps: Record<string, number
 }
 
 /** Per-day numbers for the last 7 days (oldest first), for charts. */
-export function weekSeries(activities: Activity[], steps: Record<string, number>, today: string) {
+export function weekSeries(activities: Activity[], steps: Record<string, number>, today: string, workouts: { date: string; durationSec?: number }[] = []) {
+  const sessions: Session[] = [...activities, ...workoutSessions(workouts)];
   return Array.from({ length: 7 }, (_, i) => {
     const date = addDays(today, i - 6);
-    return { date, minutes: activities.filter((a) => a.date === date).reduce((s, a) => s + a.minutes, 0), steps: steps[date] ?? 0 };
+    return { date, minutes: dayTotals(sessions, steps, date).minutes, steps: steps[date] ?? 0 };
   });
 }
 

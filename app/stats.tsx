@@ -20,6 +20,7 @@ import { useTracker } from '../src/store/tracker';
 import { radius, useColors, useThemedStyles, type Colors } from '../src/theme';
 import { Dots } from '../src/components/Dots';
 import { goBack } from '../src/lib/nav';
+import { activeMinuteItems, workoutSessions } from '../src/lib/activity';
 
 export default function Stats() {
   const colors = useColors();
@@ -47,14 +48,14 @@ export default function Stats() {
   const rawW = useMemo(() => weights.filter((w) => w.date >= startKey && w.date <= endKey), [weights, startKey, endKey]);
   const trendW = useMemo(() => trendSeries(weights).filter((w) => w.date >= startKey && w.date <= endKey), [weights, startKey, endKey]);
   const wk = useMemo(() => countsPerBucket(workouts.map((w) => ({ date: w.date, value: 1 })), endKey, period), [workouts, endKey, period]);
-  const act = useMemo(() => countsPerBucket(activities.map((a) => ({ date: a.date, value: a.minutes })), endKey, period), [activities, endKey, period]);
+  const act = useMemo(() => countsPerBucket(activeMinuteItems([...activities, ...workoutSessions(workouts)], tk.steps), endKey, period), [activities, workouts, tk.steps, endKey, period]);
   const hasWk = wk.some((c) => c.value > 0);
   const hasAct = act.some((c) => c.value > 0);
   const hasWeight = rawW.length >= 2;
   const hasOther = hasWk || hasAct || hasWeight;
   const facts = useMemo(
-    () => buildFacts({ today: endKey, goals, entries, workoutDates: workouts.map((w) => w.date), activities: tk.activities, checkins: tk.checkins, weights: tk.weights }),
-    [endKey, goals, entries, workouts, tk.activities, tk.checkins, tk.weights],
+    () => buildFacts({ today: endKey, goals, entries, workoutDates: workouts.map((w) => w.date), activities: tk.activities, steps: tk.steps, workouts, checkins: tk.checkins, weights: tk.weights }),
+    [endKey, goals, entries, workouts, tk.activities, tk.steps, tk.checkins, tk.weights],
   );
   const inv = useMemo(
     () => (k.profile ? analyzeCoach({ profile: k.profile, goals, entries, weights: tk.weights, goalWeight: tk.goalWeight, today: endKey }) : null),

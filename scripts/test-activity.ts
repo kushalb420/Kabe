@@ -65,8 +65,8 @@ const list = [
 ];
 const steps = { [today]: 9000, [addDays(today, -1)]: 6000, [addDays(today, -2)]: 0, [addDays(today, -9)]: 20000 };
 const ws = weekSummary(list, steps, today, 70, 8000);
-assert.equal(ws.activeMinutes, 130);
-assert.equal(ws.km, 28);
+assert.equal(ws.activeMinutes, 190, "60 (9,000 steps beat a 30-min run), 30 (6,000 steps), 40 (logged walk), 60 (logged ride)");
+assert.equal(ws.km, 34.3, "larger of logged km and steps-implied km each day: 6.8 + 4.5 + 3 + 20");
 assert.equal(ws.sessions, 3);
 assert.equal(ws.avgSteps, 7500); // 0 and out-of-range days ignored
 assert.equal(ws.stepDays, 2);
@@ -76,7 +76,7 @@ const none = weekSummary([], {}, today, 70, 8000);
 assert.deepEqual([none.activeMinutes, none.avgSteps, none.sessions], [0, null, 0]);
 const series = weekSeries(list, steps, today);
 assert.equal(series.length, 7);
-assert.equal(series[6].minutes, 30);
+assert.equal(series[6].minutes, 60);
 assert.equal(series[6].steps, 9000);
 assert.equal(series[0].date, addDays(today, -6));
 assert.equal(series[0].minutes, 60);
@@ -89,3 +89,20 @@ assert.equal(b.longestWalkKm, 7);
 assert.equal(b.longestRideKm, 35);
 assert.deepEqual(personalBests([]), { longestRunKm: null, fastestRunPace: null, longestWalkKm: null, longestRideKm: null });
 console.log('Activity tests passed.');
+
+// ---- one shared definition of active minutes and km ----
+import { STEP_BASELINE, activeMinuteItems, dayTotals, stepsKm, walkingMinutes, workoutSessions } from '../src/lib/activity';
+assert.equal(walkingMinutes(STEP_BASELINE), 0, 'the first 3,000 steps are everyday movement');
+assert.equal(walkingMinutes(10_595), 76);
+assert.equal(walkingMinutes(0), 0);
+assert.equal(stepsKm(10_000), 7.5);
+const sess = [{ date: today, minutes: 20, km: 2 }, { date: today, minutes: 15 }];
+assert.deepEqual(dayTotals(sess, {}, today), { minutes: 35, km: 2 }, 'logged sessions add up');
+assert.deepEqual(dayTotals(sess, { [today]: 9000 }, today), { minutes: 60, km: 6.8 }, 'steps win when larger, never added on top');
+assert.deepEqual(dayTotals([], { [today]: 2000 }, today), { minutes: 0, km: 1.5 });
+const wk = workoutSessions([{ date: today, durationSec: 2700 }, { date: today, durationSec: 0 }, { date: today }]);
+assert.deepEqual(wk, [{ date: today, minutes: 45 }], 'a workout is a session of its length; empty ones are ignored');
+assert.equal(dayTotals(wk, {}, today).minutes, 45);
+assert.equal(weekSummary([], {}, today, 70, 8000, [{ date: today, durationSec: 1800 }]).activeMinutes, 30, 'workouts count');
+assert.equal(weekSummary([], {}, today, 70, 8000, [{ date: today, durationSec: 1800 }]).sessions, 1);
+assert.deepEqual(activeMinuteItems(sess, { [addDays(today, -1)]: 6000 }).sort((a, b) => a.date.localeCompare(b.date)), [{ date: addDays(today, -1), value: 30 }, { date: today, value: 35 }]);

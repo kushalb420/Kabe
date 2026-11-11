@@ -2,6 +2,8 @@
 // Only a display name, this week's totals and the plan you choose to share leave the phone. The server side is a set of
 // SQL functions in your own Supabase project (see SUPABASE_SQL in sync.ts); everyone has to use the same project.
 import { mondayOf } from './stats';
+import { dayTotals, workoutSessions } from './activity';
+import { addDays } from './tracker';
 
 export type Totals = { steps: number; activeMinutes: number; loggedDays: number; points: number };
 export type BoardRow = { userId: string; name: string; isMe: boolean } & Totals;
@@ -34,13 +36,15 @@ export function weeklyTotals(
   steps: Record<string, number>,
   activities: { date: string; minutes: number }[],
   loggedDates: string[],
+  workouts: { date: string; durationSec?: number }[] = [],
 ): Totals & { week: string } {
   const week = mondayOf(today);
   const inWeek = (d: string) => DAY.test(d) && d >= week && d <= today;
   let st = 0;
   for (const [d, n] of Object.entries(steps)) if (inWeek(d) && n > 0) st += n;
   let minutes = 0;
-  for (const a of activities) if (inWeek(a.date) && a.minutes > 0) minutes += a.minutes;
+  const sessions = [...activities.filter((a) => a.minutes > 0), ...workoutSessions(workouts)];
+  for (let d = week; d <= today; d = addDays(d, 1)) minutes += dayTotals(sessions, steps, d).minutes;
   const logged = new Set(loggedDates.filter(inWeek)).size;
   const base = { steps: Math.round(st), activeMinutes: Math.round(minutes), loggedDays: logged };
   return { week, ...base, points: pointsOf(base) };

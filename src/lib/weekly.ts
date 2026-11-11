@@ -5,6 +5,7 @@
 import { Checkin, sleepStats } from './recovery';
 import { EntryLike, daysOf, summarize } from './stats';
 import { addDays } from './tracker';
+import { dayTotals, workoutSessions } from './activity';
 
 export type WeekFacts = {
   endDate: string;
@@ -24,7 +25,9 @@ export type Input = {
   goals: { kcal: number; protein: number };
   entries: EntryLike[];
   workoutDates: string[];
-  activities: { date: string; minutes: number }[];
+  activities: { date: string; minutes: number; km?: number }[];
+  steps?: Record<string, number>;
+  workouts?: { date: string; durationSec?: number }[];
   checkins: Record<string, Checkin>;
   weights: { date: string; kg: number }[];
 };
@@ -38,7 +41,8 @@ export function buildFacts(i: Input): WeekFacts {
     return { loggedDays: s.loggedDays, avgKcal: Math.round(s.avg.kcal), avgProtein: Math.round(s.avg.protein), daysOver: s.daysOver, daysProteinMet: s.daysProteinMet };
   };
   const prevEnd = addDays(i.today, -7);
-  const minutes = (end: string) => i.activities.filter((a) => inWeek(a.date, end)).reduce((s, a) => s + a.minutes, 0);
+  const sessions = [...i.activities, ...workoutSessions(i.workouts ?? [])];
+  const minutes = (end: string) => Array.from({ length: 7 }, (_, k) => dayTotals(sessions, i.steps ?? {}, addDays(end, -k)).minutes).reduce((a, b) => a + b, 0);
   const sl = sleepStats(i.checkins, i.today, 8);
   const ws = i.weights.filter((w) => inWeek(w.date, i.today)).sort((a, b) => a.date.localeCompare(b.date));
   const { daysOver: _o, daysProteinMet: _p, ...prev } = food(prevEnd);

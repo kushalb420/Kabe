@@ -22,9 +22,9 @@ const t = weeklyTotals(
 );
 assert.equal(t.week, '2026-11-09');
 assert.equal(t.steps, 12000, 'only Monday to today; the day before the week and future days are left out');
-assert.equal(t.activeMinutes, 55);
+assert.equal(t.activeMinutes, 95, "per day the larger of logged minutes and steps-implied walking: 30 (5,000 steps = 20), 40 from 7,000 steps, 25");
 assert.equal(t.loggedDays, 2, 'a day counts once');
-assert.equal(t.points, 12 + 5 + 10);
+assert.equal(t.points, 12 + 9 + 10);
 assert.equal(weeklyTotals('2026-11-15', {}, [], []).points, 0);
 assert.equal(weeklyTotals('2026-11-15', {}, [], []).week, '2026-11-09', 'Sunday belongs to the week that started Monday');
 

@@ -1,7 +1,7 @@
 // Streaks, badges, weekly challenges, levels and nudges. Everything is DERIVED from the user's real logs by pure
 // functions, so it can't drift or be faked; only the date a badge was first earned is stored (by the caller).
 import { Key, translate } from '../i18n';
-import { Activity, isHardSession } from './activity';
+import { Activity, isHardSession, activeMinuteItems, workoutSessions } from './activity';
 import { dailyIntake } from './coach';
 import { WeightEntry, addDays, dayIndex } from './tracker';
 
@@ -13,7 +13,7 @@ export type RawData = {
   waterGoal: number;
   steps: Record<string, number>;
   stepGoal: number;
-  workouts: { date: string }[];
+  workouts: { date: string; durationSec?: number }[];
   activities: Activity[];
   weights: WeightEntry[];
   goalWeight: number | null;
@@ -65,7 +65,7 @@ export function buildCtx(raw: RawData) {
   const checkinDays = new Set(Object.keys(raw.checkins));
   // best rolling 7-day total of activity minutes
   const minutesByDay: Record<string, number> = {};
-  for (const a of raw.activities) minutesByDay[a.date] = (minutesByDay[a.date] ?? 0) + a.minutes;
+  for (const x of activeMinuteItems([...raw.activities, ...workoutSessions(raw.workouts)], raw.steps)) minutesByDay[x.date] = x.value;
   const dates = Object.keys(minutesByDay).sort();
   let bestWeekMinutes = 0;
   for (const d of dates) bestWeekMinutes = Math.max(bestWeekMinutes, sum(Array.from({ length: 7 }, (_, i) => minutesByDay[addDays(d, -i)] ?? 0)));
@@ -86,6 +86,7 @@ export function buildCtx(raw: RawData) {
     mealsLogged: raw.entries.length,
     recipeMeals: raw.entries.filter((e) => e.foodId?.startsWith('recipe-')).length,
     bestWeekMinutes,
+    minutesByDay,
     weighIns: weights.length,
     weightProgressKg: first && latest && sign ? Math.max(0, sign * (latest.kg - first.kg)) : 0,
     goalReached: !!(raw.goalWeight && first && latest && weights.length >= 2 && (Math.abs(latest.kg - raw.goalWeight) <= 0.3 || (first.kg - raw.goalWeight) * (latest.kg - raw.goalWeight) < 0)),
@@ -157,7 +158,7 @@ export const CHALLENGES: ChallengeDef[] = [
   { id: 'water-5', title: 'Hit your water goal on 5 days', target: 5, unit: 'days', value: (c, f, t) => countDays(c.waterDays, f, t) },
   { id: 'steps-4', title: 'Hit your step goal on 4 days', target: 4, unit: 'days', value: (c, f, t) => countDays(c.stepDays, f, t) },
   { id: 'train-3', title: 'Finish 3 workouts', target: 3, unit: 'workouts', value: (c, f, t) => c.raw.workouts.filter((w) => inRange(w.date, f, t)).length },
-  { id: 'active-150', title: 'Reach 150 active minutes', target: 150, unit: 'min', value: (c, f, t) => sum(c.raw.activities.filter((a) => inRange(a.date, f, t)).map((a) => a.minutes)) },
+  { id: 'active-150', title: 'Reach 150 active minutes', target: 150, unit: 'min', value: (c, f, t) => sum(Object.entries(c.minutesByDay).filter(([d]) => inRange(d, f, t)).map(([, m]) => m)) },
   { id: 'protein-5', title: 'Hit your protein goal on 5 days', target: 5, unit: 'days', value: (c, f, t) => countDays(c.proteinDays, f, t) },
   { id: 'checkin-5', title: 'Do 5 morning check-ins', target: 5, unit: 'check-ins', value: (c, f, t) => countDays(c.checkinDays, f, t) },
   { id: 'cook-3', title: 'Log 3 meals you cooked', target: 3, unit: 'recipes', value: (c, f, t) => c.raw.entries.filter((e) => e.foodId?.startsWith('recipe-') && inRange(e.date, f, t)).length },

@@ -42,8 +42,8 @@ export default function ActivityScreen() {
   const dayName = (key: string) => t(`day.${new Date(key + 'T00:00:00').getDay()}` as Key);
 
   const weightKg = currentWeight(tk.weights, k.profile?.weightKg ?? 60);
-  const week = useMemo(() => weekSummary(tk.activities, tk.steps, today, weightKg, tk.stepGoal), [tk.activities, tk.steps, today, weightKg, tk.stepGoal]);
-  const series = useMemo(() => weekSeries(tk.activities, tk.steps, today), [tk.activities, tk.steps, today]);
+  const week = useMemo(() => weekSummary(tk.activities, tk.steps, today, weightKg, tk.stepGoal, k.workouts), [tk.activities, tk.steps, today, weightKg, tk.stepGoal, k.workouts]);
+  const series = useMemo(() => weekSeries(tk.activities, tk.steps, today, k.workouts), [tk.activities, tk.steps, today, k.workouts]);
   const bests = useMemo(() => personalBests(tk.activities), [tk.activities]);
   const recent = useMemo(() => [...tk.activities].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12), [tk.activities]);
 
@@ -145,6 +145,7 @@ export default function ActivityScreen() {
           <BarChart data={series.map((d) => ({ label: dayName(d.date), value: d.minutes }))} goal={WHO_WEEKLY_MINUTES / 7} format={(v) => String(Math.round(v))} />
           <Text style={styles.label}>{t('act.steps')}</Text>
           <BarChart color="#3B9AE1" data={series.map((d) => ({ label: dayName(d.date), value: d.steps }))} goal={tk.stepGoal} format={(v) => (v >= 1000 ? `${Math.round(v / 100) / 10}k` : String(v))} />
+          <Text style={styles.sub}>{t('act.weekNote')}</Text>
         </Card>
 
         {(bests.longestRunKm || bests.longestWalkKm || bests.longestRideKm) && (

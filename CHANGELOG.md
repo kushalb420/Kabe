@@ -14,6 +14,9 @@
 - **Fewer AI requests:** foods whose vitamins could not be worked out are remembered for a week instead of being asked about on every visit, and a failed request stops the round instead of repeating for every food.
 - **Sync:** the app now checks once a minute (a tiny request) whether your backup changed on another device and pulls it in; if sync is stuck waiting for a decision or failed, Today shows a card that opens the backup screen.
 - **Continue with Google** on the sign-in / sign-up screen (needs Google switched on in your Supabase project and the newest build). If an email account with the same verified email already exists, Supabase joins the Google sign-in to that same account, so your data is simply there.
+- **Active minutes and km are counted everywhere the same way:** logged walks, runs and workouts, or the walking your steps show (about 100 steps a minute above the first 3,000 a day), whichever is larger for each day. Distance from steps is an estimate. This feeds the Activity week card and charts, Insights, friends, badges and challenges, and the coach.
+- **Free sugar limit:** set your own in Me → Set my own targets (default stays 10% of calories). Today and the coach use it.
+- **Add exercise:** the "Add your own exercise" row lines up with the rest of the screen.
 - New bento-box app icon and splash. The Account screen's Continue button no longer stretches.
 
 ## 7.0.0 — Kitchen from your pantry, notifications, workouts, account (2026-11-10)

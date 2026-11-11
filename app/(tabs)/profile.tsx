@@ -14,10 +14,11 @@ import { useT } from '../../src/i18n/useT';
 import { router } from 'expo-router';
 import { radius, useThemedStyles, type Colors } from '../../src/theme';
 import { Sticker } from '../../src/components/Sticker';
+import { sugarLimit } from '../../src/lib/limits';
 
 export default function ProfileScreen() {
   const styles = useThemedStyles(makeStyles);
-  const { profile, goals, goalsCustom, setGoals, setCustomGoals } = useKabe();
+  const { profile, goals, goalsCustom, setGoals, setCustomGoals, sugarGoal, setSugarGoal } = useKabe();
   const { t } = useT();
   const cloud = useCloud();
   const fr = useFriends();
@@ -29,9 +30,9 @@ export default function ProfileScreen() {
     `${t('friends.m.steps')} ${r.steps.toLocaleString()} · ${t('friends.m.activeMinutes')} ${r.activeMinutes} · ${t('friends.m.loggedDays')} ${r.loggedDays}`;
 
   const [editing, setEditing] = useState(false);
-  const [own, setOwn] = useState({ kcal: '', protein: '', carbs: '', fat: '', fiber: '' });
+  const [own, setOwn] = useState({ kcal: '', protein: '', carbs: '', fat: '', fiber: '', sugar: '' });
   const startEdit = () => {
-    setOwn({ kcal: String(r0(goals.kcal)), protein: String(r0(goals.protein)), carbs: String(r0(goals.carbs)), fat: String(r0(goals.fat)), fiber: String(r0(goals.fiber)) });
+    setOwn({ kcal: String(r0(goals.kcal)), protein: String(r0(goals.protein)), carbs: String(r0(goals.carbs)), fat: String(r0(goals.fat)), fiber: String(r0(goals.fiber)), sugar: String(r0(sugarLimit(goals, sugarGoal))) });
     setEditing(true);
   };
   const saveOwn = () => {
@@ -41,11 +42,20 @@ export default function ProfileScreen() {
       Alert.alert(t('me.checkNumbers'), t('me.goalsRange'));
       return;
     }
+    const sugar = n(own.sugar);
+    if (!(sugar >= 0 && sugar <= 500)) {
+      Alert.alert(t('me.checkNumbers'), t('me.goalsRange'));
+      return;
+    }
     setCustomGoals(g);
+    setSugarGoal(sugar > 0 ? sugar : null);
     setEditing(false);
   };
 
-  const useSuggested = () => setGoals(suggestGoals(profile ?? DEFAULT_PROFILE));
+  const useSuggested = () => {
+    setGoals(suggestGoals(profile ?? DEFAULT_PROFILE));
+    setSugarGoal(null);
+  };
 
   return (
     <Screen title={t('me.title')} subtitle={t('me.subtitle')} headerRight={<Sticker name="mascot" size={66} tilt={6} bob />}>
@@ -70,6 +80,11 @@ export default function ProfileScreen() {
                 </View>
               ))}
             </View>
+            <View>
+              <Text style={styles.label}>{t('macro.sugar')}</Text>
+              <TextInput style={styles.input} keyboardType="decimal-pad" value={own.sugar} onChangeText={(v) => setOwn({ ...own, sugar: v })} />
+              <Text style={[styles.sub, { marginTop: 4 }]}>{t('me.sugarHint')}</Text>
+            </View>
             <Button title={t('common.save')} onPress={saveOwn} />
             <Button title={t('common.cancel')} variant="ghost" onPress={() => setEditing(false)} />
           </>
@@ -77,7 +92,7 @@ export default function ProfileScreen() {
           <>
             <Text style={styles.big}>{r0(goals.kcal)} kcal</Text>
             <Text style={styles.sub}>
-              {t('macro.protein')} {r0(goals.protein)}g · {t('macro.carbs')} {r0(goals.carbs)}g · {t('macro.fat')} {r0(goals.fat)}g · {t('macro.fiber')} {r0(goals.fiber)}g
+              {t('macro.protein')} {r0(goals.protein)}g · {t('macro.carbs')} {r0(goals.carbs)}g · {t('macro.fat')} {r0(goals.fat)}g · {t('macro.fiber')} {r0(goals.fiber)}g · {t('macro.sugar')} ≤ {r0(sugarLimit(goals, sugarGoal))}g
             </Text>
             {goalsCustom ? <Text style={styles.sub}>{t('me.goalsOwn')}</Text> : null}
             <Button title={t('me.goalsSetOwn')} variant="ghost" icon="create-outline" onPress={startEdit} />

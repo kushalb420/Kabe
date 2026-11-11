@@ -4,7 +4,7 @@
 // Device-only secrets (Gemini/USDA keys, consents, an unfinished workout, coach chat) are NEVER part of a snapshot:
 // snapshots are built from explicit allow-lists, so a new secret field can't leak by accident.
 
-export const KABE_SYNC_KEYS = ['entries', 'customFoods', 'externalFoods', 'favorites', 'savedMeals', 'goals', 'goalsCustom', 'profile', 'userName', 'intent', 'dashboard', 'workouts', 'routines', 'customExercises'] as const;
+export const KABE_SYNC_KEYS = ['entries', 'customFoods', 'externalFoods', 'favorites', 'savedMeals', 'goals', 'goalsCustom', 'sugarGoal', 'profile', 'userName', 'intent', 'dashboard', 'workouts', 'routines', 'customExercises'] as const;
 export const TRACKER_SYNC_KEYS = ['weights', 'measurements', 'water', 'waterGoal', 'caffeine', 'supplements', 'supplementLog', 'habits', 'habitLog', 'notif', 'customReminders', 'customDone', 'goalWeight', 'checkins', 'restDays', 'activities', 'steps', 'stepGoal', 'sleepGoal', 'badges', 'challengesDone'] as const;
 
 export const KITCHEN_SYNC_KEYS = ['pantry', 'savedRecipes', 'shopping', 'equipment', 'equipmentSet', 'diet'] as const;

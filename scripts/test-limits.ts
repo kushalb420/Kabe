@@ -25,3 +25,15 @@ assert.deepEqual(s.overToday, [{ nutrient: 'fat', overByG: 15 }]);
 assert.deepEqual(s.daysOverInLast7, { 'free sugar': 1, carbs: 1, fat: 1 });
 assert.equal(s.daysLoggedInLast7, 2, 'a day with nothing logged is not counted');
 console.log('limits: ok');
+
+// ---- the person's own free sugar limit
+import { sugarLimit } from '../src/lib/limits';
+assert.equal(sugarLimit(goals, null), 50, 'default: 10% of calories');
+assert.equal(sugarLimit(goals, 30), 30, 'own number wins');
+assert.equal(sugarLimit(goals, 0), 50, 'zero or nothing means the default');
+assert.equal(limitGoals(goals, 25).sugar, 25);
+assert.deepEqual(overLimits({ sugar: 40, carbs: 0, fat: 0, satFat: 0 }, goals, 30), [{ key: 'sugar', overG: 10 }]);
+assert.deepEqual(overLimits({ sugar: 40, carbs: 0, fat: 0, satFat: 0 }, goals), [], 'under the default 50 g');
+const own = exceedSummary([{ date: '2026-11-11', carbs: 10, fat: 5, sugar: 35 }], goals, '2026-11-11', ['2026-11-11'], 30);
+assert.deepEqual(own.overToday, [{ nutrient: 'free sugar', overByG: 5 }]);
+console.log('limits (own sugar): ok');

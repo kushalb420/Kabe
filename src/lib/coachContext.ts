@@ -27,6 +27,7 @@ export function buildCoachContext(a: {
   supplementLog: DayLog;
   quickFoods: Food[]; // favourites + recent
   analysis: CoachAnalysis;
+  sugarGoal?: number | null; // the person's own free sugar limit in grams
   lifestyle?: Record<string, unknown>; // recovery + activity summary computed by the app
 }) {
   const { today, analysis: z } = a;
@@ -44,7 +45,7 @@ export function buildCoachContext(a: {
     dailyTargets: { kcal: a.goals.kcal, proteinG: a.goals.protein, carbsG: a.goals.carbs, fatG: a.goals.fat },
     minimumSafeKcal: a.profile ? MIN_KCAL[a.profile.sex] : MIN_KCAL.female,
     todaySoFar: { kcal: r0(eaten.kcal), proteinG: r0(eaten.protein), carbsG: r0(eaten.carbs), fatG: r0(eaten.fat), itemsLogged: todays.length },
-    limitsExceeded: exceedSummary(a.entries, a.goals, today, z.days28.slice(-7).map((d) => d.date)), // free sugar, carbs, fat and saturated fat over their daily limits
+    limitsExceeded: exceedSummary(a.entries, a.goals, today, z.days28.slice(-7).map((d) => d.date), a.sugarGoal), // free sugar, carbs, fat and saturated fat over their daily limits
     remainingToday: { kcal: r0(a.goals.kcal - eaten.kcal), proteinG: r0(a.goals.protein - eaten.protein) },
     last7DaysFood: z.days28.slice(-7).map((d) => ({ date: d.date, logged: d.kcal > 0, kcal: r0(d.kcal), proteinG: r0(d.protein) })),
     weekSummary: z.week,

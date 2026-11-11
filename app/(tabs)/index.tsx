@@ -18,11 +18,12 @@ import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../../s
 import { Sticker } from '../../src/components/Sticker';
 import { progressOn } from '../../src/lib/supplements';
 import { useCloud } from '../../src/store/cloud';
+import { sugarLimit } from '../../src/lib/limits';
 
 export default function Home() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const { entries, goals, dashboard, userName } = useKabe();
+  const { entries, goals, dashboard, userName, sugarGoal: ownSugar } = useKabe();
   const { t, tn } = useT();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t('today.greet.morning') : hour < 18 ? t('today.greet.afternoon') : t('today.greet.evening');
@@ -31,7 +32,7 @@ export default function Home() {
   const total = useMemo(() => sumMacros(todays), [todays]);
   const sugar = sumOptional(todays, 'sugar').total;
   const satFat = sumOptional(todays, 'satFat').total;
-  const sugarGoal = (goals.kcal * NUTRITION.freeSugarMaxPctKcal) / 100 / NUTRITION.kcalPerGramSugar;
+  const sugarGoal = sugarLimit(goals, ownSugar);
   const satFatGoal = (goals.kcal * NUTRITION.satFatMaxPctKcal) / 100 / NUTRITION.kcalPerGramFat;
   const tracker = useTracker();
   const cloud = useCloud();

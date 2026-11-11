@@ -56,6 +56,7 @@ export default function CoachChatScreen() {
     try {
       const quickFoods = [...k.favorites.map((id) => k.allFoods.find((f) => f.id === id)), ...k.recentFoods].filter((f): f is NonNullable<typeof f> => !!f);
       const ctx = buildCoachContext({
+        sugarGoal: k.sugarGoal,
         today, profile: k.profile, goals: k.goals, entries: k.entries, weights: tk.weights, goalWeight: tk.goalWeight, workouts: k.workouts,
         water: tk.water, waterGoal: tk.waterGoal, caffeine: tk.caffeine, habits: tk.habits, habitLog: tk.habitLog, supplements: tk.supplements,
         supplementLog: tk.supplementLog, quickFoods, analysis: a,

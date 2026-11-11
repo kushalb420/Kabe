@@ -48,6 +48,7 @@ type Persisted = {
   geminiKey: string; // user's own free Google AI Studio key, for photo analysis
   aiConsent: boolean; // user agreed that photos are sent to Google (free tier may be used to improve its products)
   consentV2: boolean;
+  sugarGoal: number | null; // the person's own free sugar limit (g); null = the WHO default of 10% of calories
   goalsCustom: boolean; // true when the person typed their own targets instead of using the suggested ones
   welcomed: boolean; // the first-run welcome screen has been seen
   userName: string; // what to call the person (Today greeting)
@@ -76,6 +77,7 @@ const DEFAULTS: Persisted = {
   coachConsent: true,
   consentV2: false, // set once older installs have been moved to the default above
   goalsCustom: false,
+  sugarGoal: null,
   welcomed: false,
   userName: '',
   nameAsked: false,
@@ -159,6 +161,7 @@ type Ctx = Persisted & {
   deleteSavedMeal: (mealId: string) => void;
   setGoals: (g: Macros) => void; // suggested targets (clears "my own")
   setCustomGoals: (g: Macros) => void; // the person's own targets
+  setSugarGoal: (g: number | null) => void; // own free sugar limit, null = default
   setProfile: (p: Profile) => void;
   resetAll: () => void;
 };
@@ -434,6 +437,7 @@ export function KabeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setGoals = useCallback((goals: Macros) => setData((d) => ({ ...d, goals, goalsCustom: false })), []);
+  const setSugarGoal = useCallback((g: number | null) => setData((d) => ({ ...d, sugarGoal: typeof g === 'number' && g > 0 && g <= 500 ? Math.round(g) : null })), []);
   const setCustomGoals = useCallback((goals: Macros) => setData((d) => ({ ...d, goals, goalsCustom: true })), []);
   const setProfile = useCallback((profile: Profile) => setData((d) => ({ ...d, profile })), []);
   const resetAll = useCallback(() => setData(DEFAULTS), []);
@@ -506,10 +510,11 @@ export function KabeProvider({ children }: { children: React.ReactNode }) {
       deleteSavedMeal,
       setGoals,
       setCustomGoals,
+      setSugarGoal,
       setProfile,
       resetAll,
     }),
-    [data, ready, allFoods, recentFoods, historyFoods, setUserName, skipNameAsk, addEntry, updateEntryGrams, updateEntry, removeEntry, addCustomFood, toggleFavorite, setGeminiKey, setAiConsent, setCoachConsent, setWelcomed, setLanguage, setIntent, setDashboard, setInsightCache, importSnapshot, allExercises, startWorkout, updateActive, addExerciseToActive, finishWorkout, discardWorkout, deleteWorkout, saveRoutine, deleteRoutine, createRoutine, updateRoutine, addCustomExercise, saveMeal, saveOrder, addSavedMeal, addMealItems, updateSavedMeal, saveFoods, deleteSavedMeal, setGoals, setCustomGoals, setProfile, resetAll],
+    [data, ready, allFoods, recentFoods, historyFoods, setUserName, skipNameAsk, addEntry, updateEntryGrams, updateEntry, removeEntry, addCustomFood, toggleFavorite, setGeminiKey, setAiConsent, setCoachConsent, setWelcomed, setLanguage, setIntent, setDashboard, setInsightCache, importSnapshot, allExercises, startWorkout, updateActive, addExerciseToActive, finishWorkout, discardWorkout, deleteWorkout, saveRoutine, deleteRoutine, createRoutine, updateRoutine, addCustomExercise, saveMeal, saveOrder, addSavedMeal, addMealItems, updateSavedMeal, saveFoods, deleteSavedMeal, setGoals, setCustomGoals, setSugarGoal, setProfile, resetAll],
   );
 
   return <KabeContext.Provider value={value}>{children}</KabeContext.Provider>;

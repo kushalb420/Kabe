@@ -120,5 +120,5 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   item: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
   itemName: { fontSize: 15, fontWeight: '600', color: colors.ink },
   itemSub: { fontSize: 12, color: colors.inkSoft, marginTop: 2 },
-  custom: { gap: 10, paddingVertical: 8, marginHorizontal: -18, paddingHorizontal: 0 },
+  custom: { gap: 10, paddingVertical: 12 }, // same side margins as the exercise rows below
 });

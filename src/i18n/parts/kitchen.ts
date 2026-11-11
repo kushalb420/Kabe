@@ -1,0 +1,173 @@
+import { part } from '../define';
+
+/** Kitchen (Cook, Plan, Groceries, Pantry), Recipe view and Recipe editor. */
+export const kitchen = part({
+  en: {
+    'kitchen.cook': 'Cook',
+    'kitchen.pantry': 'Pantry',
+    'diet.any': 'Everything',
+    'diet.egg': 'Egg + veg',
+    'diet.veg': 'Vegetarian',
+    'diet.vegan': 'Vegan',
+    'diet.nonveg': 'Non-veg',
+    'diet.hasEgg': 'Has egg',
+
+
+
+    'groc.count.one': '1 item to buy',
+    'groc.count.other': '{n} items to buy',
+    'groc.unpriced.one': '1 item has no price yet',
+    'groc.unpriced.other': '{n} items have no price yet',
+    'groc.bought.one': 'I bought 1 checked item → add to my kitchen',
+    'groc.bought.other': 'I bought {n} checked items → add to my kitchen',
+    'cat.Vegetables': 'Vegetables',
+    'cat.Fruit': 'Fruit',
+    'cat.Dairy & eggs': 'Dairy & eggs',
+    'cat.Meat & protein': 'Meat & protein',
+    'cat.Grains & flour': 'Grains & flour',
+    'cat.Lentils & beans': 'Lentils & beans',
+    'cat.Oils & fats': 'Oils & fats',
+    'cat.Nuts': 'Nuts',
+    'cat.Other': 'Other',
+
+    'plan.diet.any': 'any food',
+    'plan.diet.egg': 'eggs + vegetarian',
+    'plan.diet.veg': 'vegetarian',
+    'plan.diet.vegan': 'vegan',
+
+    'rec.diet.nonveg': 'non-vegetarian',
+    'rec.diet.egg': 'contains egg',
+    'rec.diet.veg': 'vegetarian',
+    'rec.diet.vegan': 'vegan',
+    'rec.sub.time': "Cooking time is different.",
+    'rec.sub.richer': "Richer: more fat and calories.",
+    'rec.sub.taste': "The taste changes.",
+
+  },
+  hi: {
+    'kitchen.cook': 'पकाएँ',
+    'kitchen.pantry': 'भंडार',
+    'diet.any': 'सब कुछ',
+    'diet.egg': 'अंडा + शाकाहारी',
+    'diet.veg': 'शाकाहारी',
+    'diet.vegan': 'वीगन',
+    'diet.nonveg': 'मांसाहारी',
+    'diet.hasEgg': 'अंडा है',
+
+
+
+    'groc.count.one': 'ख़रीदने के लिए 1 चीज़',
+    'groc.count.other': 'ख़रीदने के लिए {n} चीज़ें',
+    'groc.unpriced.one': '1 चीज़ की कीमत अभी नहीं है',
+    'groc.unpriced.other': '{n} चीज़ों की कीमत अभी नहीं है',
+    'groc.bought.one': 'मैंने टिक की हुई 1 चीज़ ख़रीदी → मेरी रसोई में जोड़ें',
+    'groc.bought.other': 'मैंने टिक की हुई {n} चीज़ें ख़रीदीं → मेरी रसोई में जोड़ें',
+    'cat.Vegetables': 'सब्ज़ियाँ',
+    'cat.Fruit': 'फल',
+    'cat.Dairy & eggs': 'डेयरी और अंडे',
+    'cat.Meat & protein': 'मांस और प्रोटीन',
+    'cat.Grains & flour': 'अनाज और आटा',
+    'cat.Lentils & beans': 'दालें और फलियाँ',
+    'cat.Oils & fats': 'तेल और वसा',
+    'cat.Nuts': 'मेवे',
+    'cat.Other': 'अन्य',
+
+    'plan.diet.any': 'कोई भी खाना',
+    'plan.diet.egg': 'अंडा + शाकाहारी',
+    'plan.diet.veg': 'शाकाहारी',
+    'plan.diet.vegan': 'वीगन',
+
+    'rec.diet.nonveg': 'मांसाहारी',
+    'rec.diet.egg': 'अंडा शामिल',
+    'rec.diet.veg': 'शाकाहारी',
+    'rec.diet.vegan': 'वीगन',
+    'rec.sub.time': "पकने का समय अलग होता है।",
+    'rec.sub.richer': "ज़्यादा भारी: ज़्यादा फैट और कैलोरी।",
+    'rec.sub.taste': "स्वाद बदल जाता है।",
+
+  },
+  te: {
+    'kitchen.cook': 'వండండి',
+    'kitchen.pantry': 'సరుకుల గది',
+    'diet.any': 'అన్నీ',
+    'diet.egg': 'గుడ్డు + శాకాహారం',
+    'diet.veg': 'శాకాహారం',
+    'diet.vegan': 'వీగన్',
+    'diet.nonveg': 'మాంసాహారం',
+    'diet.hasEgg': 'గుడ్డు ఉంది',
+
+
+
+    'groc.count.one': 'కొనాల్సినది 1 వస్తువు',
+    'groc.count.other': 'కొనాల్సినవి {n} వస్తువులు',
+    'groc.unpriced.one': '1 వస్తువుకు ఇంకా ధర లేదు',
+    'groc.unpriced.other': '{n} వస్తువులకు ఇంకా ధర లేదు',
+    'groc.bought.one': 'టిక్ చేసిన 1 వస్తువు కొన్నాను → నా వంటగదికి జోడించండి',
+    'groc.bought.other': 'టిక్ చేసిన {n} వస్తువులు కొన్నాను → నా వంటగదికి జోడించండి',
+    'cat.Vegetables': 'కూరగాయలు',
+    'cat.Fruit': 'పండ్లు',
+    'cat.Dairy & eggs': 'పాల ఉత్పత్తులు, గుడ్లు',
+    'cat.Meat & protein': 'మాంసం, ప్రోటీన్',
+    'cat.Grains & flour': 'ధాన్యాలు, పిండి',
+    'cat.Lentils & beans': 'పప్పులు, చిక్కుళ్లు',
+    'cat.Oils & fats': 'నూనెలు, కొవ్వులు',
+    'cat.Nuts': 'గింజలు',
+    'cat.Other': 'ఇతరాలు',
+
+    'plan.diet.any': 'ఏ ఆహారమైనా',
+    'plan.diet.egg': 'గుడ్లు + శాకాహారం',
+    'plan.diet.veg': 'శాకాహారం',
+    'plan.diet.vegan': 'వీగన్',
+
+    'rec.diet.nonveg': 'మాంసాహారం',
+    'rec.diet.egg': 'గుడ్డు ఉంది',
+    'rec.diet.veg': 'శాకాహారం',
+    'rec.diet.vegan': 'వీగన్',
+    'rec.sub.time': "ఉడికే సమయం వేరుగా ఉంటుంది.",
+    'rec.sub.richer': "ఎక్కువ బలమైనది: ఎక్కువ కొవ్వు, కేలరీలు.",
+    'rec.sub.taste': "రుచి మారుతుంది.",
+
+  },
+  ta: {
+    'kitchen.cook': 'சமை',
+    'kitchen.pantry': 'சரக்கறை',
+    'diet.any': 'அனைத்தும்',
+    'diet.egg': 'முட்டை + சைவம்',
+    'diet.veg': 'சைவம்',
+    'diet.vegan': 'வீகன்',
+    'diet.nonveg': 'அசைவம்',
+    'diet.hasEgg': 'முட்டை உள்ளது',
+
+
+
+    'groc.count.one': 'வாங்க வேண்டியது 1 பொருள்',
+    'groc.count.other': 'வாங்க வேண்டியவை {n} பொருட்கள்',
+    'groc.unpriced.one': '1 பொருளுக்கு இன்னும் விலை இல்லை',
+    'groc.unpriced.other': '{n} பொருட்களுக்கு இன்னும் விலை இல்லை',
+    'groc.bought.one': 'டிக் செய்த 1 பொருளை வாங்கினேன் → என் சமையலறையில் சேர்',
+    'groc.bought.other': 'டிக் செய்த {n} பொருட்களை வாங்கினேன் → என் சமையலறையில் சேர்',
+    'cat.Vegetables': 'காய்கறிகள்',
+    'cat.Fruit': 'பழங்கள்',
+    'cat.Dairy & eggs': 'பால் பொருட்கள், முட்டை',
+    'cat.Meat & protein': 'இறைச்சி, புரதம்',
+    'cat.Grains & flour': 'தானியங்கள், மாவு',
+    'cat.Lentils & beans': 'பருப்புகள், பயறுகள்',
+    'cat.Oils & fats': 'எண்ணெய்கள், கொழுப்புகள்',
+    'cat.Nuts': 'கொட்டைகள்',
+    'cat.Other': 'மற்றவை',
+
+    'plan.diet.any': 'எந்த உணவும்',
+    'plan.diet.egg': 'முட்டை + சைவம்',
+    'plan.diet.veg': 'சைவம்',
+    'plan.diet.vegan': 'வீகன்',
+
+    'rec.diet.nonveg': 'அசைவம்',
+    'rec.diet.egg': 'முட்டை உள்ளது',
+    'rec.diet.veg': 'சைவம்',
+    'rec.diet.vegan': 'வீகன்',
+    'rec.sub.time': "சமைக்கும் நேரம் வேறுபடும்.",
+    'rec.sub.richer': "செறிவானது: அதிகக் கொழுப்பும் கலோரியும்.",
+    'rec.sub.taste': "சுவை மாறும்.",
+
+  },
+});

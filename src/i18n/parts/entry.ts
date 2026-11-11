@@ -1,0 +1,93 @@
+import { part } from '../define';
+
+/** Edit entry, Save meal and Scan barcode screens. */
+export const entry = part({
+  en: {
+    'common.close': 'Close',
+    'edit.notFound': 'Entry not found',
+    'edit.amount': 'Amount',
+    'edit.nutrition': 'Nutrition for this amount',
+    'edit.yourNumbers': ' (your numbers)',
+    'edit.hint': 'Change the amount and the numbers follow. Or type your own numbers (from a label or a restaurant menu).',
+    'edit.save': 'Save changes',
+    'edit.delete': 'Delete entry',
+    'edit.deleteAsk': 'Delete this entry?',
+    'edit.proteinG': 'protein g',
+    'edit.carbsG': 'carbs g',
+    'edit.fatG': 'fat g',
+
+    'saveMeal.title': 'Save {meal} as a meal',
+    'saveMeal.name': 'Meal name',
+    'saveMeal.placeholder': 'e.g. My usual breakfast',
+    'saveMeal.items.one': '1 item',
+    'saveMeal.items.other': '{n} items',
+    'saveMeal.save': 'Save meal',
+
+  },
+  hi: {
+    'common.close': 'बंद करें',
+    'edit.notFound': 'प्रविष्टि नहीं मिली',
+    'edit.amount': 'मात्रा',
+    'edit.nutrition': 'इस मात्रा के पोषक तत्व',
+    'edit.yourNumbers': ' (आपके अपने आंकड़े)',
+    'edit.hint': 'मात्रा बदलें तो आंकड़े अपने आप बदलेंगे। या अपने आंकड़े खुद लिखें (लेबल या रेस्टोरेंट मेन्यू से)।',
+    'edit.save': 'बदलाव सहेजें',
+    'edit.delete': 'प्रविष्टि हटाएँ',
+    'edit.deleteAsk': 'यह प्रविष्टि हटाएँ?',
+    'edit.proteinG': 'प्रोटीन ग्रा',
+    'edit.carbsG': 'कार्ब्स ग्रा',
+    'edit.fatG': 'वसा ग्रा',
+
+    'saveMeal.title': '{meal} को भोजन के रूप में सहेजें',
+    'saveMeal.name': 'भोजन का नाम',
+    'saveMeal.placeholder': 'जैसे: मेरा रोज़ का नाश्ता',
+    'saveMeal.items.one': '1 वस्तु',
+    'saveMeal.items.other': '{n} वस्तुएँ',
+    'saveMeal.save': 'भोजन सहेजें',
+
+  },
+  te: {
+    'common.close': 'మూసివేయండి',
+    'edit.notFound': 'నమోదు కనబడలేదు',
+    'edit.amount': 'పరిమాణం',
+    'edit.nutrition': 'ఈ పరిమాణానికి పోషకాలు',
+    'edit.yourNumbers': ' (మీ సంఖ్యలు)',
+    'edit.hint': 'పరిమాణం మారిస్తే సంఖ్యలు మారతాయి. లేదా మీ సొంత సంఖ్యలు రాయండి (లేబుల్ లేదా రెస్టారెంట్ మెనూ నుండి).',
+    'edit.save': 'మార్పులు సేవ్ చేయండి',
+    'edit.delete': 'నమోదును తొలగించండి',
+    'edit.deleteAsk': 'ఈ నమోదును తొలగించాలా?',
+    'edit.proteinG': 'ప్రోటీన్ గ్రా',
+    'edit.carbsG': 'కార్బ్స్ గ్రా',
+    'edit.fatG': 'కొవ్వు గ్రా',
+
+    'saveMeal.title': '{meal}ను భోజనంగా సేవ్ చేయండి',
+    'saveMeal.name': 'భోజనం పేరు',
+    'saveMeal.placeholder': 'ఉదా: నా రోజువారీ అల్పాహారం',
+    'saveMeal.items.one': '1 అంశం',
+    'saveMeal.items.other': '{n} అంశాలు',
+    'saveMeal.save': 'భోజనం సేవ్ చేయండి',
+
+  },
+  ta: {
+    'common.close': 'மூடு',
+    'edit.notFound': 'பதிவு கிடைக்கவில்லை',
+    'edit.amount': 'அளவு',
+    'edit.nutrition': 'இந்த அளவுக்கான ஊட்டச்சத்து',
+    'edit.yourNumbers': ' (உங்கள் எண்கள்)',
+    'edit.hint': 'அளவை மாற்றினால் எண்கள் தானாக மாறும். அல்லது லேபிள் அல்லது உணவக மெனுவிலிருந்து உங்கள் சொந்த எண்களை உள்ளிடுங்கள்.',
+    'edit.save': 'மாற்றங்களைச் சேமி',
+    'edit.delete': 'பதிவை நீக்கு',
+    'edit.deleteAsk': 'இந்தப் பதிவை நீக்கவா?',
+    'edit.proteinG': 'புரதம் கி',
+    'edit.carbsG': 'கார்ப்ஸ் கி',
+    'edit.fatG': 'கொழுப்பு கி',
+
+    'saveMeal.title': '{meal} உணவாகச் சேமி',
+    'saveMeal.name': 'உணவின் பெயர்',
+    'saveMeal.placeholder': 'எ.கா: எனது வழக்கமான காலை உணவு',
+    'saveMeal.items.one': '1 பொருள்',
+    'saveMeal.items.other': '{n} பொருட்கள்',
+    'saveMeal.save': 'உணவைச் சேமி',
+
+  },
+});

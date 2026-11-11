@@ -1,0 +1,35 @@
+import { account } from './account';
+import { coach } from './coach';
+import { dashboard } from './dashboard';
+import { entry } from './entry';
+import { friends } from './friends';
+import { fridge } from './fridge';
+import { insights } from './insights';
+import { kitchen } from './kitchen';
+import { label } from './label';
+import { log } from './log';
+import { me } from './me';
+import { more } from './more';
+import { micro } from './micro';
+import { misc } from './misc';
+import { photo } from './photo';
+import { reminders } from './reminders';
+import { restaurant } from './restaurant';
+import { stats } from './stats';
+import { next } from './next';
+import { photos } from './photos';
+import { privacy } from './privacy';
+import { theme } from './theme';
+import { weekly } from './weekly';
+import { tracking } from './tracking';
+import { track } from './track';
+import { train } from './train';
+import { voice } from './voice';
+import { wellness } from './wellness';
+import { welcome } from './welcome';
+
+/** Every screen's strings. Add a new part: import it and spread it into all four objects below. */
+export const partsEn = { ...entry.en, ...tracking.en, ...train.en, ...coach.en, ...kitchen.en, ...fridge.en, ...label.en, ...theme.en, ...photo.en, ...me.en, ...misc.en, ...restaurant.en, ...wellness.en, ...voice.en, ...stats.en, ...weekly.en, ...next.en, ...privacy.en, ...insights.en, ...micro.en, ...dashboard.en, ...photos.en, ...track.en, ...reminders.en, ...friends.en, ...welcome.en, ...log.en, ...account.en, ...more.en };
+export const partsHi = { ...entry.hi, ...tracking.hi, ...train.hi, ...coach.hi, ...kitchen.hi, ...fridge.hi, ...label.hi, ...theme.hi, ...photo.hi, ...me.hi, ...misc.hi, ...restaurant.hi, ...wellness.hi, ...voice.hi, ...stats.hi, ...weekly.hi, ...next.hi, ...privacy.hi, ...insights.hi, ...micro.hi, ...dashboard.hi, ...photos.hi, ...track.hi, ...reminders.hi, ...friends.hi, ...welcome.hi, ...log.hi, ...account.hi, ...more.hi };
+export const partsTe = { ...entry.te, ...tracking.te, ...train.te, ...coach.te, ...kitchen.te, ...fridge.te, ...label.te, ...theme.te, ...photo.te, ...me.te, ...misc.te, ...restaurant.te, ...wellness.te, ...voice.te, ...stats.te, ...weekly.te, ...next.te, ...privacy.te, ...insights.te, ...micro.te, ...dashboard.te, ...photos.te, ...track.te, ...reminders.te, ...friends.te, ...welcome.te, ...log.te, ...account.te, ...more.te };
+export const partsTa = { ...entry.ta, ...tracking.ta, ...train.ta, ...coach.ta, ...kitchen.ta, ...fridge.ta, ...label.ta, ...theme.ta, ...photo.ta, ...me.ta, ...misc.ta, ...restaurant.ta, ...wellness.ta, ...voice.ta, ...stats.ta, ...weekly.ta, ...next.ta, ...privacy.ta, ...insights.ta, ...micro.ta, ...dashboard.ta, ...photos.ta, ...track.ta, ...reminders.ta, ...friends.ta, ...welcome.ta, ...log.ta, ...account.ta, ...more.ta };

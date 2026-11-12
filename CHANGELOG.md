@@ -17,6 +17,10 @@
 - **Active minutes and km are counted everywhere the same way:** logged walks, runs and workouts, or the walking your steps show (about 100 steps a minute above the first 3,000 a day), whichever is larger for each day. Distance from steps is an estimate. This feeds the Activity week card and charts, Insights, friends, badges and challenges, and the coach.
 - **Free sugar limit:** set your own in Me → Set my own targets (default stays 10% of calories). Today and the coach use it.
 - **Add exercise:** the "Add your own exercise" row lines up with the rest of the screen.
+- **Buy list:** about 270 suggestions now (many more vegetables, fruits, grains and pulses, spices and masalas, proteins, dairy, plus new Oils and sauces and Snacks and drinks groups), all still filtered by your kitchen setup and diet. A **Refresh ideas** button asks the AI for everyday items that go with what is in your pantry and are not already listed. Fixed the Dairy group making the whole suggestions section disappear.
+- **Supplements:** each one is a tidy row with a dropdown arrow that opens what is in it, its reminder and edit. The reminder says "Remind me" and, for a supplement taken every few days or on set days, "Only on the days you take it" (it already only fired on those days). Reminder buttons no longer cross the card edge.
+- **Free sugar means added sugar only** everywhere: meal and food estimates, label reading (total sugars are never used), the coach and the sugar limit hint.
+- Fixed the refresh button on a meal item showing oversized loader dots, and the friends sticker on Me is smaller and centred.
 - New bento-box app icon and splash. The Account screen's Continue button no longer stretches.
 
 ## 7.0.0 — Kitchen from your pantry, notifications, workouts, account (2026-11-10)

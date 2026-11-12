@@ -28,7 +28,7 @@ export const BOX = { border: 2, shadowOffset: 4, radiusCard: 16, radiusButton: 1
 
 /** Daily limits behind the bars on Today. Percent of the calorie goal. */
 export const NUTRITION = {
-  freeSugarMaxPctKcal: 10, // WHO: keep free sugars under 10% of energy
+  freeSugarMaxPctKcal: 10, // keep added (free) sugar under 10% of energy, the usual WHO advice
   satFatMaxPctKcal: 10, // keep saturated fat under 10% of energy
   kcalPerGramSugar: 4,
   kcalPerGramFat: 9,

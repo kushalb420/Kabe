@@ -2,7 +2,7 @@ import type { Food } from '../data/foods';
 
 export type Macros = { kcal: number; protein: number; carbs: number; fat: number; fiber: number };
 /** Optional extras. undefined means "unknown" — never treated as zero in the UI. */
-export type Extras = { sugar?: number; sodium?: number; satFat?: number }; // sugar = FREE sugar (added sugars, honey, syrups, juices)
+export type Extras = { sugar?: number; sodium?: number; satFat?: number }; // sugar = free sugar: ADDED sugar only (sugar, jaggery, honey, syrups, sweetened products), not the natural sugar in fruit or milk
 
 export const ZERO: Macros = { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
 

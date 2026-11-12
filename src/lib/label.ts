@@ -23,7 +23,7 @@ export const buildLabelPrompt = () =>
     '- serving_size: the serving size in grams or ml as printed (a number), or null',
     '- kcal: energy in kcal (NOT kJ; null if only kJ is printed)',
     '- protein, carbs (total carbohydrate), fat (total fat), saturated_fat (saturated fat), fiber (dietary fibre): grams',
-    '- sugar: ADDED sugars in grams if the table lists added sugars; otherwise the total sugars',
+    '- sugar: ADDED sugars in grams ("added sugars" or "of which added sugars"). If the table lists only total sugars or no sugar line at all, answer null: never give total sugars, because natural sugar in milk or fruit is not added sugar',
     '- sodium_mg: sodium in milligrams (null if the label shows only salt)',
     '',
     'If the image does not show a nutrition table, answer null for every number.',

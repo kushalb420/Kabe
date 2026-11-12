@@ -112,7 +112,9 @@ export default function ProfileScreen() {
           )}
           {friendRows.length === 0 ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Sticker name="sparkles" size={46} />
+              <View style={{ width: 40, alignItems: 'center', justifyContent: 'center' }}>
+                <Sticker name="sparkles" size={32} />
+              </View>
               <Text style={[styles.sub, { flex: 1 }]}>{t('me.friendsNone')}</Text>
             </View>
           ) : (

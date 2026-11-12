@@ -4,7 +4,7 @@ import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
@@ -17,7 +17,6 @@ import { MEALS, MealType, useKabe } from '../store/kabe';
 import { useTracker } from '../store/tracker';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { Calculating } from './Calculating';
-import { Loading } from './Loading';
 import { WebCamera } from './WebCamera';
 import { Dots } from './Dots';
 import { NutrientGrid } from './NutrientGrid';
@@ -409,7 +408,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
                           onSubmitEditing={() => void refine(it)}
                         />
                         <Pressable onPress={() => void refine(it)} disabled={refining !== null || !(detail[it.id] ?? '').trim()} style={[styles.step, { width: 44, opacity: (detail[it.id] ?? '').trim() ? 1 : 0.4 }]} accessibilityLabel={t('log.detailBtn')}>
-                          {refining === it.id ? <Loading /> : <Ionicons name="refresh" size={20} color={colors.ink} />}
+                          {refining === it.id ? <ActivityIndicator size="small" color={colors.ink} /> : <Ionicons name="refresh" size={20} color={colors.ink} />}
                         </Pressable>
                       </View>
                       <Pressable onPress={() => setItems((l) => l.filter((x) => x.id !== it.id))}>

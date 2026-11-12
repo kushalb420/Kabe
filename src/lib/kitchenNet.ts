@@ -1,6 +1,7 @@
 // The network side of the kitchen: one Gemini call each for meal ideas, a recipe, a cooking question and a pantry photo.
 // All checking is in kitchenAi.ts (pure, tested); `ask` is injectable so tests never touch the network.
 import { CHAT_SCHEMA, DETAIL_SCHEMA, Detail, Equipment, PANTRY_PHOTO_PROMPT, PANTRY_PHOTO_SCHEMA, PantryItem, Request, SUGGEST_SCHEMA, Suggestion, Suggestions, Turn, buildChatPrompt, buildDetailPrompt, buildSuggestPrompt, parseAnswer, parseDetail, parsePantryPhoto, parseSuggestions } from './kitchenAi';
+import { BUILTIN_NAMES, BuyIdea, MORE_SCHEMA, buildMoreIdeasPrompt, parseMoreIdeas } from './buyIdeas';
 import { askJson } from './vision';
 
 type Ask = (key: string, input: unknown, schema: object) => Promise<unknown>;
@@ -19,4 +20,11 @@ export async function askCook(key: string, s: Suggestion, detail: Detail | null,
 
 export async function pantryFromPhoto(key: string, base64: string, mime: string, existing: PantryItem[], ask: Ask = askJson): Promise<{ name: string; qty: string }[]> {
   return parsePantryPhoto(await ask(key, [{ type: 'text', text: PANTRY_PHOTO_PROMPT }, { type: 'image', data: base64, mime_type: mime }], PANTRY_PHOTO_SCHEMA), existing);
+}
+
+/** New things to buy that suit the pantry, kitchen and diet and are not in the built-in list. One request per tap of "Refresh ideas". */
+export async function moreBuyIdeas(key: string, i: { equipment: Equipment; diet: 'any' | 'egg' | 'veg' | 'vegan'; pantry: PantryItem[]; shopping: { name: string }[]; earlier: string[] }, ask: Ask = askJson): Promise<BuyIdea[]> {
+  const known = [...BUILTIN_NAMES, ...i.earlier];
+  const q = { equipment: i.equipment, diet: i.diet, pantry: i.pantry, shopping: i.shopping, known };
+  return parseMoreIdeas(await ask(key, buildMoreIdeasPrompt(q), MORE_SCHEMA), q);
 }

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { DEFAULT_EQUIPMENT, Detail, Diet, Equipment, PantryItem, Suggestion, inPantry, sanitizeEquipment } from '../lib/kitchenAi';
+import type { BuyIdea } from '../lib/buyIdeas';
 import { KITCHEN_SYNC_KEYS } from '../lib/sync';
 
 export type SavedRecipe = Suggestion & { detail: Detail | null; savedAt: string };
@@ -13,9 +14,10 @@ type Persisted = {
   equipment: Equipment;
   equipmentSet: boolean; // the person has told us what they cook with
   diet: Diet;
+  moreIdeas: BuyIdea[]; // extra things to buy found by "Refresh ideas" (device only)
 };
 
-const DEFAULTS: Persisted = { pantry: [], savedRecipes: [], shopping: [], equipment: DEFAULT_EQUIPMENT, equipmentSet: false, diet: 'any' };
+const DEFAULTS: Persisted = { pantry: [], savedRecipes: [], shopping: [], equipment: DEFAULT_EQUIPMENT, equipmentSet: false, diet: 'any', moreIdeas: [] };
 const KEY = 'kabe:kitchen:v2';
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -28,6 +30,8 @@ type Ctx = Persisted & {
   saveRecipe: (s: Suggestion, detail: Detail | null) => void;
   removeRecipe: (id: string) => void;
   addShopping: (name: string, why?: string) => void;
+  /** Remember new ideas from "Refresh ideas" (newest first, at most 80). */
+  addMoreIdeas: (ideas: BuyIdea[]) => void;
   toggleShopping: (id: string) => void;
   removeShopping: (id: string) => void;
   /** Moves ticked buy-list items into the pantry. */
@@ -93,6 +97,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     [],
   );
   const setEquipment = useCallback((equipment: Equipment) => setData((d) => ({ ...d, equipment: sanitizeEquipment(equipment), equipmentSet: true })), []);
+  const addMoreIdeas = useCallback((ideas: BuyIdea[]) => setData((d) => ({ ...d, moreIdeas: [...ideas, ...d.moreIdeas.filter((x) => !ideas.some((n) => n.name.toLowerCase() === x.name.toLowerCase()))].slice(0, 80) })), []);
   const setDiet = useCallback((diet: Diet) => setData((d) => ({ ...d, diet })), []);
 
   const importSnapshot = useCallback((s: Record<string, unknown>) => {
@@ -106,8 +111,8 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const resetKitchen = useCallback(() => setData(DEFAULTS), []);
 
   const value = useMemo(
-    () => ({ ...data, ready, addPantry, addPantryMany, removePantry, clearPantry, saveRecipe, removeRecipe, addShopping, toggleShopping, removeShopping, moveBought, setEquipment, setDiet, importSnapshot, resetKitchen }),
-    [data, ready, addPantry, addPantryMany, removePantry, clearPantry, saveRecipe, removeRecipe, addShopping, toggleShopping, removeShopping, moveBought, setEquipment, setDiet, importSnapshot, resetKitchen],
+    () => ({ ...data, ready, addPantry, addPantryMany, removePantry, clearPantry, saveRecipe, removeRecipe, addShopping, toggleShopping, removeShopping, addMoreIdeas, moveBought, setEquipment, setDiet, importSnapshot, resetKitchen }),
+    [data, ready, addPantry, addPantryMany, removePantry, clearPantry, saveRecipe, removeRecipe, addShopping, toggleShopping, removeShopping, addMoreIdeas, moveBought, setEquipment, setDiet, importSnapshot, resetKitchen],
   );
   return <KitchenContext.Provider value={value}>{children}</KitchenContext.Provider>;
 }

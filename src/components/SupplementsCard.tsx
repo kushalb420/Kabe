@@ -6,6 +6,7 @@ import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
 import { Alert } from '../lib/alert';
 import { toDateKey } from '../lib/nutrition';
+import { formatTime } from '../lib/reminders';
 import { ensurePermission, explainPermission } from '../lib/permissions';
 import { SuppRead, readSupplementByName, readSupplementLabel } from '../lib/suppAi';
 import { MAX_TIMES, Schedule, cleanSchedule, daysBetween, defaultSchedule, dosesDue, dosesTaken, nextDue, streakOf, topAmounts } from '../lib/supplements';
@@ -43,6 +44,8 @@ export function SupplementsCard() {
   const [failed, setFailed] = useState<string[]>([]);
   const attempted = useRef(new Set<string>());
   const [open, setOpen] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string[]>([]); // supplements whose details are showing
+  const toggleDetails = (id: string) => setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
   const [editDose, setEditDose] = useState('');
   const [editSched, setEditSched] = useState<Schedule | null>(null);
 
@@ -191,7 +194,8 @@ export function SupplementsCard() {
         const complete = due > 0 ? taken >= due : taken > 0;
         const streak = streakOf(sc, tk.supplementLog, s.id, today);
         const c = s.composition;
-        const sub = [s.dose, label(sc)].filter(Boolean).join(' · ');
+        const sub = [s.dose, label(sc), s.remind ? `🔔 ${formatTime(s.remind.hour, s.remind.minute)}` : ''].filter(Boolean).join(' · ');
+        const shut = !expanded.includes(s.id);
         const tap = () => (taken < Math.max(1, due) || (sc.mode === 'asNeeded' && taken < MAX_TIMES) ? tk.takeDose(today, s.id) : tk.undoDose(today, s.id));
         return (
           <View key={s.id} style={styles.item}>
@@ -205,7 +209,14 @@ export function SupplementsCard() {
                 {due === 0 && sc.mode !== 'asNeeded' ? <Text style={styles.sub}>{nextText(sc)}</Text> : null}
               </View>
               {streak > 0 && <Text style={styles.streak}>🔥 {t('daily.days', { n: streak })}</Text>}
+              <Pressable onPress={() => toggleDetails(s.id)} hitSlop={10} style={styles.chev} accessibilityRole="button" accessibilityState={{ expanded: !shut }} accessibilityLabel={t('supp.details')}>
+                <Ionicons name={shut ? 'chevron-down' : 'chevron-up'} size={20} color={colors.ink} />
+              </Pressable>
             </Pressable>
+
+            {!shut && (
+              <View style={styles.details}>
+            <Text style={styles.label}>{t('supp.inside')}</Text>
 
             {reading.includes(s.id) ? (
               <View style={styles.info}>
@@ -229,11 +240,11 @@ export function SupplementsCard() {
                 <Text style={[styles.link, { flex: 1 }]}>{failed.includes(s.id) ? t('supp.failed') : t('supp.readAgain')}</Text>
               </Pressable>
             ) : (
-              <Text style={[styles.sub, { marginLeft: 44 }]}>{t('supp.needAi')}</Text>
+              <Text style={styles.sub}>{t('supp.needAi')}</Text>
             )}
 
-            <ItemReminder remind={s.remind} onRemind={(r) => tk.setItemReminder('supplement', s.id, r)} />
-            <Pressable onPress={() => openEdit(s)} hitSlop={8} style={{ marginLeft: 44, paddingBottom: 8 }}>
+            <ItemReminder supplement remind={s.remind} scope={sc.mode === 'daily' || sc.mode === 'asNeeded' ? t('supp.remindEvery') : t('supp.remindDue')} onRemind={(r) => tk.setItemReminder('supplement', s.id, r)} />
+            <Pressable onPress={() => openEdit(s)} hitSlop={8} style={{ paddingBottom: 8 }}>
               <Text style={styles.link}>{open === s.id ? t('supp.close') : t('supp.edit')}</Text>
             </Pressable>
             {open === s.id && editSched && (
@@ -251,6 +262,8 @@ export function SupplementsCard() {
                 </View>
                 {scanning && <Loading />}
                 <Button title={t('common.save')} icon="checkmark" onPress={() => saveEdit(s)} />
+              </View>
+            )}
               </View>
             )}
           </View>
@@ -305,8 +318,10 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   checkOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   count: { fontSize: 12, fontWeight: '800', color: colors.ink },
   streak: { fontSize: 13, fontWeight: '700', color: colors.warn },
-  info: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginLeft: 44, paddingBottom: 6 },
-  edit: { gap: 10, marginLeft: 44, paddingBottom: 10 },
+  info: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingBottom: 6 },
+  edit: { gap: 10, paddingBottom: 10 },
+  details: { gap: 8, marginLeft: 44, paddingBottom: 6 },
+  chev: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   add: { gap: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line, paddingTop: 12, marginTop: 4 },
   input: { borderWidth: 2, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, fontSize: 15, color: colors.ink, backgroundColor: colors.card },
 });

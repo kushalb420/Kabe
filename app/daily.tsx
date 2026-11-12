@@ -145,7 +145,9 @@ function Checklist({
             </View>
             {s > 0 && <Text style={styles.streak}>🔥 {t('daily.days', { n: s })}</Text>}
           </Pressable>
-          <ItemReminder remind={it.remind} onRemind={(r) => onRemind(it.id, r)} />
+          <View style={{ marginLeft: 44 }}>
+            <ItemReminder remind={it.remind} onRemind={(r) => onRemind(it.id, r)} />
+          </View>
           </View>
         );
       })}

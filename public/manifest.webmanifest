@@ -1,0 +1,15 @@
+{
+  "name": "Kabe",
+  "short_name": "Kabe",
+  "description": "A free fitness and nutrition app: log meals from a photo or your voice, get meal ideas from your own kitchen, and keep going with friends.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FDE186",
+  "theme_color": "#FDE186",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

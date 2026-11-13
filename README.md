@@ -64,3 +64,9 @@ Free, using your own Supabase project. Steps: `docs/SUPABASE_SETUP.md` (includes
 - `AGENTS.md`: project rules for coding agents (Expo SDK 58, Expo Router in `app/`).
 - `ARCHITECTURE.md`: how the code is organised. `CHANGELOG.md`: every change. `MASTER_FEATURES.md` and `ROADMAP.md`: features and plans. `BACKLOG.md`: what is left.
 - Logic lives in `src/lib/` as plain tested functions; screens are in `app/`; strings are in `src/i18n/parts/` (every string exists in four languages, enforced by `npm test`).
+
+## Web version (for iPhone and anyone without the Android app)
+
+The app also runs as a website, live at https://kushalb420.github.io (privacy policy: /privacy.html). On an iPhone, open it in Safari and tap Share, then Add to Home Screen.
+
+To publish a new version: run `node scripts/build-web.js` (it blanks the Gemini key so it cannot leak), then copy the contents of `dist/` into the `kushalb420/kushalb420.github.io` repo and push. GitHub Pages republishes in about a minute.

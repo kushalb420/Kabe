@@ -21,6 +21,7 @@
 - **Supplements:** each one is a tidy row with a dropdown arrow that opens what is in it, its reminder and edit. The reminder says "Remind me" and, for a supplement taken every few days or on set days, "Only on the days you take it" (it already only fired on those days). Reminder buttons no longer cross the card edge.
 - **Free sugar means added sugar only** everywhere: meal and food estimates, label reading (total sugars are never used), the coach and the sugar limit hint.
 - Fixed the refresh button on a meal item showing oversized loader dots, and the friends sticker on Me is smaller and centred.
+- **Web version:** Kabe now also runs as a website at https://kushalb420.github.io so iPhone users can add it to their home screen (it has its own icon, name and full-screen mode). The privacy policy is public at /privacy.html and was brought up to date (no barcode scanning, Google sign-in, supplement labels, buy ideas). New `scripts/build-web.js` builds the site without the AI key.
 - New bento-box app icon and splash. The Account screen's Continue button no longer stretches.
 
 ## 7.0.0 — Kitchen from your pantry, notifications, workouts, account (2026-11-10)

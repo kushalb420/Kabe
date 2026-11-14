@@ -103,7 +103,8 @@
           }
         }
       ],
-      "expo-dev-client"
+      "expo-dev-client",
+      "expo-sharing"
     ],
     "backgroundColor": "#FDE186",
     "extra": {

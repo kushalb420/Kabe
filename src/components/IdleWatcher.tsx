@@ -1,8 +1,9 @@
 import * as Notifications from 'expo-notifications';
 import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
-import { loadHealthConnect, readStepsBetween } from '../lib/healthConnect';
-import { idleTimes, movedEnough } from '../lib/idleSchedule';
+import { Pedometer } from 'expo-sensors';
+import { loadHealthConnect, readStepSpans } from '../lib/healthConnect';
+import { idleTimes, lastMovement } from '../lib/idleSchedule';
 import { IDLE_TEXT } from '../lib/idleText';
 import { useKabe } from '../store/kabe';
 import { useTracker } from '../store/tracker';
@@ -22,6 +23,7 @@ export function IdleWatcher() {
   const on = notif.allOn && notif.idle.on;
   const { afterMin, from, to, minSteps } = notif.idle;
   const lastActive = useRef(0); // ms; set when the app starts, moved forward whenever movement is seen
+  const replan = useRef<() => void>(() => {}); // lets the live step counter ask for a fresh plan while walking
 
   useEffect(() => {
     if (!ready || Platform.OS === 'web') return;
@@ -39,11 +41,13 @@ export function IdleWatcher() {
         if ((await ensurePermission(Notifications.getPermissionsAsync, Notifications.requestPermissionsAsync)) !== 'granted') return;
         await ensureReminderChannel();
         const now = Date.now();
-        // did the person move during the chosen time? then the clock starts again from now
+        // the clock starts from the last time the person was really walking (Health Connect keeps the history, even while
+        // Kabe was closed), not from when the app happened to open
         const hc = loadHealthConnect();
         if (hc) {
-          const steps = await readStepsBetween(hc, new Date(now - afterMin * 60_000), new Date(now));
-          if (movedEnough(steps, minSteps)) lastActive.current = now;
+          const spans = await readStepSpans(hc, new Date(now - 6 * 3_600_000), new Date(now));
+          const moved = spans ? lastMovement(spans, { windowMin: 5, minSteps: Math.min(minSteps, 40) }) : null;
+          if (moved !== null) lastActive.current = Math.max(lastActive.current, moved);
         }
         const times = idleTimes({ now, lastActiveAt: lastActive.current, afterMin, from, to, max: IDS.length });
         const text = IDLE_TEXT[language] ?? IDLE_TEXT.en;
@@ -59,11 +63,31 @@ export function IdleWatcher() {
       }
     };
 
+    replan.current = () => void plan();
     void plan();
     const sub = AppState.addEventListener('change', () => void plan()); // opened or put away: look again
+
+    // while Kabe is open, the phone's step counter sees you walking live: every burst of steps pushes the reminders later
+    let walk: { remove: () => void } | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    (async () => {
+      try {
+        if (!on || !(await Pedometer.isAvailableAsync())) return;
+        const perm = await Pedometer.getPermissionsAsync();
+        if (!perm.granted || dead) return;
+        walk = Pedometer.watchStepCount(() => {
+          lastActive.current = Date.now();
+          if (!timer) timer = setTimeout(() => { timer = null; replan.current(); }, 90_000); // look again at most every 90 seconds
+        });
+      } catch {
+        /* no step counter here: Health Connect alone does the job */
+      }
+    })();
     return () => {
       dead = true;
       sub.remove();
+      walk?.remove();
+      if (timer) clearTimeout(timer);
     };
   }, [on, ready, afterMin, from, to, minSteps, language]);
 

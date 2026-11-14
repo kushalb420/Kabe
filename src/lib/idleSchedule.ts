@@ -20,3 +20,23 @@ export function idleTimes(i: { now: number; lastActiveAt: number; afterMin: numb
 
 /** Did the person move? `steps` is what Health Connect reported for the last stretch (null when unknown). */
 export const movedEnough = (steps: number | null, minSteps: number): boolean => steps !== null && steps >= minSteps;
+
+export type StepSpan = { start: number; end: number; count: number };
+
+/**
+ * The last moment the person was clearly moving: the end of the latest stretch after which the previous `windowMin` minutes held at
+ * least `minSteps` steps. Null when there was no such walking. The reminder clock starts from this, so a walk taken while
+ * Kabe was closed is not mistaken for sitting still.
+ */
+export function lastMovement(spans: StepSpan[], opts: { windowMin?: number; minSteps?: number } = {}): number | null {
+  const win = (opts.windowMin ?? 5) * 60_000;
+  const need = opts.minSteps ?? 30;
+  const s = spans.filter((x) => x.count > 0).sort((a, b) => a.end - b.end);
+  let best: number | null = null;
+  for (let k = 0; k < s.length; k++) {
+    let sum = 0;
+    for (let j = k; j >= 0 && s[k].end - s[j].end < win; j--) sum += s[j].count;
+    if (sum >= need) best = s[k].end;
+  }
+  return best;
+}

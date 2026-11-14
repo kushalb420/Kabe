@@ -59,4 +59,9 @@ for (const level of ['low', 'mid', 'high'] as const) {
 const lo = suggestGoals({ ...base, carbLevel: 'low' });
 const hi = suggestGoals({ ...base, carbLevel: 'high' });
 assert.ok(lo.carbs < hi.carbs && lo.fat > hi.fat, 'low carb means more fat, high carb means less');
+const mid = suggestGoals({ ...base, carbLevel: 'mid' });
+assert.ok(lo.protein > mid.protein, 'low carb means more protein');
+assert.equal(mid.protein, hi.protein, 'medium and high carb keep the same protein');
+assert.ok(lo.fat > mid.fat && mid.fat > hi.fat, 'fat falls as carbs rise');
+assert.ok(lo.carbs < mid.carbs && mid.carbs < hi.carbs);
 console.log('Goal planning tests passed.');

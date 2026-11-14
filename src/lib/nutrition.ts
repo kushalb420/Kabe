@@ -82,6 +82,8 @@ export type Profile = {
 export type CarbLevel = 'low' | 'mid' | 'high';
 /** Share of the day's calories that come from carbs at each level. */
 export const CARB_SHARE: Record<CarbLevel, number> = { low: 0.2, mid: 0.4, high: 0.55 };
+/** Least share of calories from protein: higher on low carb, the same on medium and high carb (usual 25-30% on low carb, 20-25% otherwise). */
+export const PROTEIN_SHARE: Record<CarbLevel, number> = { low: 0.3, mid: 0.22, high: 0.22 };
 
 export const DEFAULT_PROFILE: Profile = { sex: 'female', age: 25, heightCm: 165, weightKg: 60, activity: 'light', goal: 'maintain' };
 
@@ -95,8 +97,10 @@ export const macrosForCalories = (kcal: number, weightKg: number, goal: Profile[
     const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
     return { kcal, protein, carbs, fat, fiber: 30 };
   }
-  // a chosen carb level: protein by body weight (never above a third of the calories), carbs by the level, fat takes the rest
-  const p = Math.min(protein, Math.round((kcal * 0.33) / 4));
+  // a chosen carb level. Protein: by body weight, but low carb eats more of it (a larger share of calories, as in usual
+  // low-carb plans), while medium and high carb share the same protein. Carbs take their share, and fat takes the rest.
+  const share = PROTEIN_SHARE[carbLevel];
+  const p = Math.min(Math.max(protein, Math.round((kcal * share) / 4)), Math.round((kcal * 0.35) / 4));
   let carbs = Math.round((kcal * CARB_SHARE[carbLevel]) / 4);
   let fat = Math.round((kcal - p * 4 - carbs * 4) / 9);
   const minFat = Math.round((kcal * 0.2) / 9); // fat is needed for health: never below a fifth of the calories

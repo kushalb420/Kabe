@@ -85,6 +85,7 @@ export default function Home() {
       </Pressable>
     ),
     activity: <LinkRow icon="walk-outline" sticker="dumbbell" title={t('train.activity')} sub={tracker.steps[today] ? t('train.steps', { n: tracker.steps[today].toLocaleString() }) : t('train.activityCta')} onPress={() => router.push('/activity')} />,
+    route: <LinkRow icon="navigate" sticker="sparkles" title={t('route.card')} sub={t('route.cardSub')} onPress={() => router.push('/track')} />,
     logFood: <Button title={t('today.logFood')} icon="add-circle" onPress={() => router.push({ pathname: '/add-food', params: { date: today } })} />,
   };
 

@@ -68,3 +68,15 @@ export function formatClock(ms: number): string {
   const two = (n: number) => String(n).padStart(2, '0');
   return h > 0 ? `${h}:${two(m)}:${two(s)}` : `${m}:${two(s)}`;
 }
+
+/** The fixes that were accepted into the route, in order. Used to draw the route on the share card. */
+export function routeOf(fixes: Fix[], kind: TrackKind): Fix[] {
+  let tr = EMPTY_TRACK;
+  const out: Fix[] = [];
+  for (const f of fixes) {
+    const n = addFix(tr, f, kind);
+    if (n.last && n.last !== tr.last) out.push(n.last);
+    tr = n;
+  }
+  return out;
+}

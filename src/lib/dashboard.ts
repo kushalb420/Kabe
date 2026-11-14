@@ -1,12 +1,12 @@
 // Which cards show on the Today screen, and in what order (pure logic, tested in scripts/test-dashboard.ts).
 // The calorie ring at the top is always shown; everything below it can be hidden or moved.
 
-export const CARD_IDS = ['macros', 'meals', 'water', 'activity', 'logFood'] as const;
+export const CARD_IDS = ['macros', 'meals', 'water', 'activity', 'route', 'logFood'] as const;
 export type CardId = (typeof CARD_IDS)[number];
 export type Layout = { order: CardId[]; hidden: CardId[] };
 
 // What people do most comes first: log, scan, then today's numbers, then the extras.
-export const DEFAULT_ORDER: CardId[] = ['logFood', 'macros', 'water', 'activity', 'meals'];
+export const DEFAULT_ORDER: CardId[] = ['logFood', 'macros', 'water', 'activity', 'route', 'meals'];
 export const DEFAULT_LAYOUT: Layout = { order: [...DEFAULT_ORDER], hidden: [] };
 
 const isCard = (x: unknown): x is CardId => typeof x === 'string' && (CARD_IDS as readonly string[]).includes(x);

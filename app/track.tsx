@@ -1,14 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { Text } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Card } from '../src/components/ui';
 import type { Key } from '../src/i18n';
 import { useT } from '../src/i18n/useT';
 import { nowMs } from '../src/lib/clock';
-import { EMPTY_TRACK, Track, TrackKind, addFix, formatClock, formatPaceMin, summarize } from '../src/lib/gps';
+import { EMPTY_TRACK, Fix, Track, TrackKind, addFix, formatClock, formatPaceMin, routeOf, summarize } from '../src/lib/gps';
+import { RouteCard } from '../src/components/RouteCard';
 import { foldSession } from '../src/lib/gpsSession';
 import { clearSession, isBackgroundRunning, loadSession, startBackground, stopBackground } from '../src/lib/gpsTask';
 import { toDateKey } from '../src/lib/nutrition';
@@ -37,6 +38,8 @@ export default function TrackScreen() {
   const [bg, setBg] = useState(false); // true while the background task is recording
   const sub = useRef<Location.LocationSubscription | null>(null);
   const kindRef = useRef(kind);
+  const fixesRef = useRef<Fix[]>([]); // every raw fix of this route, for drawing it
+  const [route, setRoute] = useState<Fix[]>([]);
 
   useEffect(() => {
     kindRef.current = kind;
@@ -51,6 +54,7 @@ export default function TrackScreen() {
       setKind(s.kind);
       setStartMs(s.startedAt);
       setTrack(foldSession(s));
+      setRoute(routeOf(s.fixes, s.kind));
       setTick(nowMs());
       setBg(true);
       setPhase('tracking');
@@ -62,12 +66,17 @@ export default function TrackScreen() {
 
   useEffect(() => {
     if (phase !== 'tracking') return;
+    let n = 0;
     const id = setInterval(async () => {
       setTick(nowMs());
+      n++;
       if (bg) {
         const s = await loadSession();
-        if (s) setTrack(foldSession(s));
-      }
+        if (s) {
+          setTrack(foldSession(s));
+          if (n % 5 === 0) setRoute(routeOf(s.fixes, s.kind));
+        }
+      } else if (n % 5 === 0) setRoute(routeOf(fixesRef.current, kindRef.current));
     }, 1000);
     return () => clearInterval(id);
   }, [phase, bg]);
@@ -88,6 +97,8 @@ export default function TrackScreen() {
         return setError(t('track.noPermission'));
       }
       setTrack(EMPTY_TRACK);
+      setRoute([]);
+      fixesRef.current = [];
       const now = nowMs();
       setStartMs(now);
       setTick(now);
@@ -98,7 +109,12 @@ export default function TrackScreen() {
       }
       sub.current = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.High, distanceInterval: 3, timeInterval: 2000 },
-        (loc) => setTrack((tr) => addFix(tr, { lat: loc.coords.latitude, lon: loc.coords.longitude, t: loc.timestamp, acc: loc.coords.accuracy }, kindRef.current)),
+        (loc) => {
+          const fix = { lat: loc.coords.latitude, lon: loc.coords.longitude, t: loc.timestamp, acc: loc.coords.accuracy };
+          fixesRef.current.push(fix);
+          if (fixesRef.current.length > 20000) fixesRef.current.shift();
+          setTrack((tr) => addFix(tr, fix, kindRef.current));
+        },
       );
     } catch {
       setPhase('ready');
@@ -112,10 +128,13 @@ export default function TrackScreen() {
     if (bg) {
       await stopBackground();
       const s = await loadSession();
-      if (s) setTrack(foldSession(s));
+      if (s) {
+        setTrack(foldSession(s));
+        setRoute(routeOf(s.fixes, s.kind));
+      }
       await clearSession();
       setBg(false);
-    }
+    } else setRoute(routeOf(fixesRef.current, kindRef.current));
     setEndMs(nowMs());
     setPhase('done');
   };
@@ -128,6 +147,21 @@ export default function TrackScreen() {
     tk.addActivity({ date: toDateKey(new Date()), type: kind, minutes: sum.minutes, ...(sum.km > 0 ? { km: sum.km } : {}) });
     goBack();
   };
+
+  const paceText = kind === 'cycle' ? (sum.avgKmh === null ? '–' : t('track.speedVal', { v: sum.avgKmh })) : sum.paceMinPerKm === null ? '–' : t('track.paceVal', { p: formatPaceMin(sum.paceMinPerKm) });
+  const share = () => {
+    void Share.share({ message: t('route.shareMsg', { kind: t(`act.type.${kind}` as Key), km: sum.km.toFixed(2), time: formatClock(elapsed), pace: paceText }) }).catch(() => {});
+  };
+  const poster = (
+    <RouteCard
+      route={route}
+      kindLabel={t(`act.type.${kind}` as Key)}
+      distance={t('track.km', { km: sum.km.toFixed(2) })}
+      pace={paceText}
+      paceLabel={kind === 'cycle' ? t('track.speed') : t('track.pace')}
+      time={formatClock(elapsed)}
+    />
+  );
 
   const stat = (label: string, value: string) => (
     <View style={{ flex: 1, alignItems: 'center' }}>
@@ -161,7 +195,17 @@ export default function TrackScreen() {
           </>
         )}
 
-        {phase !== 'ready' && (
+        {done && (
+          <>
+            {poster}
+            <Text style={styles.sub}>{t('route.posterNote')}</Text>
+            <Button title={t('route.share')} icon="share-social" onPress={share} />
+          </>
+        )}
+
+        {phase === 'tracking' && route.length > 1 && poster}
+
+        {phase === 'tracking' && (
           <Card style={{ gap: 14 }}>
             <Text style={styles.kind}>{t(`act.type.${kind}` as Key)}</Text>
             <Text style={styles.clock}>{formatClock(elapsed)}</Text>

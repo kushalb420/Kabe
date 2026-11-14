@@ -13,6 +13,7 @@ import { fontFor } from '../src/lib/fonts';
 import { useKabe } from '../src/store/kabe';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../src/theme';
 import { Sticker } from '../src/components/Sticker';
+import { TargetsCalculator } from '../src/components/TargetsCalculator';
 
 const FEATURES: { icon: keyof typeof Ionicons.glyphMap; t: Key; s: Key }[] = [
   { icon: 'camera-outline', t: 'welcome.f1t', s: 'welcome.f1s' },
@@ -28,6 +29,8 @@ export default function Welcome() {
   const { t } = useT();
   const { setWelcomed, setUserName } = useKabe();
   const [name, setName] = useState('');
+  const [goalsOpen, setGoalsOpen] = useState(false);
+  const [goalsSaved, setGoalsSaved] = useState(false);
 
   const finish = (next?: '/about' | '/account' | '/account?mode=up') => {
     setUserName(name);
@@ -64,6 +67,14 @@ export default function Welcome() {
           <Text style={styles.nameLabel}>{t('welcome.nameLabel')}</Text>
           <TextInput value={name} onChangeText={setName} placeholder={t('welcome.namePh')} placeholderTextColor={colors.inkSoft} maxLength={30} style={styles.nameInput} />
         </View>
+
+        {goalsOpen ? (
+          <TargetsCalculator onDone={() => { setGoalsOpen(false); setGoalsSaved(true); }} />
+        ) : goalsSaved ? (
+          <Text style={styles.sub}>{t('welcome.goalsDone')}</Text>
+        ) : (
+          <Button title={t('welcome.goalsBtn')} icon="flag-outline" variant="ghost" onPress={() => setGoalsOpen(true)} />
+        )}
 
         <View style={{ gap: 10 }}>
           <Button title={t('welcome.signUp')} icon="person-add-outline" onPress={() => finish('/account?mode=up')} />

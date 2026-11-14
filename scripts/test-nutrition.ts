@@ -35,3 +35,28 @@ for (const f of FOODS) {
   assert.ok(Math.abs(est - f.kcal) <= f.kcal * 0.25 + 15, `${f.id}: macros ${est} vs kcal ${f.kcal}`);
 }
 console.log(`All nutrition tests passed (${FOODS.length} foods checked).`);
+
+// ---- goals from a target weight and a carb level ----
+import { goalFor, weeksToTarget, CARB_SHARE } from '../src/lib/nutrition';
+const base = { sex: 'female', age: 30, heightCm: 165, weightKg: 70, activity: 'light', goal: 'maintain' } as const;
+assert.equal(goalFor({ ...base, targetKg: 62 }), 'lose');
+assert.equal(goalFor({ ...base, targetKg: 75 }), 'gain');
+assert.equal(goalFor({ ...base, targetKg: 70.5 }), 'maintain');
+assert.equal(goalFor({ ...base, goal: 'gain' }), 'gain', 'no target: the chosen goal stays');
+assert.equal(weeksToTarget({ ...base, targetKg: 62 }), 18, '8 kg at about 0.45 kg a week');
+assert.equal(weeksToTarget({ ...base, targetKg: 70.5 }), null);
+assert.equal(weeksToTarget(base), null);
+const lose = suggestGoals({ ...base, targetKg: 62 });
+assert.ok(lose.kcal < suggestGoals(base).kcal, 'a lower target means fewer calories');
+assert.ok(lose.kcal >= 1200, 'never below the safe floor');
+for (const level of ['low', 'mid', 'high'] as const) {
+  const m = suggestGoals({ ...base, carbLevel: level });
+  const share = (m.carbs * 4) / m.kcal;
+  assert.ok(Math.abs(share - CARB_SHARE[level]) < 0.04, level + ' carb share ' + share);
+  assert.ok(Math.abs(m.protein * 4 + m.carbs * 4 + m.fat * 9 - m.kcal) < 25, level + ' macros add up to the calories');
+  assert.ok((m.fat * 9) / m.kcal >= 0.19, 'fat is never below a fifth of calories');
+}
+const lo = suggestGoals({ ...base, carbLevel: 'low' });
+const hi = suggestGoals({ ...base, carbLevel: 'high' });
+assert.ok(lo.carbs < hi.carbs && lo.fat > hi.fat, 'low carb means more fat, high carb means less');
+console.log('Goal planning tests passed.');

@@ -73,18 +73,39 @@ export type Profile = {
   weightKg: number;
   activity: 'sedentary' | 'light' | 'moderate' | 'active';
   goal: 'lose' | 'maintain' | 'gain';
+  /** Optional: the weight the person wants to reach. When set, the goal (lose, maintain or gain) follows from it. */
+  targetKg?: number;
+  /** Optional: how many of the calories come from carbs. Unset keeps the usual balanced split. */
+  carbLevel?: CarbLevel;
 };
+
+export type CarbLevel = 'low' | 'mid' | 'high';
+/** Share of the day's calories that come from carbs at each level. */
+export const CARB_SHARE: Record<CarbLevel, number> = { low: 0.2, mid: 0.4, high: 0.55 };
 
 export const DEFAULT_PROFILE: Profile = { sex: 'female', age: 25, heightCm: 165, weightKg: 60, activity: 'light', goal: 'maintain' };
 
 const ACTIVITY ={ sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725 };
 
 /** Split a calorie target into macros: protein by body weight, fat ~27% of calories, carbs the rest. */
-export const macrosForCalories = (kcal: number, weightKg: number, goal: Profile['goal']): Macros => {
+export const macrosForCalories = (kcal: number, weightKg: number, goal: Profile['goal'], carbLevel?: CarbLevel): Macros => {
   const protein = Math.round(weightKg * (goal === 'lose' ? 1.8 : 1.6));
-  const fat = Math.round((kcal * 0.27) / 9);
-  const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
-  return { kcal, protein, carbs, fat, fiber: 30 };
+  if (!carbLevel) {
+    const fat = Math.round((kcal * 0.27) / 9);
+    const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+    return { kcal, protein, carbs, fat, fiber: 30 };
+  }
+  // a chosen carb level: protein by body weight (never above a third of the calories), carbs by the level, fat takes the rest
+  const p = Math.min(protein, Math.round((kcal * 0.33) / 4));
+  let carbs = Math.round((kcal * CARB_SHARE[carbLevel]) / 4);
+  let fat = Math.round((kcal - p * 4 - carbs * 4) / 9);
+  const minFat = Math.round((kcal * 0.2) / 9); // fat is needed for health: never below a fifth of the calories
+  if (fat < minFat) {
+    fat = minFat;
+    carbs = Math.max(0, Math.round((kcal - p * 4 - fat * 9) / 4));
+  }
+  const fiber = Math.min(38, Math.max(25, Math.round((kcal / 1000) * 14)));
+  return { kcal, protein: p, carbs, fat, fiber };
 };
 
 /** Mifflin-St Jeor estimate of daily energy use (TDEE). A starting point only, not medical advice. */
@@ -97,9 +118,30 @@ export const GOAL_ADJUST = { lose: -400, maintain: 0, gain: 300 } as const;
 /** Kabe never suggests eating below these without professional guidance. */
 export const MIN_KCAL = { female: 1200, male: 1500 } as const;
 
+/** Within this many kg of the target counts as "at the target". */
+export const AT_TARGET_KG = 1;
+/** A steady, safe pace: about half a kilo a week to lose, a quarter to gain. */
+export const PACE_KG_WEEK = { lose: 0.45, gain: 0.25 } as const;
+
+/** The goal that follows from the target weight, or the chosen goal when there is no target. */
+export const goalFor = (p: Profile): Profile['goal'] => {
+  if (!p.targetKg || !(p.targetKg > 0)) return p.goal;
+  const diff = p.targetKg - p.weightKg;
+  return Math.abs(diff) < AT_TARGET_KG ? 'maintain' : diff < 0 ? 'lose' : 'gain';
+};
+
+/** About how many weeks the target takes at a steady pace; null when there is no target or nothing to change. */
+export const weeksToTarget = (p: Profile): number | null => {
+  const g = goalFor(p);
+  if (!p.targetKg || g === 'maintain') return null;
+  return Math.max(1, Math.round(Math.abs(p.targetKg - p.weightKg) / PACE_KG_WEEK[g]));
+};
+
 export const suggestGoals = (p: Profile): Macros => {
-  const kcal = Math.round((formulaTdee(p) + GOAL_ADJUST[p.goal]) / 10) * 10;
-  return macrosForCalories(kcal, p.weightKg, p.goal);
+  const goal = goalFor(p);
+  let kcal = Math.round((formulaTdee(p) + GOAL_ADJUST[goal]) / 10) * 10;
+  if (p.targetKg || p.carbLevel) kcal = Math.max(kcal, MIN_KCAL[p.sex]); // never suggest eating below the safe floor
+  return macrosForCalories(kcal, p.weightKg, goal, p.carbLevel);
 };
 
 export const toDateKey = (d: Date) => {

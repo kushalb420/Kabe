@@ -32,8 +32,8 @@ export type Colors = typeof baseColors;
 export const lightColors: Colors = baseColors;
 
 // ---------------------------------------------------------------- colour themes (page tints, from THEMES in the config)
-export const ACCENT_IDS = THEMES.map((t) => t.id) as unknown as readonly ['forest', 'ocean', 'sunset', 'berry'];
 export type AccentId = (typeof THEMES)[number]['id'];
+export const ACCENT_IDS = THEMES.map((t) => t.id) as readonly AccentId[];
 export const isAccentId = (v: unknown): v is AccentId => typeof v === 'string' && THEMES.some((t) => t.id === v);
 
 /** Themes unlock as the person levels up (the first is there from the start). */

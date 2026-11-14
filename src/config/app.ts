@@ -18,6 +18,12 @@ export const THEMES = [
   { id: 'ocean', level: 3, bg: BRAND.sage, soft: BRAND.yellow },
   { id: 'sunset', level: 5, bg: '#FFB98F', soft: BRAND.yellow },
   { id: 'berry', level: 7, bg: '#F6B8D4', soft: BRAND.yellow },
+  { id: 'mint', level: 1, bg: '#BFF0D4', soft: '#FFF0B0' },
+  { id: 'lavender', level: 1, bg: '#DCD0FF', soft: '#FFF0B0' },
+  { id: 'sky', level: 1, bg: '#BFE3FF', soft: '#FFF0B0' },
+  { id: 'paper', level: 1, bg: '#F3F1EA', soft: '#DDE8D6' },
+  { id: 'sand', level: 2, bg: '#EBDDBE', soft: '#C9E4D4' },
+  { id: 'coral', level: 2, bg: '#FFA9A0', soft: '#FFF0B0' },
 ] as const;
 
 /** The dot pattern behind pages. */

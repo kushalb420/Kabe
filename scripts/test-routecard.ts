@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { Fix, routeOf } from '../src/lib/gps';
-import { projectRoute, thin } from '../src/lib/routeCard';
+import { base64ToBytes, projectRoute, thin } from '../src/lib/routeCard';
 import { lastMovement } from '../src/lib/idleSchedule';
 
 // a walk north-east: about 15 m every 10 s
@@ -35,4 +35,7 @@ const walk = [{ start: 0, end: min(5), count: 40 }, { start: min(5), end: min(10
 assert.equal(lastMovement(walk), min(15), 'the walk ended at minute 15');
 // a long record with plenty of steps counts, the late small one on its own does not
 assert.equal(lastMovement([{ start: 0, end: min(60), count: 500 }, { start: min(100), end: min(101), count: 5 }]), min(60));
+assert.deepEqual([...base64ToBytes('SGVsbG8=')], [72, 101, 108, 108, 111], 'Hello');
+assert.deepEqual([...base64ToBytes('SGk')], [72, 105], 'no padding');
+assert.deepEqual([...base64ToBytes('data:x')].length > 0, true);
 console.log('Route card and movement tests passed.');

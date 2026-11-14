@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import type Svg from 'react-native-svg';
 import { Text } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Card } from '../src/components/ui';
@@ -10,6 +11,8 @@ import { useT } from '../src/i18n/useT';
 import { nowMs } from '../src/lib/clock';
 import { EMPTY_TRACK, Fix, Track, TrackKind, addFix, formatClock, formatPaceMin, routeOf, summarize } from '../src/lib/gps';
 import { RouteCard } from '../src/components/RouteCard';
+import { RouteStory } from '../src/components/RouteStory';
+import { shareStory } from '../src/lib/routeStory';
 import { foldSession } from '../src/lib/gpsSession';
 import { clearSession, isBackgroundRunning, loadSession, startBackground, stopBackground } from '../src/lib/gpsTask';
 import { toDateKey } from '../src/lib/nutrition';
@@ -40,6 +43,9 @@ export default function TrackScreen() {
   const kindRef = useRef(kind);
   const fixesRef = useRef<Fix[]>([]); // every raw fix of this route, for drawing it
   const [route, setRoute] = useState<Fix[]>([]);
+  const storyRef = useRef<Svg>(null);
+  const [sharing, setSharing] = useState(false);
+  const [shareNote, setShareNote] = useState('');
 
   useEffect(() => {
     kindRef.current = kind;
@@ -149,8 +155,15 @@ export default function TrackScreen() {
   };
 
   const paceText = kind === 'cycle' ? (sum.avgKmh === null ? '–' : t('track.speedVal', { v: sum.avgKmh })) : sum.paceMinPerKm === null ? '–' : t('track.paceVal', { p: formatPaceMin(sum.paceMinPerKm) });
-  const share = () => {
-    void Share.share({ message: t('route.shareMsg', { kind: t(`act.type.${kind}` as Key), km: sum.km.toFixed(2), time: formatClock(elapsed), pace: paceText }) }).catch(() => {});
+  const share = async () => {
+    if (!storyRef.current || sharing) return;
+    setSharing(true);
+    setShareNote('');
+    const text = t('route.shareMsg', { kind: t(`act.type.${kind}` as Key), km: sum.km.toFixed(2), time: formatClock(elapsed), pace: paceText });
+    const r = await shareStory(storyRef.current as never, text);
+    setSharing(false);
+    if (r === 'downloaded') setShareNote(t('route.saved'));
+    else if (r === 'failed') setShareNote(t('route.failed'));
   };
   const poster = (
     <RouteCard
@@ -197,9 +210,25 @@ export default function TrackScreen() {
 
         {done && (
           <>
-            {poster}
+            <View style={{ alignItems: 'center' }}>
+              <RouteStory
+                ref={storyRef}
+                width={250}
+                route={route}
+                kind={t(`act.type.${kind}` as Key).toUpperCase()}
+                date={new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                km={sum.km.toFixed(2)}
+                distanceLabel={`${t('track.distance').toUpperCase()} · KM`}
+                paceLabel={kind === 'cycle' ? t('track.speed') : t('track.pace')}
+                pace={paceText}
+                timeLabel={t('route.time')}
+                time={formatClock(elapsed)}
+                footer={t('route.footer')}
+              />
+            </View>
             <Text style={styles.sub}>{t('route.posterNote')}</Text>
-            <Button title={t('route.share')} icon="share-social" onPress={share} />
+            <Button title={t('route.share')} icon="share-social" disabled={sharing} onPress={() => void share()} />
+            {shareNote ? <Text style={styles.sub}>{shareNote}</Text> : null}
           </>
         )}
 

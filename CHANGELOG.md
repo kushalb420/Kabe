@@ -31,6 +31,7 @@
 - **Six new colours** (Mint, Lavender, Sky, Paper, Sand, Coral) in Settings.
 - **Goals from your target weight:** add a target weight and Kabe picks lose, maintain or gain for you and shows about how many weeks it takes at a steady pace; choose low, medium or high carb and protein, carbs and fat follow. The activity levels are explained in plain words. The same setup is offered on the first-run screen and in Settings.
 - **Carb levels fixed:** low carb now also raises protein (about 30% of calories, as low-carb plans do), while medium and high carb keep the same protein and differ in carbs and fat. **Friends:** Save and share my week no longer says "Type a name" when the box was pre-filled with your nickname.
+- **Share your route as a picture:** the route card is now a 9:16 story picture (big distance number, your route outlined in the theme colours, pace and time chips) that shares as a 1080 x 1920 PNG. On the web it opens the share sheet or downloads the picture. Sharing the picture from the Android app needs the next build (it adds expo-sharing); until then Android shares the text.
 - New bento-box app icon and splash. The Account screen's Continue button no longer stretches.
 
 ## 7.0.0 — Kitchen from your pantry, notifications, workouts, account (2026-11-10)

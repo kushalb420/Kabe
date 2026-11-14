@@ -3,8 +3,8 @@ import { part } from '../define';
 /** GPS route tracking. */
 export const track = part({
   en: {
-    'track.link': 'Track a route with GPS',
-    'track.title': 'Track a route',
+    'track.link': 'Trace my route with GPS',
+    'track.title': 'Trace your route',
     'track.intro': "Track a walk, run or ride with your phone's GPS. Keep Kabe open and the screen on while you move.",
     'track.start': 'Start',
     'track.stop': 'Stop',
@@ -23,8 +23,8 @@ export const track = part({
     'track.notifBody': 'Tap Kabe and press Stop when you finish.',
   },
   hi: {
-    'track.link': 'GPS से रास्ता ट्रैक करें',
-    'track.title': 'रास्ता ट्रैक करें',
+    'track.link': 'GPS से मेरा रास्ता बनाएँ',
+    'track.title': 'अपना रास्ता बनाएँ',
     'track.intro': 'अपने फ़ोन के GPS से सैर, दौड़ या साइकिल सवारी ट्रैक करें। चलते समय Kabe खुला और स्क्रीन चालू रखें।',
     'track.start': 'शुरू करें',
     'track.stop': 'रोकें',
@@ -43,8 +43,8 @@ export const track = part({
     'track.notifBody': 'पूरा होने पर Kabe खोलकर रोकें दबाएँ।',
   },
   te: {
-    'track.link': 'GPSతో మార్గాన్ని ట్రాక్ చేయండి',
-    'track.title': 'మార్గాన్ని ట్రాక్ చేయండి',
+    'track.link': 'GPSతో నా మార్గాన్ని గీయండి',
+    'track.title': 'మీ మార్గాన్ని గీయండి',
     'track.intro': 'మీ ఫోన్ GPSతో నడక, పరుగు లేదా సైకిల్ ప్రయాణాన్ని ట్రాక్ చేయండి. కదులుతున్నప్పుడు Kabe తెరిచి, స్క్రీన్ ఆన్‌లో ఉంచండి.',
     'track.start': 'ప్రారంభించండి',
     'track.stop': 'ఆపండి',
@@ -63,8 +63,8 @@ export const track = part({
     'track.notifBody': 'పూర్తయ్యాక Kabe తెరిచి ఆపండి నొక్కండి.',
   },
   ta: {
-    'track.link': 'GPS மூலம் பாதையைக் கண்காணிக்கவும்',
-    'track.title': 'பாதையைக் கண்காணி',
+    'track.link': 'GPS மூலம் என் பாதையை வரை',
+    'track.title': 'உங்கள் பாதையை வரையுங்கள்',
     'track.intro': 'உங்கள் போனின் GPS மூலம் நடை, ஓட்டம் அல்லது சைக்கிள் பயணத்தைக் கண்காணிக்கவும். நகரும்போது Kabe-ஐத் திறந்தும் திரையை இயக்கத்திலும் வைத்திருங்கள்.',
     'track.start': 'தொடங்கு',
     'track.stop': 'நிறுத்து',

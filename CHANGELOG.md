@@ -22,6 +22,14 @@
 - **Free sugar means added sugar only** everywhere: meal and food estimates, label reading (total sugars are never used), the coach and the sugar limit hint.
 - Fixed the refresh button on a meal item showing oversized loader dots, and the friends sticker on Me is smaller and centred.
 - **Web version:** Kabe now also runs as a website at https://kushalb420.github.io so iPhone users can add it to their home screen (it has its own icon, name and full-screen mode). The privacy policy is public at /privacy.html and was brought up to date (no barcode scanning, Google sign-in, supplement labels, buy ideas). New `scripts/build-web.js` builds the site without the AI key.
+- **Trace my route:** the GPS tracker has a new name and a card on Today. When you stop, you get a route poster (the shape of your walk, run or ride with distance, pace and time, in your theme colours) that you can screenshot or share as text. The card can be hidden or moved in Customise Today.
+- **Idle reminder:** it now starts counting from the last time you were really walking, read from Health Connect (even while Kabe was closed), and while Kabe is open the live step counter keeps pushing it later. Closed-app walking can only be seen once Kabe next opens or goes to the background.
+- **Photo logging:** an optional note box before scanning (what is in the meal, which bowl or plate), a tip to put a spoon or fork next to the food, and your note is given to the AI as a size reference.
+- **Learns your portions:** when you save a meal with a named bowl, plate, cup or glass, Kabe remembers your usual amount for that food in that utensil (no AI) and starts from it after two meals.
+- **Edit amounts:** the grams box can be cleared or set to 0 (a 0 item is left out when you save), and the edit screen accepts 0. **Change food** on any scanned item replaces it with the food you name and keeps the same grams.
+- **Label scan:** Save to my foods keeps you on the page so you can still Save and add to diary (it never creates a second copy).
+- **Six new colours** (Mint, Lavender, Sky, Paper, Sand, Coral) in Settings.
+- **Goals from your target weight:** add a target weight and Kabe picks lose, maintain or gain for you and shows about how many weeks it takes at a steady pace; choose low, medium or high carb and protein, carbs and fat follow. The activity levels are explained in plain words. The same setup is offered on the first-run screen and in Settings.
 - New bento-box app icon and splash. The Account screen's Continue button no longer stretches.
 
 ## 7.0.0 — Kitchen from your pantry, notifications, workouts, account (2026-11-10)

@@ -10,7 +10,9 @@ import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
 import { Command, parseCommand } from '../lib/commands';
 import { MealItem, foodFromItem, isMeasure, itemGrams, itemNutrients, mealTotals, setCount, setGrams, stepFor } from '../lib/gemFood';
-import { MealResult, analyzeMealAudio, analyzeMealPhoto, analyzeMealText, refineItem } from '../lib/mealAi';
+import { MealResult, analyzeMealAudio, analyzeMealPhoto, analyzeMealText, refineItem, swapItem } from '../lib/mealAi';
+import { PortionMemory, applyPortions, learnPortions } from '../lib/portionMemory';
+import { loadPortions, savePortions } from '../lib/portionStore';
 import { toDateKey } from '../lib/nutrition';
 import { MAX_AUDIO_BYTES, bytesToBase64, mealFromText } from '../lib/voice';
 import { MEALS, MealType, useKabe } from '../store/kabe';
@@ -51,6 +53,14 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
   const [adding, setAdding] = useState(false);
   const [detail, setDetail] = useState<Record<string, string>>({}); // extra detail typed for an item, by item id
   const [refining, setRefining] = useState<string | null>(null);
+  const [photoNote, setPhotoNote] = useState(''); // what the person says about the photo before it is scanned
+  const [gramText, setGramText] = useState<Record<string, string>>({}); // what is being typed in an item's grams box, so it can be cleared or zeroed
+  const [swapping, setSwapping] = useState<Record<string, string | undefined>>({}); // 'Change food' box per item (undefined = closed)
+  const [swapBusy, setSwapBusy] = useState<string | null>(null);
+  const portions = useRef<PortionMemory>({}); // Kabe's own memory of the person's usual amounts (no AI)
+  useEffect(() => {
+    void loadPortions().then((m) => { portions.current = m; });
+  }, []);
   const [items, setItems] = useState<MealItem[]>([]);
   const [uri, setUri] = useState<string | null>(null);
   useDiscardPhoto(uri); // the cached copy of the picture is removed when it is replaced or the screen closes
@@ -92,9 +102,11 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
 
   const friendly = (e: unknown) => (e instanceof Error && e.message ? e.message : t('log.empty'));
 
-  const finish = (r: MealResult, src: 'photo' | 'voice') => {
+  const finish = (r: MealResult, src: 'photo' | 'voice', hint = '') => {
     if (r.meal) setMeal(r.meal);
-    setItems(r.items);
+    setItems(applyPortions(portions.current, r.items, hint));
+    setGramText({});
+    setSwapping({});
     setSource(src);
     setStage('review');
   };
@@ -111,7 +123,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     }
     setStage('calculating');
     try {
-      finish(await analyzeMealText(geminiKey, text), 'voice');
+      finish(await analyzeMealText(geminiKey, text), 'voice', text);
     } catch (e) {
       setError(friendly(e));
       setStage('idle');
@@ -124,7 +136,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     setUri(previewUri);
     setStage('calculating');
     try {
-      finish(await analyzeMealPhoto(geminiKey, base64, mime), 'photo');
+      finish(await analyzeMealPhoto(geminiKey, base64, mime, undefined, photoNote), 'photo', photoNote);
     } catch (e) {
       setError(friendly(e));
       setStage('idle');
@@ -154,7 +166,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     setUri(asset.uri);
     setStage('calculating');
     try {
-      finish(await analyzeMealPhoto(geminiKey, asset.base64, asset.mimeType ?? 'image/jpeg'), 'photo');
+      finish(await analyzeMealPhoto(geminiKey, asset.base64, asset.mimeType ?? 'image/jpeg', undefined, photoNote), 'photo', photoNote);
     } catch (e) {
       setError(friendly(e));
       setStage('idle');
@@ -204,7 +216,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     setAdding(true);
     try {
       const r = await analyzeMealText(geminiKey, text);
-      setItems((l) => [...l, ...r.items]);
+      setItems((l) => [...l, ...applyPortions(portions.current, r.items, text)]);
       setMore('');
     } catch (e) {
       setError(friendly(e));
@@ -232,10 +244,33 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     }
   };
 
+  /** The scan got a food wrong: replace it with the food the person names, keeping the same grams. */
+  const swap = async (it: MealItem) => {
+    const name = (swapping[it.id] ?? '').trim();
+    if (!name) return;
+    setSwapBusy(it.id);
+    setError('');
+    try {
+      const n = await swapItem(geminiKey, it, name);
+      if (n) {
+        setItems((l) => l.map((x) => (x.id === it.id ? n : x)));
+        setSwapping((m) => ({ ...m, [it.id]: undefined }));
+        setGramText((m) => ({ ...m, [it.id]: String(itemGrams(n)) }));
+      } else setError(t('log.detailFail'));
+    } catch (e) {
+      setError(friendly(e));
+    } finally {
+      setSwapBusy(null);
+    }
+  };
+
   const total = mealTotals(items);
 
   const save = () => {
-    for (const it of items) {
+    const kept = items.filter((it) => itemGrams(it) > 0); // an item set to 0 is simply left out
+    const hint = source === 'photo' ? photoNote : typed;
+    void savePortions((portions.current = learnPortions(portions.current, kept.map((it) => ({ item: it, grams: itemGrams(it) })), hint, Date.now())));
+    for (const it of kept) {
       const n = itemNutrients(it);
       addEntry(foodFromItem(it), itemGrams(it), meal, date, { [source]: true, macros: { kcal: n.kcal, protein: n.protein, carbs: n.carbs, fat: n.fat, fiber: n.fiber, sugar: n.sugar, satFat: n.satFat } });
     }
@@ -255,6 +290,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     setStage('idle');
     setItems([]);
     setTyped('');
+    setPhotoNote('');
     setUri(null);
     setError('');
     setCmd(null);
@@ -298,6 +334,8 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
             {mode === 'photo' ? (
               <Card style={{ gap: 10 }}>
                 <Text style={styles.body}>{t('log.photoIntro')}</Text>
+                <Text style={styles.sub}>{t('log.sizeTip')}</Text>
+                <TextInput value={photoNote} onChangeText={setPhotoNote} placeholder={t('log.photoNotePh')} placeholderTextColor={colors.inkSoft} maxLength={300} multiline style={[styles.input, { minHeight: 64, textAlignVertical: 'top' }]} />
                 <Button title={t('log.photo')} icon="camera" disabled={!ready} onPress={() => fromPhoto('camera')} />
                 <Button title={t('log.gallery')} icon="images" variant="ghost" disabled={!ready} onPress={() => fromPhoto('library')} />
                 {!geminiKey ? <Text style={styles.sub}>{t('rest.needKey')}</Text> : null}
@@ -307,6 +345,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
             <Card style={{ gap: 10 }}>
               <Text style={styles.body}>{t('log.intro')}</Text>
               <TextInput value={typed} onChangeText={setTyped} multiline placeholder={t('log.ph')} placeholderTextColor={colors.inkSoft} style={[styles.input, { minHeight: 110, textAlignVertical: 'top' }]} />
+              <Text style={styles.sub}>{t('log.sizeTipText')}</Text>
               <Button title={t('log.go')} icon="sparkles" disabled={!typed.trim() || !ready} onPress={fromText} />
               {error ? <Text style={styles.err}>{error}</Text> : null}
             </Card>
@@ -383,11 +422,13 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
                         </View>
                         <View style={styles.gramsBox}>
                           <TextInput
-                            value={String(itemGrams(it))}
+                            value={gramText[it.id] ?? String(itemGrams(it))}
                             onChangeText={(v) => {
-                              const g = parseFloat(v);
-                              if (g > 0) setItems((l) => l.map((x) => (x.id === it.id ? setGrams(x, g) : x)));
+                              const clean = v.replace(/[^0-9]/g, '').slice(0, 4);
+                              setGramText((m) => ({ ...m, [it.id]: clean })); // the box can be emptied or set to 0 while typing
+                              setItems((l) => l.map((x) => (x.id === it.id ? setGrams(x, clean === '' ? 0 : parseInt(clean, 10)) : x)));
                             }}
+                            onBlur={() => setGramText((m) => { const { [it.id]: _gone, ...rest } = m; return rest; })}
                             keyboardType="number-pad"
                             selectTextOnFocus
                             style={styles.grams}
@@ -411,9 +452,30 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
                           {refining === it.id ? <ActivityIndicator size="small" color={colors.ink} /> : <Ionicons name="refresh" size={20} color={colors.ink} />}
                         </Pressable>
                       </View>
-                      <Pressable onPress={() => setItems((l) => l.filter((x) => x.id !== it.id))}>
-                        <Text style={[styles.link, { color: colors.danger }]}>{t('common.remove')}</Text>
-                      </Pressable>
+                      {swapping[it.id] !== undefined && (
+                        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                          <TextInput
+                            value={swapping[it.id] ?? ''}
+                            onChangeText={(v) => setSwapping((m) => ({ ...m, [it.id]: v }))}
+                            placeholder={t('log.swapPh')}
+                            placeholderTextColor={colors.inkSoft}
+                            autoFocus
+                            style={[styles.input, { flex: 1, minWidth: 0, paddingVertical: 8, fontSize: 13 }]}
+                            onSubmitEditing={() => void swap(it)}
+                          />
+                          <Pressable onPress={() => void swap(it)} disabled={swapBusy !== null || !(swapping[it.id] ?? '').trim()} style={[styles.step, { width: 44, opacity: (swapping[it.id] ?? '').trim() ? 1 : 0.4 }]} accessibilityLabel={t('log.swapGo')}>
+                            {swapBusy === it.id ? <ActivityIndicator size="small" color={colors.ink} /> : <Ionicons name="checkmark" size={20} color={colors.ink} />}
+                          </Pressable>
+                        </View>
+                      )}
+                      <View style={{ flexDirection: 'row', gap: 18 }}>
+                        <Pressable onPress={() => setSwapping((m) => ({ ...m, [it.id]: m[it.id] === undefined ? '' : undefined }))}>
+                          <Text style={styles.link}>{t('log.swap')}</Text>
+                        </Pressable>
+                        <Pressable onPress={() => setItems((l) => l.filter((x) => x.id !== it.id))}>
+                          <Text style={[styles.link, { color: colors.danger }]}>{t('common.remove')}</Text>
+                        </Pressable>
+                      </View>
                     </Card>
                   );
                 })}

@@ -51,7 +51,7 @@ function EditForm({ entry }: { entry: Entry }) {
   const onGrams = (text: string) => {
     setGrams(text);
     const n = parseFloat(text.replace(',', '.'));
-    if (!edited && n > 0) {
+    if (!edited && n >= 0) {
       const s = scaleToGrams(entry, n);
       setVals({ kcal: r0(s.kcal), protein: r1(s.protein), carbs: r1(s.carbs), fat: r1(s.fat) });
     }
@@ -89,7 +89,7 @@ function EditForm({ entry }: { entry: Entry }) {
       <Button
         title={t('edit.save')}
         icon="checkmark"
-        disabled={!(g > 0)}
+        disabled={!(g >= 0)}
         onPress={() => {
           updateEntry(entry.id, { grams: g, ...vals });
           goBack();

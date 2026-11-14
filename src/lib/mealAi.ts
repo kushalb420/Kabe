@@ -1,7 +1,7 @@
 // The network side of meal understanding: one Gemini call per typed list, photo, recording or food search.
 // All parsing and checking is in gemFood.ts (pure, tested); `ask` is injectable so tests never touch the network.
 import type { Food } from '../data/foods';
-import { FOOD_SCHEMA, MEAL_SCHEMA, MealItem, buildFoodPrompt, buildMealPhotoPrompt, buildMealTextPrompt, parseFood, parseMeal, withStatedAmounts } from './gemFood';
+import { FOOD_SCHEMA, MEAL_SCHEMA, MealItem, buildFoodPrompt, buildMealPhotoPrompt, buildMealTextPrompt, itemGrams, parseFood, parseMeal, setGrams, withStatedAmounts } from './gemFood';
 import { askJson } from './vision';
 
 export type MealResult = { items: MealItem[]; meal: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null };
@@ -14,8 +14,8 @@ export async function analyzeMealText(key: string, text: string, ask: Ask = askJ
   return { ...r, items: withStatedAmounts(r.items, text) }; // an amount the person typed is never asked about again
 }
 
-export async function analyzeMealPhoto(key: string, base64: string, mime: string, ask: Ask = askJson): Promise<MealResult> {
-  return parseMeal(await ask(key, [{ type: 'text', text: buildMealPhotoPrompt() }, { type: 'image', data: base64, mime_type: mime }], MEAL_SCHEMA));
+export async function analyzeMealPhoto(key: string, base64: string, mime: string, ask: Ask = askJson, note = ''): Promise<MealResult> {
+  return parseMeal(await ask(key, [{ type: 'text', text: buildMealPhotoPrompt(note) }, { type: 'image', data: base64, mime_type: mime }], MEAL_SCHEMA));
 }
 
 export async function analyzeMealAudio(key: string, base64: string, mime: string, ask: Ask = askJson): Promise<MealResult> {
@@ -44,4 +44,18 @@ export async function refineItem(key: string, item: MealItem, detail: string, as
   const note = [item.note, d].filter(Boolean).join('; ').slice(0, 160);
   // keep the person's amount: scale to the same grams, with the new nutrition
   return { ...n, id: item.id, name: item.name, unit: item.unit, unitGrams: item.unitGrams, count: item.count, stated: item.stated, note };
+}
+
+/**
+ * Replace an item with a different food (the scan got it wrong). The amount in grams stays what it was, so only the food and
+ * its nutrition change. Returns null if nothing usable came back.
+ */
+export async function swapItem(key: string, item: MealItem, newName: string, ask: Ask = askJson): Promise<MealItem | null> {
+  const name = newName.trim().slice(0, 80);
+  if (!name) return null;
+  const grams = itemGrams(item);
+  const r = parseMeal(await ask(key, buildMealTextPrompt(`${Math.max(grams, 1)} g ${name}`), MEAL_SCHEMA));
+  const n = r.items[0];
+  if (!n) return null;
+  return { ...setGrams(n, grams), id: item.id, note: '', stated: item.stated };
 }

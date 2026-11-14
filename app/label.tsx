@@ -53,6 +53,7 @@ export default function LabelScan() {
   const [boxes, setBoxes] = useState<Boxes>(valuesToBoxes(EMPTY_VALUES));
   const [eatText, setEatText] = useState('');
   const [calculated, setCalculated] = useState(false);
+  const [savedFood, setSavedFood] = useState<{ food: ReturnType<typeof k.addCustomFood>; sig: string } | null>(null); // set after 'Save to my foods': the page stays so it can still be logged
 
   const withDetail = (key: Key, e: unknown) => (e instanceof Error && e.message ? `${t(key)} (${e.message})` : t(key));
 
@@ -75,6 +76,7 @@ export default function LabelScan() {
     setBoxes(valuesToBoxes(read?.values ?? EMPTY_VALUES));
     setEatText('');
     setCalculated(false);
+    setSavedFood(null);
     setStage('review');
   };
 
@@ -130,15 +132,16 @@ export default function LabelScan() {
 
   const save = (andLog: boolean) => {
     if (!food) return Alert.alert(t('label.needNameKcal'));
-    const created = k.addCustomFood(food);
-    k.toggleFavorite(created); // so it shows up under Saved foods straight away
+    // saving twice must not create a second copy: after the first save the same food is reused
+    const same = savedFood && savedFood.sig === JSON.stringify(food) ? savedFood.food : null;
+    const created = same ?? k.addCustomFood(food);
+    if (!same) k.toggleFavorite(created); // so it shows up under Saved foods straight away
     if (andLog) {
       k.addEntry(created, eatG, meal, date);
       goHome();
     } else {
       Alert.alert(t('label.saved'), t('label.savedBody', { name: created.name }));
-      setStage('idle');
-      setUri(null);
+      setSavedFood({ food: created, sig: JSON.stringify(food) });
     }
   };
 

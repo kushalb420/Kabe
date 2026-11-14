@@ -51,9 +51,10 @@ export default function Friends() {
   const saveName = () =>
     run(async () => {
       if (!client) return;
-      const code = await saveProfile(client, name, totals);
-      setMe({ name: name.trim(), code });
-      setUserName(name); // the Today greeting uses the same nickname
+      const shown = (name || me?.name || userName || '').trim(); // the same name the box shows, even if it was filled in for you
+      const code = await saveProfile(client, shown, totals);
+      setMe({ name: shown, code });
+      setUserName(shown); // the Today greeting uses the same nickname
       refresh();
     });
 

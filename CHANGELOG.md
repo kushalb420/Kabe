@@ -30,6 +30,7 @@
 - **Label scan:** Save to my foods keeps you on the page so you can still Save and add to diary (it never creates a second copy).
 - **Six new colours** (Mint, Lavender, Sky, Paper, Sand, Coral) in Settings.
 - **Goals from your target weight:** add a target weight and Kabe picks lose, maintain or gain for you and shows about how many weeks it takes at a steady pace; choose low, medium or high carb and protein, carbs and fat follow. The activity levels are explained in plain words. The same setup is offered on the first-run screen and in Settings.
+- **Carb levels fixed:** low carb now also raises protein (about 30% of calories, as low-carb plans do), while medium and high carb keep the same protein and differ in carbs and fat. **Friends:** Save and share my week no longer says "Type a name" when the box was pre-filled with your nickname.
 - New bento-box app icon and splash. The Account screen's Continue button no longer stretches.
 
 ## 7.0.0 — Kitchen from your pantry, notifications, workouts, account (2026-11-10)

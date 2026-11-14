@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { WEB_STEPS_ACTIVE_EVENT, WEB_STEPS_EVENT, WEB_STEPS_KEY, requestMotion } from '../src/lib/webSteps';
 import { Alert } from '../src/lib/alert';
 import { Text, TextInput } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -94,8 +95,13 @@ export default function ActivityScreen() {
             <Switch value={tk.autoSteps} onValueChange={tk.setAutoSteps} trackColor={{ true: colors.primary }} />
             <Text style={[styles.sub, { flex: 1, fontSize: 14, color: colors.ink }]}>{t('steps.auto')}</Text>
           </View>
-          <Text style={styles.sub}>{t('act.stepNote')}</Text>
-          <Text style={styles.sub}>{t('steps.denied')}</Text>
+          {Platform.OS === 'web' ? <WebStepsControl /> : null}
+          {Platform.OS !== 'web' && (
+            <>
+              <Text style={styles.sub}>{t('act.stepNote')}</Text>
+              <Text style={styles.sub}>{t('steps.denied')}</Text>
+            </>
+          )}
         </Card>
 
         <Card style={{ gap: 8 }}>
@@ -220,3 +226,33 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { fontSize: 12, fontWeight: '600', color: colors.ink },
 });
+
+/** Browser only: asks for motion access (iPhone Safari shows its own question) and says whether steps are being counted. */
+function WebStepsControl() {
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useT();
+  const [state, setState] = useState<'idle' | 'on' | 'denied' | 'unsupported'>('idle');
+  useEffect(() => {
+    const w = globalThis as any;
+    const on = () => setState('on');
+    w.addEventListener(WEB_STEPS_ACTIVE_EVENT, on);
+    return () => w.removeEventListener(WEB_STEPS_ACTIVE_EVENT, on);
+  }, []);
+  const enable = async () => {
+    const r = await requestMotion(); // must run straight from the tap
+    if (r !== 'granted') return setState(r);
+    try {
+      (globalThis as any).localStorage?.setItem(WEB_STEPS_KEY, '1');
+    } catch {
+      /* storage blocked: counting still starts for this visit */
+    }
+    (globalThis as any).dispatchEvent(new Event(WEB_STEPS_EVENT));
+    setTimeout(() => setState((s) => (s === 'idle' ? 'unsupported' : s)), 4000); // no readings arrived: this browser has no motion sensor
+  };
+  return (
+    <View style={{ alignSelf: 'stretch', gap: 8 }}>
+      {state !== 'on' && <Button title={t('steps.webBtn')} icon="walk" variant="ghost" onPress={() => void enable()} />}
+      <Text style={styles.sub}>{t(state === 'on' ? 'steps.webOn' : state === 'denied' ? 'steps.webDenied' : state === 'unsupported' ? 'steps.webNo' : 'steps.webHint')}</Text>
+    </View>
+  );
+}

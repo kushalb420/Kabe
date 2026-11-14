@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type Svg from 'react-native-svg';
 import { Text } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,7 +20,7 @@ import { useTracker } from '../src/store/tracker';
 import { radius, useColors, useThemedStyles, type Colors } from '../src/theme';
 import { Dots } from '../src/components/Dots';
 import { goBack } from '../src/lib/nav';
-import { ensurePermission, explainPermission } from '../src/lib/permissions';
+import { ensurePermission, explainPermission, webLocationRequest } from '../src/lib/permissions';
 
 type Phase = 'ready' | 'tracking' | 'done';
 const KINDS: TrackKind[] = ['walk', 'run', 'cycle'];
@@ -97,7 +97,10 @@ export default function TrackScreen() {
   const start = async () => {
     setError('');
     try {
-      const perm = await ensurePermission(Location.getForegroundPermissionsAsync, Location.requestForegroundPermissionsAsync);
+      const perm =
+        Platform.OS === 'web'
+          ? await ensurePermission(async () => ({ granted: false, canAskAgain: true }), webLocationRequest) // the browser asks
+          : await ensurePermission(Location.getForegroundPermissionsAsync, Location.requestForegroundPermissionsAsync);
       if (perm !== 'granted') {
         explainPermission(perm, t('perm.location'), t);
         return setError(t('track.noPermission'));

@@ -39,3 +39,16 @@ export function explainPermission(result: PermResult, what: string, t: Say): voi
     ...(native ? [{ text: t('perm.open'), onPress: () => void Linking.openSettings().catch(() => {}) }] : []),
   ]);
 }
+
+/** The browser's own location question (iPhone Safari cannot be asked any other way). Shows the browser's dialog the first time. */
+export function webLocationRequest(): Promise<PermState> {
+  return new Promise((resolve) => {
+    const geo = (globalThis as any).navigator?.geolocation;
+    if (!geo) return resolve({ granted: false, canAskAgain: false });
+    geo.getCurrentPosition(
+      () => resolve({ granted: true }),
+      (e: { code: number }) => resolve({ granted: false, canAskAgain: e.code !== 1 }), // code 1: the person said no
+      { timeout: 20000, maximumAge: 60000 },
+    );
+  });
+}

@@ -1,5 +1,6 @@
 import { Pedometer } from 'expo-sensors';
 import { useEffect, useRef } from 'react';
+import { WEB_STEPS_ACTIVE_EVENT, WEB_STEPS_EVENT, WEB_STEPS_KEY, startMotion } from '../lib/webSteps';
 import { Platform } from 'react-native';
 import { loadHealthConnect, readTodayStepsWith } from '../lib/healthConnect';
 import { toDateKey } from '../lib/nutrition';
@@ -18,6 +19,39 @@ export function StepCounter() {
     stepsRef.current = steps;
   }, [steps]);
   const last = useRef<{ value: number; at: number } | null>(null);
+
+  // In a browser (the iPhone version) there is no step counter: steps are estimated from the motion sensor while Kabe is open,
+  // once the person has allowed it from the Activity screen.
+  useEffect(() => {
+    if (!autoSteps || Platform.OS !== 'web') return;
+    const w = globalThis as any;
+    let stop: (() => void) | null = null;
+    let pending = 0;
+    const flush = setInterval(() => {
+      if (!pending) return;
+      const day = toDateKey(new Date());
+      setSteps(day, (stepsRef.current[day] ?? 0) + pending);
+      pending = 0;
+    }, 5000);
+    const begin = () => {
+      stop?.();
+      stop = null;
+      let on = false;
+      try {
+        on = w.localStorage?.getItem(WEB_STEPS_KEY) === '1';
+      } catch {
+        /* storage blocked */
+      }
+      if (on) stop = startMotion((n) => { pending += n; }, () => w.dispatchEvent(new Event(WEB_STEPS_ACTIVE_EVENT)));
+    };
+    begin();
+    w.addEventListener(WEB_STEPS_EVENT, begin);
+    return () => {
+      w.removeEventListener(WEB_STEPS_EVENT, begin);
+      clearInterval(flush);
+      stop?.();
+    };
+  }, [autoSteps, setSteps]);
 
   useEffect(() => {
     if (!autoSteps || Platform.OS === 'web') return;

@@ -7,7 +7,7 @@ const food = (id: string, kcal: number, protein: number): Food => ({ id, name: i
 
 // ---- the AI is told to read names only, never to produce nutrition ----
 const prompt = buildMenuPrompt();
-assert.match(prompt, /Only calories per serving are wanted/);
+assert.match(prompt, /Only calories and protein per serving are wanted/);
 assert.ok(!/"calories"|kcal:/i.test(JSON.stringify(buildMenuRequest('m', 'AAAA', 'image/jpeg').response_format)), 'schema has no calorie field');
 const req = buildMenuRequest('gemini-x', 'AAAA', 'image/png');
 assert.equal(req.model, 'gemini-x');
@@ -178,4 +178,18 @@ import { rankByCalories, cleanKcal } from '../src/lib/menu';
   assert.equal(cleanKcal(451.4), 451);
   assert.equal(cleanKcal('x'), null);
   console.log('Instant ranking tests passed.');
+}
+
+// ---- best picks and what to go easy on ----
+{
+  const { bestPicks, dishToItem } = require('../src/lib/menu') as typeof import('../src/lib/menu');
+  const dish = (name: string, kcal: number, protein: number | null) => dishToItem({ name, searchTerm: name, grams: 250, veg: 'unknown', price: null, confidence: 'medium', kcal, protein }, name);
+  const items = [dish('Paneer tikka', 380, 26), dish('Butter naan', 300, 8), dish('Dal fry', 220, 11), dish('Mutton biryani', 950, 40), dish('Cheese burst pizza', 1100, 38), dish('Mystery dish', 0, null)];
+  const { picks, skip } = bestPicks(items, 600);
+  assert.equal(picks[0].item.name, 'Paneer tikka', 'the protein-rich dish of the right size comes first');
+  assert.equal(picks[0].why, 'highProtein');
+  assert.ok(picks.length <= 3 && picks.every((p) => p.kcal <= 600 * 1.3), 'heavy dishes are never picked');
+  assert.deepEqual(skip.map((s) => s.item.name), ['Cheese burst pizza', 'Mutton biryani'], 'heaviest first');
+  assert.ok(!picks.some((p) => p.item.name === 'Mystery dish') && !skip.some((s) => s.item.name === 'Mystery dish'), 'no calorie number: never picked or warned about');
+  assert.equal(bestPicks([], 600).picks.length, 0);
 }

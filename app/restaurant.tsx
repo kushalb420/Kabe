@@ -12,7 +12,7 @@ import { Button, Card } from '../src/components/ui';
 import type { Food } from '../src/data/foods';
 import type { Key } from '../src/i18n';
 import { useT } from '../src/i18n/useT';
-import { DietFilter, MenuDish, MenuItem, allowedByDiet, dishToItem, dishesFromText, mealBudget, orderName, orderTotals, rankByCalories, toSavedItems } from '../src/lib/menu';
+import { DietFilter, MenuDish, MenuItem, allowedByDiet, bestPicks, dishToItem, dishesFromText, mealBudget, orderName, orderTotals, rankByCalories, toSavedItems } from '../src/lib/menu';
 import { r0, r1, sumMacros, toDateKey } from '../src/lib/nutrition';
 import { MacroKey, SearchFn, effectiveMacros, resolveOnline, setItemMacro, withGrams } from '../src/lib/photo';
 import { estimateDishKcal, readMenu } from '../src/lib/vision';
@@ -153,6 +153,7 @@ export default function Restaurant() {
     return items.filter((i) => allowedByDiet(i.veg, diet)).map((item) => ({ item, kcal: effectiveMacros(item)?.kcal ?? item.quickKcal ?? null, tag: rankByCalories([item], budget, 'any')[0].tag }));
   }, [items, budget, diet, byFit]);
 
+  const advice = useMemo(() => bestPicks(items, budget, diet), [items, budget, diet]);
   const tot = orderTotals(items);
   const pending = items.some((i) => i.picked && i.lookup === 'pending');
   const showVegWarn = items.some((i) => i.veg === 'unknown') && diet !== 'any';
@@ -288,6 +289,36 @@ export default function Restaurant() {
             )}
 
             {ranking && <Loading label={t('rest.ranking')} />}
+            {items.length >= 3 && advice.picks.length > 0 && (
+              <Card style={{ gap: 10 }}>
+                <Text style={styles.h2}>{t('rest.picksTitle')}</Text>
+                <Text style={styles.sub}>{t('rest.picksSub', { meal: budget })}</Text>
+                {advice.picks.map((p) => (
+                  <View key={p.item.id} style={styles.pickRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.name}>{p.item.name}</Text>
+                      <Text style={styles.sub}>{p.protein !== null ? t('rest.line', { kcal: r0(p.kcal), p: r0(p.protein) }) : t('rest.lineKcal', { kcal: r0(p.kcal) })}</Text>
+                      <Text style={[styles.sub, { color: tagColors(colors)[p.why === 'fits' ? 'fits' : p.why], fontWeight: '700' }]}>{t(`rest.why.${p.why}` as Key)}</Text>
+                    </View>
+                    <Pressable onPress={() => togglePick(p.item)} style={[styles.pickBtn, p.item.picked && { backgroundColor: colors.primary }]}>
+                      <Text style={[styles.pickBtnText, p.item.picked && { color: colors.onPrimary }]}>{p.item.picked ? t('rest.picked') : t('rest.pick')}</Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </Card>
+            )}
+            {items.length >= 3 && advice.skip.length > 0 && (
+              <Card style={{ gap: 8 }}>
+                <Text style={styles.h2}>{t('rest.skipTitle')}</Text>
+                {advice.skip.map((x) => (
+                  <View key={x.item.id}>
+                    <Text style={styles.name}>{x.item.name}</Text>
+                    <Text style={[styles.sub, { color: colors.danger, fontWeight: '700' }]}>{t('rest.why.heavy', { kcal: r0(x.kcal), meal: budget })}</Text>
+                  </View>
+                ))}
+              </Card>
+            )}
+            {items.length >= 3 && <Text style={styles.h2}>{t('rest.allDishes')}</Text>}
             {view.map(({ item: it, tag, kcal }) => {
               const m = effectiveMacros(it);
               return (
@@ -393,6 +424,9 @@ export default function Restaurant() {
 }
 
 const makeStyles = (colors: Colors) => StyleSheet.create({
+  pickRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  pickBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card },
+  pickBtnText: { fontSize: 13, fontWeight: '800', color: colors.ink },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 18, paddingBottom: 10 },
   title: { fontSize: 26, fontWeight: '800', color: colors.ink },
   h2: { fontSize: 16, fontWeight: '700', color: colors.ink },

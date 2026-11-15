@@ -11,9 +11,9 @@ export type Veg = 'veg' | 'egg' | 'nonveg' | 'unknown';
 export type DietFilter = 'any' | 'egg' | 'veg';
 
 /** A dish as read from the menu (or typed). */
-export type MenuDish = { name: string; searchTerm: string; grams: number; veg: Veg; price: number | null; confidence: Confidence; kcal?: number | null };
+export type MenuDish = { name: string; searchTerm: string; grams: number; veg: Veg; price: number | null; confidence: Confidence; kcal?: number | null; protein?: number | null };
 /** A dish on the review screen: a PhotoItem (so the plate-photo lookup and editing code is reused) plus menu fields. */
-export type MenuItem = PhotoItem & { veg: Veg; price: number | null; picked: boolean; /** calories of one basic serving, read with the menu (used to rank instantly) */ quickKcal?: number | null };
+export type MenuItem = PhotoItem & { veg: Veg; price: number | null; picked: boolean; /** calories of one basic serving, read with the menu (used to rank instantly) */ quickKcal?: number | null; /** protein of one basic serving, read with the menu */ quickProtein?: number | null };
 
 const MAX_DISHES = 60;
 export const DEFAULT_PORTION_G = 250;
@@ -30,8 +30,9 @@ export const buildMenuPrompt = () =>
     '- veg: "veg", "egg", "nonveg", or "unknown" (use the menu\'s veg/non-veg marks or the ingredients; "unknown" if you cannot tell)',
     '- price: the printed price as a number, or null if none is shown',
     '- kcal: calories in ONE such serving, a single best number (for example 450). Base it on standard food tables for the dish as served',
+    '- protein: grams of protein in that same serving, a single best number (for example 22)',
     '- confidence: high, medium or low, for how sure you are about the dish AND the serving size',
-    'Only calories per serving are wanted, no other nutrients. If the image is not a menu, return an empty dishes list.',
+    'Only calories and protein per serving are wanted, no other nutrients. If the image is not a menu, return an empty dishes list.',
   ].join('\n');
 
 const SCHEMA = {
@@ -49,6 +50,7 @@ const SCHEMA = {
           veg: { type: 'string', enum: ['veg', 'egg', 'nonveg', 'unknown'] },
           price: { type: ['number', 'null'] },
           kcal: { type: ['number', 'null'] },
+          protein: { type: ['number', 'null'] },
           confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
         },
         required: ['name', 'search_term', 'grams'],
@@ -74,6 +76,11 @@ type Step = { type?: string; content?: { type?: string; text?: string }[] };
 export const cleanKcal = (v: unknown): number | null => {
   const n = typeof v === 'number' ? v : NaN;
   return isFinite(n) && n >= 10 && n <= 3500 ? Math.round(n) : null;
+};
+
+export const cleanProtein = (v: unknown): number | null => {
+  const n = typeof v === 'number' ? v : NaN;
+  return isFinite(n) && n >= 0 && n <= 250 ? Math.round(n * 10) / 10 : null;
 };
 
 const cleanPrice = (v: unknown): number | null => {
@@ -119,6 +126,7 @@ export function parseMenuResponse(json: unknown): { restaurant: string; dishes: 
       price: cleanPrice(d.price),
       confidence: conf,
       kcal: cleanKcal(d.kcal),
+      protein: cleanProtein(d.protein),
     });
     if (dishes.length >= MAX_DISHES) break;
   }
@@ -165,7 +173,7 @@ export function dishesFromText(text: string): MenuDish[] {
 /** A dish becomes a reviewable item. Restaurant servings are never better than "medium" confidence. */
 export const dishToItem = (d: MenuDish, id: string): MenuItem => {
   const raw: RawItem = { name: d.name, databaseName: null, searchTerm: d.searchTerm, grams: d.grams, confidence: d.confidence === 'high' ? 'medium' : d.confidence };
-  return { ...raw, id, food: null, veg: d.veg, price: d.price, picked: false, quickKcal: d.kcal ?? null };
+  return { ...raw, id, food: null, veg: d.veg, price: d.price, picked: false, quickKcal: d.kcal ?? null, quickProtein: d.protein ?? null };
 };
 
 // ---------------------------------------------------------------- ranking: which dishes fit me?
@@ -221,6 +229,46 @@ export function rankByCalories(items: MenuItem[], mealKcal: number, diet: DietFi
     });
   const known = rows.filter((r) => r.kcal !== null).sort((a, b) => (heaviestFirst ? (b.kcal as number) - (a.kcal as number) : (a.kcal as number) - (b.kcal as number)));
   return [...known, ...rows.filter((r) => r.kcal === null)];
+}
+
+export type MenuPick = { item: MenuItem; kcal: number; protein: number | null; why: 'highProtein' | 'light' | 'fits' };
+export type MenuSkip = { item: MenuItem; kcal: number };
+
+/**
+ * The answer a person actually wants from a menu: the few dishes to order, and the few to go easy on, for a meal of about
+ * `mealKcal`. Dishes with a protein number are scored on protein for the calories as well as on size; dishes without one only on size.
+ * Dishes with no calorie number are never picked or warned about.
+ */
+export function bestPicks(items: MenuItem[], mealKcal: number, diet: DietFilter = 'any', count = 3): { picks: MenuPick[]; skip: MenuSkip[] } {
+  const target = Math.max(250, mealKcal);
+  const rows = items
+    .filter((i) => allowedByDiet(i.veg, diet))
+    .map((item) => {
+      const m = effectiveMacros(item);
+      const kcal = m?.kcal ?? item.quickKcal ?? null;
+      const protein = m?.protein ?? item.quickProtein ?? null;
+      return { item, kcal, protein };
+    })
+    .filter((r): r is { item: MenuItem; kcal: number; protein: number | null } => r.kcal !== null && r.kcal > 0);
+  const heavy = (k: number) => k > target * 1.3;
+  const picks = rows
+    .filter((r) => !heavy(r.kcal))
+    .map((r) => {
+      const share = r.protein !== null ? Math.min(1, (r.protein * 4) / r.kcal) : null;
+      const closeness = Math.max(0, 1 - Math.abs(r.kcal - target) / target);
+      const score = (share !== null ? 0.6 * share : 0.3) + 0.4 * closeness;
+      const why: MenuPick['why'] = r.protein !== null && r.protein >= 20 && (share ?? 0) >= 0.2 ? 'highProtein' : r.kcal <= target * 0.6 ? 'light' : 'fits';
+      return { pick: { ...r, why } as MenuPick, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count)
+    .map((x) => x.pick);
+  const skip = rows
+    .filter((r) => heavy(r.kcal))
+    .sort((a, b) => b.kcal - a.kcal)
+    .slice(0, count)
+    .map((r) => ({ item: r.item, kcal: r.kcal }));
+  return { picks, skip };
 }
 
 /** No single restaurant meal is ranked against more than this, even when most of the day is still left. */

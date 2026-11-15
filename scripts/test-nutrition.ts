@@ -37,7 +37,7 @@ for (const f of FOODS) {
 console.log(`All nutrition tests passed (${FOODS.length} foods checked).`);
 
 // ---- goals from a target weight and a carb level ----
-import { goalFor, weeksToTarget, CARB_SHARE } from '../src/lib/nutrition';
+import { goalFor, weeksToTarget, macrosForCalories } from '../src/lib/nutrition';
 const base = { sex: 'female', age: 30, heightCm: 165, weightKg: 70, activity: 'light', goal: 'maintain' } as const;
 assert.equal(goalFor({ ...base, targetKg: 62 }), 'lose');
 assert.equal(goalFor({ ...base, targetKg: 75 }), 'gain');
@@ -49,19 +49,12 @@ assert.equal(weeksToTarget(base), null);
 const lose = suggestGoals({ ...base, targetKg: 62 });
 assert.ok(lose.kcal < suggestGoals(base).kcal, 'a lower target means fewer calories');
 assert.ok(lose.kcal >= 1200, 'never below the safe floor');
-for (const level of ['low', 'mid', 'high'] as const) {
-  const m = suggestGoals({ ...base, carbLevel: level });
-  const share = (m.carbs * 4) / m.kcal;
-  assert.ok(Math.abs(share - CARB_SHARE[level]) < 0.04, level + ' carb share ' + share);
-  assert.ok(Math.abs(m.protein * 4 + m.carbs * 4 + m.fat * 9 - m.kcal) < 25, level + ' macros add up to the calories');
-  assert.ok((m.fat * 9) / m.kcal >= 0.19, 'fat is never below a fifth of calories');
-}
-const lo = suggestGoals({ ...base, carbLevel: 'low' });
-const hi = suggestGoals({ ...base, carbLevel: 'high' });
-assert.ok(lo.carbs < hi.carbs && lo.fat > hi.fat, 'low carb means more fat, high carb means less');
-const mid = suggestGoals({ ...base, carbLevel: 'mid' });
-assert.ok(lo.protein > mid.protein, 'low carb means more protein');
-assert.equal(mid.protein, hi.protein, 'medium and high carb keep the same protein');
-assert.ok(lo.fat > mid.fat && mid.fat > hi.fat, 'fat falls as carbs rise');
-assert.ok(lo.carbs < mid.carbs && mid.carbs < hi.carbs);
+// protein: current weight x 1.8 to lose, x 2 to maintain, x 2.2 to gain
+assert.equal(suggestGoals({ ...base, goal: 'lose' }).protein, 126);
+assert.equal(suggestGoals({ ...base, goal: 'maintain' }).protein, 140);
+assert.equal(suggestGoals({ ...base, goal: 'gain' }).protein, 154);
+assert.equal(macrosForCalories(2000, 80, 'maintain').protein, 160);
+const m2 = macrosForCalories(2000, 80, 'lose');
+assert.ok(Math.abs(m2.protein * 4 + m2.carbs * 4 + m2.fat * 9 - 2000) < 12, 'macros add up to the calories');
+assert.equal(suggestGoals({ ...base, carbLevel: 'low' }).carbs, suggestGoals(base).carbs, 'the carb level is ignored');
 console.log('Goal planning tests passed.');

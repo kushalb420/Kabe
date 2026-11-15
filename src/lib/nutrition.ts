@@ -89,9 +89,12 @@ export const DEFAULT_PROFILE: Profile = { sex: 'female', age: 25, heightCm: 165,
 
 const ACTIVITY ={ sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725 };
 
-/** Split a calorie target into macros: protein by body weight, fat ~27% of calories, carbs the rest. */
+/** Grams of protein per kg of body weight for each goal. */
+export const PROTEIN_PER_KG = { lose: 1.8, maintain: 2, gain: 2.2 } as const;
+
+/** Split a calorie target into macros: protein by body weight and goal, fat ~27% of calories, carbs the rest. */
 export const macrosForCalories = (kcal: number, weightKg: number, goal: Profile['goal'], carbLevel?: CarbLevel): Macros => {
-  const protein = Math.round(weightKg * (goal === 'lose' ? 1.8 : 1.6));
+  const protein = Math.round(weightKg * PROTEIN_PER_KG[goal]);
   if (!carbLevel) {
     const fat = Math.round((kcal * 0.27) / 9);
     const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
@@ -144,8 +147,8 @@ export const weeksToTarget = (p: Profile): number | null => {
 export const suggestGoals = (p: Profile): Macros => {
   const goal = goalFor(p);
   let kcal = Math.round((formulaTdee(p) + GOAL_ADJUST[goal]) / 10) * 10;
-  if (p.targetKg || p.carbLevel) kcal = Math.max(kcal, MIN_KCAL[p.sex]); // never suggest eating below the safe floor
-  return macrosForCalories(kcal, p.weightKg, goal, p.carbLevel);
+  kcal = Math.max(kcal, MIN_KCAL[p.sex]); // never suggest eating below the safe floor
+  return macrosForCalories(kcal, p.weightKg, goal); // the carb level is no longer offered: the usual balanced split
 };
 
 export const toDateKey = (d: Date) => {

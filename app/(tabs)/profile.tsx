@@ -5,7 +5,7 @@ import { Text, TextInput } from '../../src/components/Text';
 import { Screen } from '../../src/components/Screen';
 import { Button, Card, LinkRow } from '../../src/components/ui';
 import { FEATURES } from '../../src/config/app';
-import { DEFAULT_PROFILE, r0, suggestGoals } from '../../src/lib/nutrition';
+import { DEFAULT_PROFILE, goalFor, macrosForCalories, r0, suggestGoals } from '../../src/lib/nutrition';
 import { useKabe } from '../../src/store/kabe';
 import { useCloud } from '../../src/store/cloud';
 import { useFriends } from '../../src/lib/useFriends';
@@ -31,7 +31,22 @@ export default function ProfileScreen() {
 
   const [editing, setEditing] = useState(false);
   const [own, setOwn] = useState({ kcal: '', protein: '', carbs: '', fat: '', fiber: '', sugar: '' });
+  const touched = React.useRef(new Set<string>()); // boxes the person typed in themselves: never overwritten
+  const typeOwn = (k: keyof typeof own, v: string) => {
+    touched.current.add(k);
+    if (k !== 'kcal') return setOwn({ ...own, [k]: v });
+    // changing the calories works out protein, carbs and fat from the body weight and goal, unless typed by hand
+    const kcal = Math.round(parseFloat(v.replace(',', '.')));
+    const next = { ...own, kcal: v };
+    if (kcal >= 800 && kcal <= 6000) {
+      const p = profile ?? DEFAULT_PROFILE;
+      const m = macrosForCalories(kcal, p.weightKg, goalFor(p));
+      for (const f of ['protein', 'carbs', 'fat'] as const) if (!touched.current.has(f)) next[f] = String(m[f]);
+    }
+    setOwn(next);
+  };
   const startEdit = () => {
+    touched.current = new Set();
     setOwn({ kcal: String(r0(goals.kcal)), protein: String(r0(goals.protein)), carbs: String(r0(goals.carbs)), fat: String(r0(goals.fat)), fiber: String(r0(goals.fiber)), sugar: String(r0(sugarLimit(goals, sugarGoal))) });
     setEditing(true);
   };
@@ -68,7 +83,7 @@ export default function ProfileScreen() {
               {(['kcal', 'protein'] as const).map((k) => (
                 <View key={k} style={{ flex: 1 }}>
                   <Text style={styles.label}>{k === 'kcal' ? t('macro.kcal') : t('macro.protein')}</Text>
-                  <TextInput style={styles.input} keyboardType="decimal-pad" value={own[k]} onChangeText={(v) => setOwn({ ...own, [k]: v })} />
+                  <TextInput style={styles.input} keyboardType="decimal-pad" value={own[k]} onChangeText={(v) => typeOwn(k, v)} />
                 </View>
               ))}
             </View>
@@ -76,7 +91,7 @@ export default function ProfileScreen() {
               {(['carbs', 'fat', 'fiber'] as const).map((k) => (
                 <View key={k} style={{ flex: 1 }}>
                   <Text style={styles.label}>{k === 'carbs' ? t('macro.carbs') : k === 'fat' ? t('macro.fat') : t('macro.fiber')}</Text>
-                  <TextInput style={styles.input} keyboardType="decimal-pad" value={own[k]} onChangeText={(v) => setOwn({ ...own, [k]: v })} />
+                  <TextInput style={styles.input} keyboardType="decimal-pad" value={own[k]} onChangeText={(v) => typeOwn(k, v)} />
                 </View>
               ))}
             </View>

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
 import { Alert } from '../lib/alert';
-import { CarbLevel, DEFAULT_PROFILE, Profile, goalFor, suggestGoals, weeksToTarget } from '../lib/nutrition';
+import { DEFAULT_PROFILE, Profile, goalFor, suggestGoals, weeksToTarget } from '../lib/nutrition';
 import { useKabe } from '../store/kabe';
 import { radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { Text, TextInput } from './Text';
@@ -24,7 +24,7 @@ function Seg<T extends string>({ value, options, onChange }: { value: T; options
 }
 
 /**
- * "Calculate my targets": your body details, target weight and how many carbs you like, turned into daily calories and macros.
+ * "Calculate my targets": your body details, goal and optional target weight, turned into daily calories and macros.
  * Lives in Settings and in the first-time setup. `onDone` runs after the targets are saved.
  */
 export function TargetsCalculator({ onDone }: { onDone?: () => void }) {
@@ -53,13 +53,11 @@ export function TargetsCalculator({ onDone }: { onDone?: () => void }) {
       Alert.alert(t('me.checkNumbers'), t('me.realistic'));
       return;
     }
-    const saved: Profile = { ...withTarget, goal };
+    const saved: Profile = { ...withTarget, goal, carbLevel: undefined };
     setProfile(saved);
     setGoals(suggestGoals(saved));
     onDone?.();
   };
-
-  const carbs: CarbLevel[] = ['low', 'mid', 'high'];
 
   return (
     <Card style={{ gap: 12 }}>
@@ -84,33 +82,23 @@ export function TargetsCalculator({ onDone }: { onDone?: () => void }) {
       />
       <Text style={styles.sub}>{t(`me.actHelp.${p.activity}` as Key)}</Text>
 
+      <Text style={styles.label}>{t('me.goal')}</Text>
+      <Seg
+        value={goal}
+        options={[
+          { key: 'lose', label: t('me.goal.lose') },
+          { key: 'maintain', label: t('me.goal.maintain') },
+          { key: 'gain', label: t('me.goal.gain') },
+        ]}
+        onChange={(g) => {
+          setP({ ...p, goal: g });
+          setTargetText(''); // choosing a goal yourself replaces the target weight
+        }}
+      />
+
       <Text style={styles.label}>{t('me.target')}</Text>
       <TextInput style={styles.input} keyboardType="decimal-pad" value={targetText} onChangeText={setTargetText} placeholder={t('me.targetPh')} placeholderTextColor={styles.sub.color} />
-      {target > 0 ? (
-        <Text style={styles.sub}>{t(`me.goalFrom.${goal}` as Key)}</Text>
-      ) : (
-        <>
-          <Text style={styles.sub}>{t('me.targetHint')}</Text>
-          <Text style={styles.label}>{t('me.goal')}</Text>
-          <Seg
-            value={p.goal}
-            options={[
-              { key: 'lose', label: t('me.goal.lose') },
-              { key: 'maintain', label: t('me.goal.maintain') },
-              { key: 'gain', label: t('me.goal.gain') },
-            ]}
-            onChange={(g) => setP({ ...p, goal: g })}
-          />
-        </>
-      )}
-
-      <Text style={styles.label}>{t('me.carbs')}</Text>
-      <Seg
-        value={(p.carbLevel ?? 'mid') as CarbLevel}
-        options={carbs.map((c) => ({ key: c, label: t(`me.carbs.${c}` as Key) }))}
-        onChange={(carbLevel) => setP({ ...p, carbLevel })}
-      />
-      <Text style={styles.sub}>{t(`me.carbsHelp.${p.carbLevel ?? 'mid'}` as Key)}</Text>
+      <Text style={styles.sub}>{target > 0 ? t(`me.goalFrom.${goal}` as Key) : t('me.targetHint')}</Text>
 
       {plan && (
         <View style={styles.plan}>

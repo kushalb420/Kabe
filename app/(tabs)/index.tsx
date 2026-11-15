@@ -97,7 +97,7 @@ export default function Home() {
   );
 
   return (
-    <Screen title={userName ? `${greeting}, ${userName}` : greeting} subtitle={t('today.subtitle')} headerRight={streak} eyebrow={<Sticker name="wordmark" size={78} />}>
+    <Screen title={userName ? `${greeting}, ${userName}` : greeting} subtitle={t('today.subtitle')} headerRight={streak} eyebrow={<Text style={styles.brand}>KABE</Text>}>
       {cloud.user?.email && (cloud.status === 'conflict' || cloud.status === 'error') ? (
         <LinkRow
           icon="sync-outline"
@@ -139,6 +139,7 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 const makeStyles = (colors: Colors) => StyleSheet.create({
+  brand: { fontSize: 22, lineHeight: 28, fontWeight: '900', letterSpacing: 6, color: colors.ink, includeFontPadding: false },
   big: { fontSize: 40, fontWeight: '800', color: colors.ink },
   small: { fontSize: 13, color: colors.inkSoft, fontWeight: '500' },
   statsRow: { flexDirection: 'row', alignSelf: 'stretch', marginTop: 18 },

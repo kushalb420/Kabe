@@ -15,6 +15,19 @@ import { Button, Card } from './ui';
 const KEY = 'kabe.permCheckup.v1'; // how many times the person has been asked
 const MAX_ASKS = 3;
 
+/** True when notifications, the step counter and location are all already allowed (nothing left to ask for). */
+async function alreadyAllowed(): Promise<boolean> {
+  try {
+    const [{ getPermissionsAsync }, { Pedometer }, Location] = await Promise.all([import('expo-notifications'), import('expo-sensors'), import('expo-location')]);
+    const n = await getPermissionsAsync();
+    const p = await Pedometer.getPermissionsAsync().catch(() => ({ granted: true }));
+    const l = await Location.getForegroundPermissionsAsync().catch(() => ({ granted: true }));
+    return n.granted && p.granted && l.granted;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The next time someone opens Kabe (app or website) after they have settled in, ask once, in one tap, for everything Kabe needs:
  * motion and location in a browser; notifications, the step counter, Health Connect and location in the app. If they say "not now"
@@ -40,6 +53,10 @@ export function PermissionCheckup() {
           const done = (globalThis as any).localStorage?.getItem(WEB_STEPS_KEY) === '1';
           if (done) return;
         }
+        if (Platform.OS !== 'web' && (await alreadyAllowed())) {
+          await AsyncStorage.setItem(KEY, String(MAX_ASKS)); // everything is already allowed: never ask
+          return;
+        }
         await AsyncStorage.setItem(KEY, String(asked + 1));
         if (alive) setShow(true);
       } catch {
@@ -54,6 +71,7 @@ export function PermissionCheckup() {
 
   const allow = async () => {
     setBusy(true);
+    AsyncStorage.setItem(KEY, String(MAX_ASKS)).catch(() => {}); // they chose Allow: this question is done, whatever the phone answers
     try {
       if (Platform.OS === 'web') {
         // each of these shows the browser's own question; they must all start from this one tap

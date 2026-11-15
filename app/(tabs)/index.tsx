@@ -15,6 +15,7 @@ import { useGamify } from '../../src/store/gamify';
 import { useKabe } from '../../src/store/kabe';
 import { useTracker } from '../../src/store/tracker';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../../src/theme';
+import { Brand } from '../../src/components/Brand';
 import { Sticker } from '../../src/components/Sticker';
 import { progressOn } from '../../src/lib/supplements';
 import { useCloud } from '../../src/store/cloud';
@@ -97,7 +98,7 @@ export default function Home() {
   );
 
   return (
-    <Screen title={userName ? `${greeting}, ${userName}` : greeting} subtitle={t('today.subtitle')} headerRight={streak} eyebrow={<Text style={styles.brand}>KABE</Text>}>
+    <Screen title={userName ? `${greeting}, ${userName}` : greeting} subtitle={t('today.subtitle')} headerRight={streak} eyebrow={<Brand />}>
       {cloud.user?.email && (cloud.status === 'conflict' || cloud.status === 'error') ? (
         <LinkRow
           icon="sync-outline"
@@ -139,7 +140,6 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 const makeStyles = (colors: Colors) => StyleSheet.create({
-  brand: { fontSize: 22, lineHeight: 28, fontWeight: '900', letterSpacing: 6, color: colors.ink, includeFontPadding: false },
   big: { fontSize: 40, fontWeight: '800', color: colors.ink },
   small: { fontSize: 13, color: colors.inkSoft, fontWeight: '500' },
   statsRow: { flexDirection: 'row', alignSelf: 'stretch', marginTop: 18 },

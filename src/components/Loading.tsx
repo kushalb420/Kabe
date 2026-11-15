@@ -3,6 +3,7 @@ import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { MOTION } from '../config/app';
 import { useColors, useThemedStyles, type Colors } from '../theme';
 import { Dots } from './Dots';
+import { Brand } from './Brand';
 import { Sticker } from './Sticker';
 import { Text } from './Text';
 
@@ -64,7 +65,7 @@ export function LoadingScreen({ label }: { label?: string }) {
       <Animated.View style={{ transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) }] }}>
         <Sticker name="mascot" size={150} />
       </Animated.View>
-      <Sticker name="wordmark" size={110} />
+      <Brand size={30} />
       <Loading label={label} />
     </View>
   );

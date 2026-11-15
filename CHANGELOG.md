@@ -46,7 +46,7 @@
 - **Activity:** every walk, run or ride in Recent sessions opens its route card (sessions saved before routes were kept show the numbers with a note instead of a map).
 - **Steps in the background:** the whole day is read from Health Connect the moment Kabe comes back, so steps taken while it was closed show at once. Builds made with the new background module also read steps every ~15 minutes while Kabe is closed. A website cannot run in the background or read an iPhone's step counter, so on the web steps are estimated from motion only while the page is open.
 - **Permission check-up:** the next time Kabe is opened (app or website) it asks once, in one tap, for motion, location and notifications (and the step counter and Health Connect in the app); if you say Not now it asks again on the next visit, up to three times.
-- **Today header:** the old wordmark sticker is replaced by the spaced KABE lettering from the route card, centred in line with the streak pill.
+- **Today header:** the old wordmark sticker is replaced by the spaced KABE lettering from the route card, centred in line with the streak pill. The same lettering replaces the old wordmark picture on the welcome screen and the loading screen.
 - New bento-box app icon and splash. The Account screen's Continue button no longer stretches.
 
 ## 7.0.0 — Kitchen from your pantry, notifications, workouts, account (2026-11-10)

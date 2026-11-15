@@ -12,6 +12,7 @@ import { useT } from '../src/i18n/useT';
 import { fontFor } from '../src/lib/fonts';
 import { useKabe } from '../src/store/kabe';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../src/theme';
+import { Brand } from '../src/components/Brand';
 import { Sticker } from '../src/components/Sticker';
 
 const FEATURES: { icon: keyof typeof Ionicons.glyphMap; t: Key; s: Key }[] = [
@@ -42,7 +43,7 @@ export default function Welcome() {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <Dots />
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 24, paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 20 }}>
-        <Sticker name="wordmark" size={120} style={{ marginLeft: -2 }} />
+        <Brand size={34} />
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{t('welcome.badge')}</Text>
         </View>

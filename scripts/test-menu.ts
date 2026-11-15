@@ -7,7 +7,7 @@ const food = (id: string, kcal: number, protein: number): Food => ({ id, name: i
 
 // ---- the AI is told to read names only, never to produce nutrition ----
 const prompt = buildMenuPrompt();
-assert.match(prompt, /Only calories and protein per serving are wanted/);
+assert.match(prompt, /Only calories, protein, carbs, fat and fiber per serving are wanted/);
 assert.ok(!/"calories"|kcal:/i.test(JSON.stringify(buildMenuRequest('m', 'AAAA', 'image/jpeg').response_format)), 'schema has no calorie field');
 const req = buildMenuRequest('gemini-x', 'AAAA', 'image/png');
 assert.equal(req.model, 'gemini-x');

@@ -12,7 +12,8 @@ import { Button, Card } from '../src/components/ui';
 import type { Food } from '../src/data/foods';
 import type { Key } from '../src/i18n';
 import { useT } from '../src/i18n/useT';
-import { DietFilter, MenuDish, MenuItem, allowedByDiet, bestPicks, dishToItem, dishesFromText, mealBudget, orderName, orderTotals, rankByCalories, toSavedItems } from '../src/lib/menu';
+import { MEAL_SHARE, Plan, buildPlans, mealTarget } from '../src/lib/menuPlan';
+import { DietFilter, MenuDish, MenuItem, allowedByDiet, bestPicks, dishToItem, dishesFromText, orderName, orderTotals, rankByCalories, toSavedItems } from '../src/lib/menu';
 import { r0, r1, sumMacros, toDateKey } from '../src/lib/nutrition';
 import { MacroKey, SearchFn, effectiveMacros, resolveOnline, setItemMacro, withGrams } from '../src/lib/photo';
 import { estimateDishKcal, readMenu } from '../src/lib/vision';
@@ -58,7 +59,8 @@ export default function Restaurant() {
   const eaten = useMemo(() => sumMacros(k.entries.filter((e) => e.date === today)), [k.entries, today]);
   const kcalLeft = k.goals.kcal - eaten.kcal;
   const proteinLeft = k.goals.protein - eaten.protein;
-  const budget = mealBudget(Math.max(0, kcalLeft), hour < 11 ? 3 : hour < 16 ? 2 : 1);
+  // a meal aims for its share of the day's calories (30% breakfast, 30% lunch, 10% snacks, 30% dinner): a guide, never a limit
+  const budget = mealTarget(k.goals.kcal, meal);
 
   const patch = (id: string, p: Partial<MenuItem>) => setItems((l) => l.map((x) => (x.id === id ? { ...x, ...p } : x)));
 
@@ -154,6 +156,14 @@ export default function Restaurant() {
   }, [items, budget, diet, byFit]);
 
   const advice = useMemo(() => bestPicks(items, budget, diet), [items, budget, diet]);
+  const plans = useMemo(() => buildPlans(items.filter((i) => allowedByDiet(i.veg, diet)), budget, 5), [items, budget, diet]);
+  /** Pick every dish of a plan, in the plan's quantities, with the menu's own numbers scaled to match. */
+  const pickPlan = (p: Plan) => {
+    for (const l of p.lines) {
+      const g = Math.round(l.item.grams * l.qty);
+      patch(l.item.id, { picked: true, grams: g, manual: { kcal: Math.round(l.per.kcal * l.qty), protein: Math.round(l.per.protein * l.qty * 10) / 10, carbs: Math.round(l.per.carbs * l.qty * 10) / 10, fat: Math.round(l.per.fat * l.qty * 10) / 10 }, lookup: undefined });
+    }
+  };
   const tot = orderTotals(items);
   const pending = items.some((i) => i.picked && i.lookup === 'pending');
   const showVegWarn = items.some((i) => i.veg === 'unknown') && diet !== 'any';
@@ -289,6 +299,42 @@ export default function Restaurant() {
             )}
 
             {ranking && <Loading label={t('rest.ranking')} />}
+            {items.length >= 3 && (
+              <View style={styles.chips}>
+                {MEALS.map((m) => (
+                  <Pressable key={m.key} onPress={() => setMeal(m.key)} style={[styles.chip, meal === m.key && styles.chipOn]}>
+                    <Text style={[styles.chipText, meal === m.key && { color: colors.onPrimary }]}>{mealName(m.key)} · {Math.round(MEAL_SHARE[m.key] * 100)}%</Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+            {items.length >= 3 && (
+              <Card style={{ gap: 12 }}>
+                <Text style={styles.h2}>{t('rest.planTitle', { meal: mealName(meal) })}</Text>
+                <Text style={styles.sub}>{t('rest.planSub', { kcal: budget })}</Text>
+                {plans.length === 0 ? (
+                  <Text style={styles.sub}>{t('rest.planNone')}</Text>
+                ) : (
+                  plans.map((p, n) => {
+                    const allPicked = p.lines.every((l) => items.find((i) => i.id === l.item.id)?.picked);
+                    return (
+                      <View key={n} style={styles.planBox}>
+                        <Text style={styles.name}>{t('rest.planN', { n: n + 1 })}</Text>
+                        {p.lines.map((l) => (
+                          <Text key={l.item.id} style={styles.body}>
+                            {l.qty} × {l.item.name}
+                          </Text>
+                        ))}
+                        <Text style={styles.sub}>{t('rest.planFit', { kcal: Math.round(p.total.kcal), target: budget, meal: mealName(meal) })}</Text>
+                        <Text style={styles.sub}>{t('rest.planTotals', { p: Math.round(p.total.protein), c: Math.round(p.total.carbs), fi: Math.round(p.total.fiber), f: Math.round(p.total.fat) })}</Text>
+                        {p.tags.length > 0 && <Text style={[styles.sub, { color: colors.good, fontWeight: '800' }]}>{p.tags.map((x) => t(`rest.planTag.${x}` as Key)).join(' · ')}</Text>}
+                        <Button title={allPicked ? t('rest.planPicked') : t('rest.planPick')} icon={allPicked ? 'checkmark' : 'add'} variant={allPicked ? 'ghost' : 'primary'} onPress={() => pickPlan(p)} />
+                      </View>
+                    );
+                  })
+                )}
+              </Card>
+            )}
             {items.length >= 3 && advice.picks.length > 0 && (
               <Card style={{ gap: 10 }}>
                 <Text style={styles.h2}>{t('rest.picksTitle')}</Text>
@@ -424,6 +470,7 @@ export default function Restaurant() {
 }
 
 const makeStyles = (colors: Colors) => StyleSheet.create({
+  planBox: { gap: 4, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
   pickRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   pickBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card },
   pickBtnText: { fontSize: 13, fontWeight: '800', color: colors.ink },

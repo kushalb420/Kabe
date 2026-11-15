@@ -11,9 +11,9 @@ export type Veg = 'veg' | 'egg' | 'nonveg' | 'unknown';
 export type DietFilter = 'any' | 'egg' | 'veg';
 
 /** A dish as read from the menu (or typed). */
-export type MenuDish = { name: string; searchTerm: string; grams: number; veg: Veg; price: number | null; confidence: Confidence; kcal?: number | null; protein?: number | null };
+export type MenuDish = { name: string; searchTerm: string; grams: number; veg: Veg; price: number | null; confidence: Confidence; kcal?: number | null; protein?: number | null; carbs?: number | null; fat?: number | null; fiber?: number | null };
 /** A dish on the review screen: a PhotoItem (so the plate-photo lookup and editing code is reused) plus menu fields. */
-export type MenuItem = PhotoItem & { veg: Veg; price: number | null; picked: boolean; /** calories of one basic serving, read with the menu (used to rank instantly) */ quickKcal?: number | null; /** protein of one basic serving, read with the menu */ quickProtein?: number | null };
+export type MenuItem = PhotoItem & { veg: Veg; price: number | null; picked: boolean; /** calories of one basic serving, read with the menu (used to rank instantly) */ quickKcal?: number | null; /** protein, carbs, fat and fibre of one basic serving, read with the menu */ quickProtein?: number | null; quickCarbs?: number | null; quickFat?: number | null; quickFiber?: number | null };
 
 const MAX_DISHES = 60;
 export const DEFAULT_PORTION_G = 250;
@@ -30,9 +30,9 @@ export const buildMenuPrompt = () =>
     '- veg: "veg", "egg", "nonveg", or "unknown" (use the menu\'s veg/non-veg marks or the ingredients; "unknown" if you cannot tell)',
     '- price: the printed price as a number, or null if none is shown',
     '- kcal: calories in ONE such serving, a single best number (for example 450). Base it on standard food tables for the dish as served',
-    '- protein: grams of protein in that same serving, a single best number (for example 22)',
+    '- protein, carbs, fat, fiber: grams of each in that same serving, a single best number each (for example protein 22, carbs 40, fat 12, fiber 5)',
     '- confidence: high, medium or low, for how sure you are about the dish AND the serving size',
-    'Only calories and protein per serving are wanted, no other nutrients. If the image is not a menu, return an empty dishes list.',
+    'Only calories, protein, carbs, fat and fiber per serving are wanted, no other nutrients. If the image is not a menu, return an empty dishes list.',
   ].join('\n');
 
 const SCHEMA = {
@@ -51,6 +51,9 @@ const SCHEMA = {
           price: { type: ['number', 'null'] },
           kcal: { type: ['number', 'null'] },
           protein: { type: ['number', 'null'] },
+          carbs: { type: ['number', 'null'] },
+          fat: { type: ['number', 'null'] },
+          fiber: { type: ['number', 'null'] },
           confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
         },
         required: ['name', 'search_term', 'grams'],
@@ -127,6 +130,9 @@ export function parseMenuResponse(json: unknown): { restaurant: string; dishes: 
       confidence: conf,
       kcal: cleanKcal(d.kcal),
       protein: cleanProtein(d.protein),
+      carbs: cleanProtein(d.carbs),
+      fat: cleanProtein(d.fat),
+      fiber: cleanProtein(d.fiber),
     });
     if (dishes.length >= MAX_DISHES) break;
   }
@@ -173,7 +179,7 @@ export function dishesFromText(text: string): MenuDish[] {
 /** A dish becomes a reviewable item. Restaurant servings are never better than "medium" confidence. */
 export const dishToItem = (d: MenuDish, id: string): MenuItem => {
   const raw: RawItem = { name: d.name, databaseName: null, searchTerm: d.searchTerm, grams: d.grams, confidence: d.confidence === 'high' ? 'medium' : d.confidence };
-  return { ...raw, id, food: null, veg: d.veg, price: d.price, picked: false, quickKcal: d.kcal ?? null, quickProtein: d.protein ?? null };
+  return { ...raw, id, food: null, veg: d.veg, price: d.price, picked: false, quickKcal: d.kcal ?? null, quickProtein: d.protein ?? null, quickCarbs: d.carbs ?? null, quickFat: d.fat ?? null, quickFiber: d.fiber ?? null };
 };
 
 // ---------------------------------------------------------------- ranking: which dishes fit me?

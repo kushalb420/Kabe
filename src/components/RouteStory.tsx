@@ -14,6 +14,7 @@ export type StoryProps = {
   timeLabel: string;
   time: string;
   footer: string; // "MOVED WITH KABE"
+  emptyText?: string; // shown in the panel when there is no route to draw
   width?: number; // on-screen width; the picture itself is always 360 x 640 units (9:16)
 };
 
@@ -66,6 +67,8 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
           <Circle cx={proj.start.x} cy={proj.start.y} r={8} fill={c.card} stroke={c.ink} strokeWidth={3.5} />
           <Circle cx={proj.end.x} cy={proj.end.y} r={9} fill={c.ink} stroke={c.card} strokeWidth={3} />
         </G>
+      ) : p.emptyText ? (
+        <SvgText x={180} y={403} fontSize={13} fontWeight="700" textAnchor="middle" fill={c.inkSoft} fontFamily={FONT}>{p.emptyText}</SvgText>
       ) : null}
 
       {chip(30, p.paceLabel.toUpperCase(), p.pace)}

@@ -29,9 +29,9 @@ export default function RouteView() {
   const [note, setNote] = useState('');
   const a = activities.find((x) => x.id === id);
   const story = useMemo(() => {
-    if (!a?.route || (a.type !== 'walk' && a.type !== 'run' && a.type !== 'cycle')) return null;
+    if (!a || (a.type !== 'walk' && a.type !== 'run' && a.type !== 'cycle')) return null;
     const [y, m, d] = a.date.split('-').map(Number);
-    return buildStoryData({ kind: a.type, date: new Date(y, (m || 1) - 1, d || 1), km: a.km ?? 0, minutes: a.minutes, seconds: a.seconds, route: decodeRoute(a.route) }, t);
+    return buildStoryData({ kind: a.type, date: new Date(y, (m || 1) - 1, d || 1), km: a.km ?? 0, minutes: a.minutes, seconds: a.seconds, route: decodeRoute(a.route ?? '') }, t);
   }, [a, t]);
   const w = Math.min(330, Math.max(240, width - 60));
   return (
@@ -44,9 +44,9 @@ export default function RouteView() {
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 18, gap: 14, paddingBottom: 60 }}>
-        {story && a?.route ? (
+        {story && a ? (
           <>
-            <RouteStory ref={ref} {...story} width={w} route={decodeRoute(a.route)} />
+            <RouteStory ref={ref} {...story} emptyText={a.route ? undefined : t('route.noMap')} width={w} route={decodeRoute(a.route ?? '')} />
             <View style={{ alignSelf: 'stretch', gap: 10 }}>
               <Button
                 title={t('route.share')}

@@ -44,6 +44,7 @@ export function SupplementsCard() {
   const [failed, setFailed] = useState<string[]>([]);
   const attempted = useRef(new Set<string>());
   const [open, setOpen] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false); // the add-a-supplement form is a dropdown
   const [expanded, setExpanded] = useState<string[]>([]); // supplements whose details are showing
   const toggleDetails = (id: string) => setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
   const [editDose, setEditDose] = useState('');
@@ -133,6 +134,7 @@ export function SupplementsCard() {
     setScanned(null);
     setSched(defaultSchedule(today));
     setMsg('');
+    setAddOpen(false);
   };
 
   const label = (sc: Schedule): string => {
@@ -271,7 +273,12 @@ export function SupplementsCard() {
       })}
 
       <View style={styles.add}>
-        <Text style={styles.label}>{t('daily.suppAdd')}</Text>
+        <Pressable onPress={() => setAddOpen((o) => !o)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }} accessibilityRole="button" accessibilityState={{ expanded: addOpen }}>
+          <Text style={styles.label}>{t('daily.suppAdd')}</Text>
+          <Ionicons name={addOpen ? 'chevron-up' : 'chevron-down'} size={22} color={colors.ink} />
+        </Pressable>
+        {addOpen && (
+          <>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <TextInput value={name} onChangeText={setName} placeholder={t('supp.namePh')} placeholderTextColor={colors.inkSoft} style={[styles.input, { flex: 2, minWidth: 0 }]} />
           <TextInput value={dose} onChangeText={setDose} placeholder={t('daily.dose')} placeholderTextColor={colors.inkSoft} style={[styles.input, { flex: 1, minWidth: 0 }]} />
@@ -299,6 +306,8 @@ export function SupplementsCard() {
         {msg ? <Text style={styles.err}>{msg}</Text> : null}
         <Button title={t('common.add')} onPress={add} disabled={!canAdd} />
         <Text style={styles.sub}>{t('supp.hint')}</Text>
+          </>
+        )}
       </View>
     </Card>
   );

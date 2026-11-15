@@ -25,6 +25,9 @@ import { goBack } from '../src/lib/nav';
 const TYPES: ActivityType[] = ['walk', 'run', 'cycle', 'cardio', 'other'];
 const EFFORT = [3, 5, 8, 10];
 
+/** A walk, run or ride with a distance has a route card (sessions saved before routes were kept show the numbers without a map). */
+const cardable = (a: { type: string; km?: number; route?: string }) => !!a.route || ((a.type === 'walk' || a.type === 'run' || a.type === 'cycle') && !!a.km);
+
 export default function ActivityScreen() {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -169,7 +172,7 @@ export default function ActivityScreen() {
             <Text style={styles.h2}>{t('act.recent')}</Text>
             {recent.map((a) => (
               <View key={a.id} style={styles.row}>
-                <Pressable style={{ flex: 1 }} disabled={!a.route} onPress={() => router.push({ pathname: '/route-view', params: { id: a.id } })} accessibilityRole={a.route ? 'button' : undefined}>
+                <Pressable style={{ flex: 1 }} disabled={!cardable(a)} onPress={() => router.push({ pathname: '/route-view', params: { id: a.id } })} accessibilityRole={cardable(a) ? 'button' : undefined}>
                   <Text style={styles.name}>
                     {t('act.sessionLine', { type: typeName(a.type), min: a.minutes })}
                     {a.km ? t('act.sessionKm', { km: a.km }) : ''}
@@ -178,7 +181,7 @@ export default function ActivityScreen() {
                     {a.date}
                     {a.km ? ` · ${formatPace(paceMinPerKm(a))}` : ''} · ≈{kcalBurned(a, weightKg)} kcal
                   </Text>
-                  {a.route ? <Text style={[styles.sub, { fontWeight: '800', color: colors.primaryDark }]}>{t('route.openCard')}</Text> : null}
+                  {cardable(a) ? <Text style={[styles.sub, { fontWeight: '800', color: colors.primaryDark }]}>{t('route.openCard')}</Text> : null}
                 </Pressable>
                 <Pressable
                   hitSlop={8}

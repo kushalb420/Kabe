@@ -14,3 +14,18 @@ export function shouldSave(last: { value: number; at: number } | null, value: nu
 
 /** Midnight at the start of the given date, for "steps since the start of today". */
 export const startOfDay = (d: Date): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+/** Writes `steps` for `date` into the saved tracker data, never lowering a number that is already there. Returns true if it changed. */
+export function mergeSteps(rawJson: string | null, date: string, steps: number): string | null {
+  if (!rawJson) return null;
+  try {
+    const data = JSON.parse(rawJson) as { steps?: Record<string, number> };
+    if (!data || typeof data !== 'object') return null;
+    const saved = typeof data.steps?.[date] === 'number' ? data.steps[date] : 0;
+    const next = nextTotal(saved, steps);
+    if (next === saved && saved > 0) return null;
+    return JSON.stringify({ ...data, steps: { ...(data.steps ?? {}), [date]: next } });
+  } catch {
+    return null;
+  }
+}

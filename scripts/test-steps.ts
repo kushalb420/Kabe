@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readTodayStepsWith, type HcLike, readStepsBetween } from '../src/lib/healthConnect';
-import { nextTotal, shouldSave, startOfDay, withSession } from '../src/lib/steps';
+import { mergeSteps, nextTotal, shouldSave, startOfDay, withSession } from '../src/lib/steps';
 
 assert.equal(withSession(1000, 250), 1250);
 assert.equal(withSession(0, 0), 0);
@@ -58,7 +58,16 @@ void (async () => {
   assert.equal(await readStepsBetween(fake(false, 42) as never, a, b), null, 'no permission: null, and no dialog');
   assert.equal(await readStepsBetween(fake(true, null) as never, a, b), null);
   assert.equal(await readStepsBetween({ ...fake(true, 5), getSdkStatus: async () => 1 } as never, a, b), null, 'Health Connect missing');
-})().then(() => console.log('Steps tests passed.'));
+})().then(() => {
+const base = JSON.stringify({ steps: { '2026-11-16': 4000 }, water: {} });
+assert.equal(JSON.parse(mergeSteps(base, '2026-11-16', 6500)!).steps['2026-11-16'], 6500, 'a higher system count is saved');
+assert.equal(mergeSteps(base, '2026-11-16', 3000), null, 'a lower number never replaces a higher one');
+assert.equal(JSON.parse(mergeSteps(base, '2026-11-17', 100)!).steps['2026-11-16'], 4000, 'other days are untouched');
+assert.equal(JSON.parse(mergeSteps(base, '2026-11-16', 6500)!).water !== undefined, true, 'other data is untouched');
+assert.equal(mergeSteps(null, '2026-11-16', 1), null);
+assert.equal(mergeSteps('not json', '2026-11-16', 1), null);
+console.log('Steps tests passed.');
+});
 })().catch((e) => {
   console.error(e);
   process.exit(1);

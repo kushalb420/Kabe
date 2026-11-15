@@ -58,6 +58,7 @@ export function StepCounter() {
     let cancelled = false;
     let sub: { remove: () => void } | null = null;
     let timer: ReturnType<typeof setInterval> | null = null;
+    let resume: { remove: () => void } | null = null;
 
     const save = (date: string, value: number) => {
       const total = nextTotal(stepsRef.current[date] ?? 0, value);
@@ -76,12 +77,16 @@ export function StepCounter() {
             const first = await readTodayStepsWith(hc, new Date());
             if (first !== null && !cancelled) {
               save(toDateKey(new Date()), first);
-              timer = setInterval(async () => {
-                if (AppState.currentState !== 'active') return; // nothing to do while Kabe is in the background
+              const tick = async () => {
                 const now = new Date();
                 const v = await readTodayStepsWith(hc, now);
                 if (v !== null && !cancelled) save(toDateKey(now), v);
+              };
+              timer = setInterval(() => {
+                if (AppState.currentState === 'active') void tick(); // nothing to do while Kabe is in the background
               }, 60000);
+              // Health Connect keeps counting while Kabe is closed: read the whole day the moment Kabe comes back
+              resume = AppState.addEventListener('change', (st) => st === 'active' && void tick());
               return;
             }
           }
@@ -121,6 +126,7 @@ export function StepCounter() {
     return () => {
       cancelled = true;
       sub?.remove();
+      resume?.remove();
       if (timer) clearInterval(timer);
     };
   }, [autoSteps, setSteps]);

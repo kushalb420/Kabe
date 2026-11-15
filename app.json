@@ -104,7 +104,8 @@
         }
       ],
       "expo-dev-client",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-background-task"
     ],
     "backgroundColor": "#FDE186",
     "extra": {

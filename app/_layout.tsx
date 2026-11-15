@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../src/lib/crashCatcher'; // shows an error on screen instead of closing the app
 import '../src/lib/gpsTask'; // registers the background GPS task
+import '../src/lib/stepTask'; // registers the background step reading (builds that have it)
 import { CaffeineWatcher } from '../src/components/CaffeineWatcher';
 import { IdleWatcher } from '../src/components/IdleWatcher';
 import { NotificationActions } from '../src/components/NotificationActions';
@@ -23,6 +24,7 @@ import { AlertHost } from '../src/components/AlertHost';
 import { CrashBoundary, CrashOverlay } from '../src/components/CrashScreen';
 import { LoadingScreen } from '../src/components/Loading';
 import { NicknamePrompt } from '../src/components/NicknamePrompt';
+import { PermissionCheckup } from '../src/components/PermissionCheckup';
 
 /** Everything that needs the current palette sits below the ThemeProvider. */
 function Shell() {
@@ -63,6 +65,7 @@ function Shell() {
       <IdleWatcher />
       <CaffeineWatcher />
       <NicknamePrompt />
+      <PermissionCheckup />
       <AlertHost />
       {!ready && <LoadingScreen />}
       <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', animationDuration: 260, contentStyle: { backgroundColor: colors.bg } }}>

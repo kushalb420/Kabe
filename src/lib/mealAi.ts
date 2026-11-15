@@ -2,6 +2,8 @@
 // All parsing and checking is in gemFood.ts (pure, tested); `ask` is injectable so tests never touch the network.
 import type { Food } from '../data/foods';
 import { FOOD_SCHEMA, MEAL_SCHEMA, MealItem, buildFoodPrompt, buildMealPhotoPrompt, buildMealTextPrompt, itemGrams, parseFood, parseMeal, setGrams, withStatedAmounts } from './gemFood';
+import { FoodMemory, Known, memKey, parseClause, resolveText } from './foodMemory';
+import { CacheClient, getSharedFoods, putSharedFood } from './sharedCache';
 import { askJson } from './vision';
 
 export type MealResult = { items: MealItem[]; meal: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null };
@@ -58,4 +60,39 @@ export async function swapItem(key: string, item: MealItem, newName: string, ask
   const n = r.items[0];
   if (!n) return null;
   return { ...setGrams(n, grams), id: item.id, note: '', stated: item.stated };
+}
+
+/**
+ * A typed meal, using what Kabe already knows. Foods in the person's own memory, and foods other people's lookups already worked out
+ * (the shared cache), are built without the AI; only the foods nobody has seen are sent to it, and what it answers is added to the
+ * shared cache for the next person. If every food is known, no request is made at all.
+ */
+export async function analyzeMealTextSmart(
+  key: string,
+  text: string,
+  mem: FoodMemory,
+  shared: CacheClient | null,
+  ask: Ask = askJson,
+): Promise<MealResult & { aiCalls: number }> {
+  let { known, unknown } = resolveText(text, mem);
+  if (unknown.length) {
+    // the community cache, one request for every unknown food
+    const wanted = unknown.map((u) => memKey(parseClause(u).name)).filter(Boolean);
+    const hits = await getSharedFoods(shared, wanted);
+    if (Object.keys(hits).length) {
+      const more = resolveText(unknown.join(', '), hits as Record<string, Known>);
+      known = [...known, ...more.known];
+      unknown = more.unknown;
+    }
+  }
+  if (!unknown.length) return { items: known, meal: null, aiCalls: 0 };
+  const asked = unknown.join(', ');
+  const r = await analyzeMealText(key, asked, ask);
+  // share what the AI just worked out (plain foods only: an item with a detail note is a one-off variant)
+  for (const it of r.items) {
+    if (it.note) continue;
+    const k = memKey(it.name);
+    if (k) void putSharedFood(shared, k, { name: it.name, unit: it.unit === 'g' || it.unit === 'ml' ? 'serving' : it.unit, unitGrams: it.unit === 'g' || it.unit === 'ml' ? 100 : it.unitGrams, per100: it.per100, n: 1, at: Date.now() });
+  }
+  return { items: [...known, ...r.items], meal: r.meal, aiCalls: 1 };
 }

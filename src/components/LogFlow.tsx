@@ -10,7 +10,10 @@ import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
 import { Command, parseCommand } from '../lib/commands';
 import { MealItem, foodFromItem, isMeasure, itemGrams, itemNutrients, mealTotals, setCount, setGrams, stepFor } from '../lib/gemFood';
-import { MealResult, analyzeMealAudio, analyzeMealPhoto, analyzeMealText, refineItem, swapItem } from '../lib/mealAi';
+import { MealResult, analyzeMealAudio, analyzeMealPhoto, analyzeMealTextSmart, refineItem, swapItem } from '../lib/mealAi';
+import { FoodMemory, learnFoods } from '../lib/foodMemory';
+import { loadFoodMemory, saveFoodMemory } from '../lib/foodMemoryStore';
+import { useCloud } from '../store/cloud';
 import { PortionMemory, applyPortions, learnPortions } from '../lib/portionMemory';
 import { loadPortions, savePortions } from '../lib/portionStore';
 import { toDateKey } from '../lib/nutrition';
@@ -58,8 +61,12 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
   const [swapping, setSwapping] = useState<Record<string, string | undefined>>({}); // 'Change food' box per item (undefined = closed)
   const [swapBusy, setSwapBusy] = useState<string | null>(null);
   const portions = useRef<PortionMemory>({}); // Kabe's own memory of the person's usual amounts (no AI)
+  const foods = useRef<FoodMemory>({}); // and of every food it has worked out, so the AI is asked only about new ones
+  const cloud = useCloud();
+  const sharedClient = cloud.client && cloud.user ? cloud.client : null;
   useEffect(() => {
     void loadPortions().then((m) => { portions.current = m; });
+    void loadFoodMemory().then((m) => { foods.current = m; });
   }, []);
   const [items, setItems] = useState<MealItem[]>([]);
   const [uri, setUri] = useState<string | null>(null);
@@ -123,7 +130,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     }
     setStage('calculating');
     try {
-      finish(await analyzeMealText(geminiKey, text), 'voice', text);
+      finish(await analyzeMealTextSmart(geminiKey, text, foods.current, sharedClient), 'voice', text);
     } catch (e) {
       setError(friendly(e));
       setStage('idle');
@@ -215,7 +222,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     if (!text) return;
     setAdding(true);
     try {
-      const r = await analyzeMealText(geminiKey, text);
+      const r = await analyzeMealTextSmart(geminiKey, text, foods.current, sharedClient);
       setItems((l) => [...l, ...applyPortions(portions.current, r.items, text)]);
       setMore('');
     } catch (e) {
@@ -269,6 +276,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
   const save = () => {
     const kept = items.filter((it) => itemGrams(it) > 0); // an item set to 0 is simply left out
     const hint = source === 'photo' ? photoNote : typed;
+    void saveFoodMemory((foods.current = learnFoods(foods.current, kept, Date.now())));
     void savePortions((portions.current = learnPortions(portions.current, kept.map((it) => ({ item: it, grams: itemGrams(it) })), hint, Date.now())));
     for (const it of kept) {
       const n = itemNutrients(it);

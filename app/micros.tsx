@@ -8,6 +8,8 @@ import { Button, Card } from '../src/components/ui';
 import type { Key } from '../src/i18n';
 import { useT } from '../src/i18n/useT';
 import { MICROS, MicroRow, intakeOf, missingFoods, shareOf } from '../src/lib/micro';
+import { getSharedMicros, putSharedMicro } from '../src/lib/sharedCache';
+import { useCloud } from '../src/store/cloud';
 import { loadMicroCache, loadMicroMisses, recentlyMissed, saveMicroCache, saveMicroMisses } from '../src/lib/microCache';
 import { r0, toDateKey } from '../src/lib/nutrition';
 import { lookupMicros } from '../src/lib/vision';
@@ -34,6 +36,8 @@ export default function Micros() {
   const { t } = useT();
   const k = useKabe();
   const tk = useTracker();
+  const cloud = useCloud();
+  const shared = cloud.client && cloud.user ? cloud.client : null;
   const ai = !!k.geminiKey && k.aiConsent;
   const [period, setPeriod] = useState<Period>('today');
   const [cache, setCache] = useState<Record<string, MicroRow>>({});
@@ -87,9 +91,12 @@ export default function Micros() {
       const next = { ...cache };
       const nextMiss = { ...misses };
       let failed = false;
+      const common = await getSharedMicros(shared, batch); // what other people's lookups already found: no AI needed for those
       for (const name of batch) {
         try {
-          const row = await lookupMicros(k.geminiKey, name);
+          const hit = common[name];
+          const row = hit ?? (await lookupMicros(k.geminiKey, name));
+          if (row && !hit) void putSharedMicro(shared, name, row);
           if (row) next[name] = row;
           else {
             nextMiss[name] = Date.now(); // no usable numbers: do not ask again for a week

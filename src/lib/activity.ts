@@ -4,7 +4,19 @@
 import { addDays } from './tracker';
 
 export type ActivityType = 'walk' | 'run' | 'cycle' | 'cardio' | 'other';
-export type Activity = { id: string; date: string; type: ActivityType; minutes: number; km?: number; effort?: number; note?: string };
+export type Activity = {
+  id: string;
+  date: string;
+  type: ActivityType;
+  minutes: number;
+  km?: number;
+  effort?: number;
+  note?: string;
+  /** A traced route (walk, run or ride): the shape of the route in a short text form, kept so the route card can be opened again later. */
+  route?: string;
+  /** Exact time of a traced route, in seconds. */
+  seconds?: number;
+};
 
 export const TYPE_LABEL: Record<ActivityType, string> = { walk: 'Walk', run: 'Run', cycle: 'Cycle', cardio: 'Cardio / gym', other: 'Other' };
 export const WHO_WEEKLY_MINUTES = 150; // WHO: at least 150 min of moderate activity per week for adults

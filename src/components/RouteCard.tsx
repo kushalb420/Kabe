@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useT } from '../i18n/useT';
-import type { Fix } from '../lib/gps';
-import { projectRoute } from '../lib/routeCard';
+import { projectRoute, type Route } from '../lib/routeCard';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { Text } from './Text';
 
-type Props = { route: Fix[]; kindLabel: string; distance: string; pace: string; paceLabel: string; time: string };
+type Props = { route: Route; kindLabel: string; distance: string; pace: string; paceLabel: string; time: string };
 
 /**
  * The route poster: your distance, pace and time over the shape of the route you walked, ready to screenshot or share.

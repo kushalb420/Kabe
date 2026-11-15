@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { Fix, routeOf } from '../src/lib/gps';
-import { base64ToBytes, projectRoute, thin } from '../src/lib/routeCard';
+import { EMPTY_TRACK, addFix } from '../src/lib/gps';
+import { base64ToBytes, buildRoute, decodeRoute, encodeRoute, projectRoute, thin } from '../src/lib/routeCard';
 import { lastMovement } from '../src/lib/idleSchedule';
 
 // a walk north-east: about 15 m every 10 s
@@ -38,4 +39,43 @@ assert.equal(lastMovement([{ start: 0, end: min(60), count: 500 }, { start: min(
 assert.deepEqual([...base64ToBytes('SGVsbG8=')], [72, 101, 108, 108, 111], 'Hello');
 assert.deepEqual([...base64ToBytes('SGk')], [72, 105], 'no padding');
 assert.deepEqual([...base64ToBytes('data:x')].length > 0, true);
+// ---- the stray line: a stale first fix far from where the walk really starts ----
+const stale: Fix = { lat: 12.95, lon: 77.7, t: 0, acc: 10 }; // an old location from somewhere else
+const real: Fix[] = Array.from({ length: 40 }, (_, i) => ({ lat: 12.9 + Math.sin(i / 6) * 0.0004, lon: 77.6 + Math.cos(i / 6) * 0.0004, t: 2000 + i * 2000, acc: 6 }));
+const fixed = routeOf([stale, ...real], 'walk');
+let tk = EMPTY_TRACK;
+for (const f of [stale, ...real]) tk = addFix(tk, f, 'walk');
+assert.ok(tk.meters < 400, 'the jump from the stale point is not counted as distance, got ' + tk.meters);
+const drawn = buildRoute(fixed);
+assert.equal(drawn.length, 1, 'the stale point is a separate stretch of one point and is dropped');
+assert.ok(drawn[0].every((p) => Math.abs(p.lat - 12.9) < 0.001), 'no point is left near the stale location');
+// a pause longer than 90 seconds splits the route: no straight line across the gap
+const gap = buildRoute([...fixes.slice(0, 10), ...fixes.slice(10).map((f) => ({ ...f, t: f.t + 300_000 }))]);
+assert.equal(gap.length, 2);
+// one point that wanders off and comes straight back is a spike and is removed
+const spiky: Fix[] = fixes.slice(0, 12).map((f) => ({ ...f }));
+spiky[6] = { ...spiky[6], lat: spiky[6].lat + 0.002 }; // about 220 m off
+assert.equal(buildRoute(spiky)[0].length, 11);
+assert.ok(buildRoute(fixes.slice(0, 1)).length === 0 && buildRoute([]).length === 0);
+// ---- the short text form ----
+const rt = decodeRoute(encodeRoute(drawn));
+assert.equal(rt.length, 1);
+assert.equal(rt[0].length, drawn[0].length);
+assert.ok(Math.abs(rt[0][5].lat - drawn[0][5].lat) < 1e-5 && Math.abs(rt[0][5].lon - drawn[0][5].lon) < 1e-5);
+assert.equal(decodeRoute(encodeRoute(gap)).length, 2, 'stretches survive');
+assert.deepEqual(decodeRoute('!!!!'), [], 'garbage is ignored');
+assert.deepEqual(decodeRoute(''), []);
+assert.ok(encodeRoute(drawn).length < drawn[0].length * 12, 'compact');
 console.log('Route card and movement tests passed.');
+
+// ---- the link to the website card ----
+import { parseStoryHash, routeOfStory, storyUrl, SITE } from '../src/lib/routeShare';
+const data = { kind: 'RUN', date: '14 Nov', km: '6.09', distanceLabel: 'DISTANCE · KM', paceLabel: 'Pace', pace: '5:55 /min', timeLabel: 'समय', time: '36:07', footer: 'MOVED WITH KABE', route: encodeRoute(drawn) };
+const url = storyUrl(data);
+assert.ok(url.startsWith(SITE + '/route#'));
+assert.ok(url.length < 2500, 'the link stays short, got ' + url.length);
+assert.deepEqual(parseStoryHash(url.slice(url.indexOf('#'))), data, 'the card survives the trip, including non-English text');
+assert.equal(routeOfStory(parseStoryHash(url.slice(url.indexOf('#')))!).length, 1);
+assert.equal(parseStoryHash('#nonsense'), null);
+assert.equal(parseStoryHash(''), null);
+console.log('Route link tests passed.');

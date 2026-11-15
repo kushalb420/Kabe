@@ -1,7 +1,8 @@
 // Turning the route card into a shareable picture. Pure helpers are tested in scripts/test-routecard.ts.
 import { File, Paths } from 'expo-file-system';
-import { Platform, Share } from 'react-native';
+import { Linking, Platform, Share } from 'react-native';
 import { base64ToBytes } from './routeCard';
+import { StoryData, storyUrl } from './routeShare';
 
 type Drawing = { toDataURL: (cb: (base64: string) => void, options?: { width?: number; height?: number }) => void };
 
@@ -20,17 +21,27 @@ const render = (svg: Drawing): Promise<string> =>
     }
   });
 
-export type ShareResult = 'image' | 'downloaded' | 'text' | 'failed';
+type Sharing = { isAvailableAsync: () => Promise<boolean>; shareAsync: (u: string, o?: object) => Promise<void> };
+const sharingModule = (): Sharing | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('expo-sharing') as Sharing; // only builds made with it have it
+  } catch {
+    return null;
+  }
+};
+
+export type ShareResult = 'image' | 'downloaded' | 'opened' | 'failed';
 
 /**
- * Shares the card as a 9:16 PNG. On the web it opens the share sheet with the picture when the browser allows it, otherwise
- * it downloads the picture. In the app it uses the phone's share sheet. A build made before image sharing existed cannot send a
- * picture on Android; there the text is shared instead.
+ * Shares the card as a 9:16 PNG. On the web it opens the share sheet with the picture when the browser allows it, otherwise it
+ * downloads the picture. In an app build that can share pictures it uses the phone's share sheet. In an app build that cannot, it
+ * opens the same card on the Kabe website, where it can be downloaded.
  */
-export async function shareStory(svg: Drawing, fallbackText: string): Promise<ShareResult> {
+export async function shareRouteCard(svg: Drawing, data: StoryData): Promise<ShareResult> {
   try {
-    const b64 = await render(svg);
     if (Platform.OS === 'web') {
+      const b64 = await render(svg);
       const bytes = base64ToBytes(b64);
       const blob = new Blob([bytes as BlobPart], { type: 'image/png' });
       const file = new (globalThis as any).File([blob], 'kabe-route.png', { type: 'image/png' });
@@ -45,25 +56,23 @@ export async function shareStory(svg: Drawing, fallbackText: string): Promise<Sh
       a.click();
       return 'downloaded';
     }
-    const f = new File(Paths.cache, `kabe-route-${Date.now()}.png`);
-    f.create({ overwrite: true });
-    f.write(base64ToBytes(b64));
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const Sharing = require('expo-sharing') as { isAvailableAsync: () => Promise<boolean>; shareAsync: (u: string, o?: object) => Promise<void> };
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(f.uri, { mimeType: 'image/png', dialogTitle: 'Kabe' });
-        return 'image';
-      }
-    } catch {
-      /* this build has no image sharing: try the phone's own share sheet */
+    const Sharing = sharingModule();
+    if (Sharing && (await Sharing.isAvailableAsync().catch(() => false))) {
+      const f = new File(Paths.cache, `kabe-route-${Date.now()}.png`);
+      f.create({ overwrite: true });
+      f.write(base64ToBytes(await render(svg)));
+      await Sharing.shareAsync(f.uri, { mimeType: 'image/png', dialogTitle: 'Kabe' });
+      return 'image';
     }
     if (Platform.OS === 'ios') {
+      const f = new File(Paths.cache, `kabe-route-${Date.now()}.png`);
+      f.create({ overwrite: true });
+      f.write(base64ToBytes(await render(svg)));
       await Share.share({ url: f.uri });
       return 'image';
     }
-    await Share.share({ message: fallbackText });
-    return 'text';
+    await Linking.openURL(storyUrl(data)); // this build cannot send a picture: the website card can be downloaded
+    return 'opened';
   } catch {
     return 'failed';
   }

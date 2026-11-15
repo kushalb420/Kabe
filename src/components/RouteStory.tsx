@@ -1,11 +1,10 @@
 import React from 'react';
 import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
-import type { Fix } from '../lib/gps';
-import { projectRoute } from '../lib/routeCard';
+import { projectRoute, type Route } from '../lib/routeCard';
 import { useColors } from '../theme';
 
 export type StoryProps = {
-  route: Fix[];
+  route: Route;
   kind: string; // "RUN"
   date: string; // "14 Nov"
   km: string; // "6.09"

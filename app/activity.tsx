@@ -169,7 +169,7 @@ export default function ActivityScreen() {
             <Text style={styles.h2}>{t('act.recent')}</Text>
             {recent.map((a) => (
               <View key={a.id} style={styles.row}>
-                <View style={{ flex: 1 }}>
+                <Pressable style={{ flex: 1 }} disabled={!a.route} onPress={() => router.push({ pathname: '/route-view', params: { id: a.id } })} accessibilityRole={a.route ? 'button' : undefined}>
                   <Text style={styles.name}>
                     {t('act.sessionLine', { type: typeName(a.type), min: a.minutes })}
                     {a.km ? t('act.sessionKm', { km: a.km }) : ''}
@@ -178,7 +178,8 @@ export default function ActivityScreen() {
                     {a.date}
                     {a.km ? ` · ${formatPace(paceMinPerKm(a))}` : ''} · ≈{kcalBurned(a, weightKg)} kcal
                   </Text>
-                </View>
+                  {a.route ? <Text style={[styles.sub, { fontWeight: '800', color: colors.primaryDark }]}>{t('route.openCard')}</Text> : null}
+                </Pressable>
                 <Pressable
                   hitSlop={8}
                   onPress={() => Alert.alert(t('act.deleteQ'), `${typeName(a.type)} · ${a.date}`, [{ text: t('common.cancel'), style: 'cancel' }, { text: t('common.delete'), style: 'destructive', onPress: () => tk.removeActivity(a.id) }])}

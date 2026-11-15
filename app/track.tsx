@@ -12,7 +12,9 @@ import { nowMs } from '../src/lib/clock';
 import { EMPTY_TRACK, Fix, Track, TrackKind, addFix, formatClock, formatPaceMin, routeOf, summarize } from '../src/lib/gps';
 import { RouteCard } from '../src/components/RouteCard';
 import { RouteStory } from '../src/components/RouteStory';
-import { shareStory } from '../src/lib/routeStory';
+import { shareRouteCard } from '../src/lib/routeStory';
+import { buildRoute, encodeRoute } from '../src/lib/routeCard';
+import { buildStoryData } from '../src/lib/routeShare';
 import { foldSession } from '../src/lib/gpsSession';
 import { clearSession, isBackgroundRunning, loadSession, startBackground, stopBackground } from '../src/lib/gpsTask';
 import { toDateKey } from '../src/lib/nutrition';
@@ -76,13 +78,14 @@ export default function TrackScreen() {
     const id = setInterval(async () => {
       setTick(nowMs());
       n++;
+      if (n % 5 !== 0) return; // the clock ticks every second; the heavier work only every 5 seconds
       if (bg) {
         const s = await loadSession();
         if (s) {
           setTrack(foldSession(s));
-          if (n % 5 === 0) setRoute(routeOf(s.fixes, s.kind));
+          setRoute(routeOf(s.fixes, s.kind));
         }
-      } else if (n % 5 === 0) setRoute(routeOf(fixesRef.current, kindRef.current));
+      } else setRoute(routeOf(fixesRef.current, kindRef.current));
     }, 1000);
     return () => clearInterval(id);
   }, [phase, bg]);
@@ -149,28 +152,32 @@ export default function TrackScreen() {
   };
 
   const done = phase === 'done';
+  const drawn = React.useMemo(() => buildRoute(route), [route]);
   const sum = summarize(track, startMs, done ? endMs : tick || startMs);
   const elapsed = (done ? endMs : tick || startMs) - startMs;
 
   const save = () => {
-    tk.addActivity({ date: toDateKey(new Date()), type: kind, minutes: sum.minutes, ...(sum.km > 0 ? { km: sum.km } : {}) });
+    // the route is kept with the session, so the route card can be opened again from the activity history
+    const enc = encodeRoute(drawn);
+    tk.addActivity({ date: toDateKey(new Date()), type: kind, minutes: sum.minutes, ...(sum.km > 0 ? { km: sum.km } : {}), ...(enc ? { route: enc, seconds: Math.round(elapsed / 1000) } : {}) });
     goBack();
   };
 
   const paceText = kind === 'cycle' ? (sum.avgKmh === null ? '–' : t('track.speedVal', { v: sum.avgKmh })) : sum.paceMinPerKm === null ? '–' : t('track.paceVal', { p: formatPaceMin(sum.paceMinPerKm) });
+  const story = buildStoryData({ kind, date: new Date(), km: sum.km, minutes: sum.minutes, seconds: Math.round(elapsed / 1000), route: drawn }, t);
   const share = async () => {
     if (!storyRef.current || sharing) return;
     setSharing(true);
     setShareNote('');
-    const text = t('route.shareMsg', { kind: t(`act.type.${kind}` as Key), km: sum.km.toFixed(2), time: formatClock(elapsed), pace: paceText });
-    const r = await shareStory(storyRef.current as never, text);
+    const r = await shareRouteCard(storyRef.current as never, story);
     setSharing(false);
     if (r === 'downloaded') setShareNote(t('route.saved'));
+    else if (r === 'opened') setShareNote(t('route.opened'));
     else if (r === 'failed') setShareNote(t('route.failed'));
   };
   const poster = (
     <RouteCard
-      route={route}
+      route={drawn}
       kindLabel={t(`act.type.${kind}` as Key)}
       distance={t('track.km', { km: sum.km.toFixed(2) })}
       pace={paceText}
@@ -217,16 +224,16 @@ export default function TrackScreen() {
               <RouteStory
                 ref={storyRef}
                 width={250}
-                route={route}
-                kind={t(`act.type.${kind}` as Key).toUpperCase()}
-                date={new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-                km={sum.km.toFixed(2)}
-                distanceLabel={`${t('track.distance').toUpperCase()} · KM`}
-                paceLabel={kind === 'cycle' ? t('track.speed') : t('track.pace')}
-                pace={paceText}
-                timeLabel={t('route.time')}
-                time={formatClock(elapsed)}
-                footer={t('route.footer')}
+                route={drawn}
+                kind={story.kind}
+                date={story.date}
+                km={story.km}
+                distanceLabel={story.distanceLabel}
+                paceLabel={story.paceLabel}
+                pace={story.pace}
+                timeLabel={story.timeLabel}
+                time={story.time}
+                footer={story.footer}
               />
             </View>
             <Text style={styles.sub}>{t('route.posterNote')}</Text>
@@ -235,7 +242,7 @@ export default function TrackScreen() {
           </>
         )}
 
-        {phase === 'tracking' && route.length > 1 && poster}
+        {phase === 'tracking' && drawn.length > 0 && poster}
 
         {phase === 'tracking' && (
           <Card style={{ gap: 14 }}>

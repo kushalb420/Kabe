@@ -1,7 +1,7 @@
 // GPS route tracking maths (pure, tested in scripts/test-gps.ts). The phone's location is read in app/track.tsx.
 // Bad GPS fixes are the main problem on a phone, so every fix is checked before it is counted.
 
-export type Fix = { lat: number; lon: number; t: number; acc?: number | null }; // t = milliseconds since epoch
+export type Fix = { lat: number; lon: number; t: number; acc?: number | null; brk?: boolean }; // t = milliseconds since epoch; brk = the route starts again here (after a jump)
 export type TrackKind = 'walk' | 'run' | 'cycle';
 
 export const MAX_ACCURACY_M = 35; // fixes less accurate than this are ignored
@@ -19,7 +19,7 @@ export function haversineM(a: Pick<Fix, 'lat' | 'lon'>, b: Pick<Fix, 'lat' | 'lo
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-export type Track = { last: Fix | null; meters: number; counted: number; rejected: number };
+export type Track = { last: Fix | null; meters: number; counted: number; rejected: number; streak?: number };
 export const EMPTY_TRACK: Track = { last: null, meters: 0, counted: 0, rejected: 0 };
 
 /** Adds one GPS fix. Inaccurate fixes and impossible jumps are rejected; tiny moves are ignored; the rest add to the distance. */
@@ -31,7 +31,13 @@ export function addFix(track: Track, fix: Fix, kind: TrackKind): Track {
   if (!(dt > 0)) return { ...track, rejected: track.rejected + 1 };
   const d = haversineM(track.last, fix);
   if (d < MIN_STEP_M) return track;
-  if (d / dt > MAX_SPEED_MS[kind]) return { ...track, rejected: track.rejected + 1 };
+  if (d / dt > MAX_SPEED_MS[kind]) {
+    // an impossible jump. Once in a while that is one bad fix; three in a row means the point we were holding was the wrong one
+    // (a stale location from before the walk started), so start again from here without adding the jump to the distance
+    const streak = (track.streak ?? 0) + 1;
+    if (streak >= 3) return { last: { ...fix, brk: true }, meters: track.meters, counted: track.counted + 1, rejected: track.rejected + 1 };
+    return { ...track, rejected: track.rejected + 1, streak };
+  }
   return { last: fix, meters: track.meters + d, counted: track.counted + 1, rejected: track.rejected };
 }
 

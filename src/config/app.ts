@@ -75,6 +75,7 @@ export const FEATURES = {
   progressPhotos: true,
   vitamins: true,
   cloudBackup: true,
+  idle: false, // the "time to move" reminder: hidden until it is reliable
 };
 
 /** Tabs, in order. `show: false` hides one. */

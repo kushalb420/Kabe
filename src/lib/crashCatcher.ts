@@ -17,6 +17,23 @@ export function reportCrash(e: unknown, fatal?: boolean): void {
   listeners.forEach((l) => l(last));
 }
 
+const clearers = new Set<() => void>();
+/** The person pressed "Try to continue": forget the error and let the app draw again. */
+export function clearCrash(): void {
+  last = '';
+  listeners.forEach((l) => l(''));
+  clearers.forEach((c) => c());
+}
+export function onCrashCleared(c: () => void): () => void {
+  clearers.add(c);
+  return () => {
+    clearers.delete(c);
+  };
+}
+
+/** Small errors that did not stop anything (a failed timer or handler). Kept for debugging, never shown full screen. */
+export const quietErrors: string[] = [];
+
 export function onCrash(l: Listener): () => void {
   listeners.add(l);
   if (last) l(last);
@@ -29,7 +46,13 @@ const EU = (globalThis as { ErrorUtils?: { setGlobalHandler?: (h: (e: unknown, f
 if (EU?.setGlobalHandler) {
   const previous = EU.getGlobalHandler?.();
   EU.setGlobalHandler((e, fatal) => {
-    reportCrash(e, fatal);
-    if (!fatal) previous?.(e, fatal); // a fatal error is shown on screen instead of closing the app
+    if (fatal) {
+      reportCrash(e, true); // a fatal error is shown on screen instead of closing the app
+      return;
+    }
+    // a non-fatal error did not stop the app: note it quietly instead of covering the screen with an error page
+    quietErrors.push(describeError(e));
+    if (quietErrors.length > 20) quietErrors.shift();
+    previous?.(e, fatal);
   });
 }

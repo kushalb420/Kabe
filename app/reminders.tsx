@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
+import { FEATURES } from '../src/config/app';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { Alert } from '../src/lib/alert';
@@ -70,7 +71,7 @@ export default function Notifications_() {
     habits.filter((h) => h.remind).length +
     supplements.filter((s) => s.remind).length +
     customReminders.filter((r) => r.on).length +
-    (notif.idle.on ? 1 : 0);
+    (FEATURES.idle && notif.idle.on ? 1 : 0);
 
   const saveDraft = () => {
     if (!draft || !draft.title.trim()) return;
@@ -251,7 +252,7 @@ export default function Notifications_() {
           <Text style={styles.sub}>{t('notifs.buttonsNote')}</Text>
         </Card>
 
-        {(
+        {FEATURES.idle && (
           <>
         <Text style={styles.heading}>{t('notifs.idle')}</Text>
         <Card style={{ gap: 6 }}>

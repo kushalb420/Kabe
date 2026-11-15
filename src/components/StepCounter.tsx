@@ -1,7 +1,7 @@
 import { Pedometer } from 'expo-sensors';
 import { useEffect, useRef } from 'react';
 import { WEB_STEPS_ACTIVE_EVENT, WEB_STEPS_EVENT, WEB_STEPS_KEY, startMotion } from '../lib/webSteps';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { loadHealthConnect, readTodayStepsWith } from '../lib/healthConnect';
 import { toDateKey } from '../lib/nutrition';
 import { nextTotal, shouldSave, startOfDay, withSession } from '../lib/steps';
@@ -77,6 +77,7 @@ export function StepCounter() {
             if (first !== null && !cancelled) {
               save(toDateKey(new Date()), first);
               timer = setInterval(async () => {
+                if (AppState.currentState !== 'active') return; // nothing to do while Kabe is in the background
                 const now = new Date();
                 const v = await readTodayStepsWith(hc, now);
                 if (v !== null && !cancelled) save(toDateKey(now), v);

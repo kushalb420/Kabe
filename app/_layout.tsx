@@ -3,6 +3,7 @@ import { SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider as NavThemeProvider, router, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -26,12 +27,30 @@ import { NicknamePrompt } from '../src/components/NicknamePrompt';
 /** Everything that needs the current palette sits below the ThemeProvider. */
 function Shell() {
   const { colors } = useTheme();
-  const { ready, welcomed } = useKabe();
+  const { ready, welcomed, profile } = useKabe();
   const pathname = usePathname();
   // the first time Kabe opens, show the welcome screen
   useEffect(() => {
-    if (ready && !welcomed && pathname !== '/welcome') router.replace('/welcome');
+    if (ready && !welcomed && pathname !== '/welcome' && pathname !== '/route') router.replace('/welcome'); // /route is a shared route card from a link
   }, [ready, welcomed, pathname]);
+  // right after the welcome flow (or the first sign in), ask for the person's goals once, so nobody has to look for them in Settings
+  useEffect(() => {
+    if (!ready || !welcomed || profile || pathname !== '/') return;
+    let alive = true;
+    const timer = setTimeout(async () => {
+      try {
+        if ((await AsyncStorage.getItem('kabe.goalsAsked')) === '1' || !alive) return;
+        await AsyncStorage.setItem('kabe.goalsAsked', '1');
+        if (alive) router.push('/goals');
+      } catch {
+        /* storage failed: skip the question rather than ask every time */
+      }
+    }, 900); // only once the person has settled on Today (not while heading to sign in)
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [ready, welcomed, profile, pathname]);
   // the navigation layer has its own idea of "background"; give it ours so nothing flashes white between screens
   const base = DefaultTheme;
   const navTheme = { ...base, colors: { ...base.colors, background: colors.bg, card: colors.card, border: colors.line, text: colors.ink, primary: colors.primary } };
@@ -57,6 +76,9 @@ function Shell() {
         <Stack.Screen name="label" options={{ presentation: 'modal' }} />
         <Stack.Screen name="voice" options={{ presentation: 'modal' }} />
         <Stack.Screen name="cloud" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="goals" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="route" />
+        <Stack.Screen name="route-view" options={{ presentation: 'modal' }} />
         <Stack.Screen name="kitchen" />
         <Stack.Screen name="activity" />
         <Stack.Screen name="achievements" />

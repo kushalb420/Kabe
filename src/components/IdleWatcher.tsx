@@ -5,6 +5,7 @@ import { Pedometer } from 'expo-sensors';
 import { loadHealthConnect, readStepSpans } from '../lib/healthConnect';
 import { idleTimes, lastMovement } from '../lib/idleSchedule';
 import { IDLE_TEXT } from '../lib/idleText';
+import { FEATURES } from '../config/app';
 import { useKabe } from '../store/kabe';
 import { useTracker } from '../store/tracker';
 import { ensurePermission } from '../lib/permissions';
@@ -20,7 +21,7 @@ const IDS = ['kabe-idle-0', 'kabe-idle-1', 'kabe-idle-2'];
 export function IdleWatcher() {
   const { notif, ready } = useTracker();
   const { language } = useKabe();
-  const on = notif.allOn && notif.idle.on;
+  const on = FEATURES.idle && notif.allOn && notif.idle.on; // while hidden this only removes reminders that were scheduled earlier
   const { afterMin, from, to, minSteps } = notif.idle;
   const lastActive = useRef(0); // ms; set when the app starts, moved forward whenever movement is seen
   const replan = useRef<() => void>(() => {}); // lets the live step counter ask for a fresh plan while walking

@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from './Text';
-import { onCrash, reportCrash } from '../lib/crashCatcher';
+import { clearCrash, onCrash, onCrashCleared, reportCrash } from '../lib/crashCatcher';
 
 /** Catches errors while drawing the app and reports them (see crashCatcher). Draws nothing itself. */
 export class CrashBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
+  }
+  private off: (() => void) | null = null;
+  componentDidMount() {
+    this.off = onCrashCleared(() => this.setState({ failed: false })); // "Try to continue" draws the app again
+  }
+  componentWillUnmount() {
+    this.off?.();
   }
   componentDidCatch(error: unknown) {
     reportCrash(error, true);
@@ -29,7 +36,7 @@ export function CrashOverlay() {
       <ScrollView style={{ flex: 1, backgroundColor: '#FFFEFA', borderWidth: 2, borderColor: '#000', borderRadius: 12, padding: 10 }}>
         <Text selectable style={{ fontSize: 12, color: '#000' }}>{message}</Text>
       </ScrollView>
-      <Pressable onPress={() => setMessage('')} style={{ marginTop: 12, backgroundColor: '#000', borderRadius: 12, padding: 14, alignItems: 'center' }}>
+      <Pressable onPress={() => clearCrash()} style={{ marginTop: 12, backgroundColor: '#000', borderRadius: 12, padding: 14, alignItems: 'center' }}>
         <Text style={{ color: '#FFFEFA', fontWeight: '800' }}>Try to continue</Text>
       </Pressable>
     </View>

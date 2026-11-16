@@ -1,4 +1,5 @@
 // Turning the route card into a shareable picture. Pure helpers are tested in scripts/test-routecard.ts.
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { File, Paths } from 'expo-file-system';
 import { Linking, Platform, Share } from 'react-native';
 import { base64ToBytes } from './routeCard';
@@ -24,6 +25,7 @@ const render = (svg: Drawing): Promise<string> =>
 type Sharing = { isAvailableAsync: () => Promise<boolean>; shareAsync: (u: string, o?: object) => Promise<void> };
 const sharingModule = (): Sharing | null => {
   try {
+    if (!requireOptionalNativeModule('ExpoSharing')) return null; // this build has no sharing code: never even load the library
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('expo-sharing') as Sharing; // only builds made with it have it
   } catch {

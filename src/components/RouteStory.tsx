@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import Svg, { Circle, Defs, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText, TSpan } from 'react-native-svg';
 import { projectRoute, type Route } from '../lib/routeCard';
 import { useColors } from '../theme';
 
@@ -27,7 +27,7 @@ export const STORY_W = 360;
 export const STORY_H = 640;
 
 const FONT = 'Helvetica Neue, Helvetica, Arial, sans-serif';
-const M = 64; // the margin on both sides
+const M = 55; // the margin on both sides
 
 /**
  * The shareable route card, drawn as one 9:16 picture. Like a running-app stats card: the route drawn big and clean, the numbers
@@ -49,6 +49,9 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
   const dots: { x: number; y: number }[] = [];
   if (look.dotOp > 0) for (let x = 20; x < STORY_W; x += 40) for (let y = 20; y < STORY_H; y += 40) dots.push({ x, y });
   const kmSize = p.km.length > 5 ? 46 : 56;
+  const sp = p.pace.indexOf(" ");
+  const pv = sp > 0 ? p.pace.slice(0, sp) : p.pace; // the number
+  const pu = sp > 0 ? p.pace.slice(sp + 1) : ""; // its unit, shown small and italic beside it
   const label = (x: number, y: number, text: string) => (
     <SvgText x={x} y={y} fontSize={11} fontWeight="700" letterSpacing={2.5} fill={look.soft} fontFamily={FONT}>{text}</SvgText>
   );
@@ -87,10 +90,10 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       {label(M, 450, p.distanceLabel)}
       <SvgText x={M - 1} y={500} fontSize={kmSize} fontWeight="900" letterSpacing={-2} fill={look.ink} fontFamily={FONT}>{p.km}</SvgText>
 
-      {label(M, 538, p.paceLabel.toUpperCase())}
-      <SvgText x={M} y={568} fontSize={21} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.pace}</SvgText>
-      {<SvgText x={M + 120} y={538} fontSize={11} fontWeight="700" letterSpacing={2.5} fill={look.soft} fontFamily={FONT}>{p.timeLabel.toUpperCase()}</SvgText>}
-      <SvgText x={M + 120} y={568} fontSize={21} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.time}</SvgText>
+      {label(M, 530, p.paceLabel.toUpperCase())}
+      <SvgText x={M} y={560} fontSize={21} fontWeight="900" fill={look.ink} fontFamily={FONT}>{pv}{pu ? <TSpan dx={6} fontSize={11} fontWeight="700" fontStyle="italic" letterSpacing={2.5} fill={look.soft}>{pu}</TSpan> : null}</SvgText>
+      {<SvgText x={M + 150} y={530} fontSize={11} fontWeight="700" letterSpacing={2.5} fill={look.soft} fontFamily={FONT}>{p.timeLabel.toUpperCase()}</SvgText>}
+      <SvgText x={M + 150} y={560} fontSize={21} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.time}</SvgText>
 
       <SvgText x={STORY_W / 2} y={618} fontSize={9} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.footer}</SvgText>
     </Svg>

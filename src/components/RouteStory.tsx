@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import Svg, { Circle, Defs, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText, TSpan } from 'react-native-svg';
+import Svg, { Circle, Defs, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { projectRoute, type Route } from '../lib/routeCard';
 import { useColors } from '../theme';
 
@@ -27,7 +27,9 @@ export const STORY_W = 360;
 export const STORY_H = 640;
 
 const FONT = 'Helvetica Neue, Helvetica, Arial, sans-serif';
-const M = 55; // the margin on both sides
+const M = 55;
+const LABEL_FONT = 'DMSans_500Medium, DM Sans, Helvetica Neue, Arial, sans-serif'; // the app's own fonts
+const VALUE_FONT = 'SpaceGrotesk_700Bold, Space Grotesk, Helvetica Neue, Arial, sans-serif'; // the margin on both sides
 
 /**
  * The shareable route card, drawn as one 9:16 picture. Like a running-app stats card: the route drawn big and clean, the numbers
@@ -45,15 +47,18 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       : mode === 'cream'
         ? { bg: '#F4F0E6', ink: '#1B1B1B', soft: '#6F6A5E', dot: '#1B1B1B', dotOp: 0.09, casing: 'rgba(27,27,27,0.14)' }
         : { bg: c.bg, ink: c.ink, soft: c.inkSoft, dot: c.ink, dotOp: 0.1, casing: 'rgba(0,0,0,0.14)' };
-  const proj = projectRoute(p.route, STORY_W - 2 * M, 280, 22);
+  const ROUTE_Y = 92;
+  const proj = projectRoute(p.route, STORY_W - 2 * M, 250, 20);
   const dots: { x: number; y: number }[] = [];
   if (look.dotOp > 0) for (let x = 20; x < STORY_W; x += 40) for (let y = 20; y < STORY_H; y += 40) dots.push({ x, y });
-  const kmSize = p.km.length > 5 ? 46 : 56;
-  const sp = p.pace.indexOf(" ");
-  const pv = sp > 0 ? p.pace.slice(0, sp) : p.pace; // the number
-  const pu = sp > 0 ? p.pace.slice(sp + 1) : ""; // its unit, shown small and italic beside it
-  const label = (x: number, y: number, text: string) => (
-    <SvgText x={x} y={y} fontSize={11} fontWeight="700" letterSpacing={2.5} fill={look.soft} fontFamily={FONT}>{text}</SvgText>
+  const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s);
+  const [distName, distUnit = 'km'] = p.distanceLabel.split(' · ');
+  // each number is centred under its small name, in the app's own fonts
+  const stat = (y: number, name: string, value: string) => (
+    <>
+      <SvgText x={STORY_W / 2} y={y} fontSize={14} textAnchor="middle" fill={look.soft} fontFamily={LABEL_FONT}>{name}</SvgText>
+      <SvgText x={STORY_W / 2} y={y + 36} fontSize={32} textAnchor="middle" fill={look.ink} fontFamily={VALUE_FONT}>{value}</SvgText>
+    </>
   );
   return (
     <Svg ref={ref} width={w} height={(w * STORY_H) / STORY_W} viewBox={`0 0 ${STORY_W} ${STORY_H}`}>
@@ -76,24 +81,19 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       {/* the route, big and bare */}
       {proj ? (
         <>
-          <Path transform={`translate(${M} 110)`} d={proj.path} stroke={look.casing} strokeWidth={13} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <Path transform={`translate(${M} 110)`} d={proj.path} stroke={c.accent} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <Circle cx={M + proj.start.x} cy={110 + proj.start.y} r={7} fill={look.bg === '#0E0E0E' ? '#FFFFFF' : look.bg} stroke={look.ink} strokeWidth={3} />
-          <Circle cx={M + proj.end.x} cy={110 + proj.end.y} r={8} fill={look.ink} stroke={look.bg === '#0E0E0E' ? '#0E0E0E' : look.bg} strokeWidth={3} />
+          <Path transform={`translate(${M} ${ROUTE_Y})`} d={proj.path} stroke={look.casing} strokeWidth={13} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <Path transform={`translate(${M} ${ROUTE_Y})`} d={proj.path} stroke={c.accent} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <Circle cx={M + proj.start.x} cy={ROUTE_Y + proj.start.y} r={7} fill={look.bg === '#0E0E0E' ? '#FFFFFF' : look.bg} stroke={look.ink} strokeWidth={3} />
+          <Circle cx={M + proj.end.x} cy={ROUTE_Y + proj.end.y} r={8} fill={look.ink} stroke={look.bg === '#0E0E0E' ? '#0E0E0E' : look.bg} strokeWidth={3} />
         </>
       ) : p.emptyText ? (
-        <SvgText x={STORY_W / 2} y={255} fontSize={13} fontWeight="700" textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.emptyText}</SvgText>
+        <SvgText x={STORY_W / 2} y={215} fontSize={13} fontWeight="700" textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.emptyText}</SvgText>
       ) : null}
 
-      {/* the numbers, stacked and left-aligned */}
-      <Rect x={M} y={420} width={STORY_W - 2 * M} height={1.5} fill={look.ink} opacity={0.22} />
-      {label(M, 450, p.distanceLabel)}
-      <SvgText x={M - 1} y={500} fontSize={kmSize} fontWeight="900" letterSpacing={-2} fill={look.ink} fontFamily={FONT}>{p.km}</SvgText>
-
-      {label(M, 530, p.paceLabel.toUpperCase())}
-      <SvgText x={M} y={560} fontSize={21} fontWeight="900" fill={look.ink} fontFamily={FONT}>{pv}{pu ? <TSpan dx={6} fontSize={11} fontWeight="700" fontStyle="italic" letterSpacing={2.5} fill={look.soft}>{pu}</TSpan> : null}</SvgText>
-      {<SvgText x={M + 150} y={530} fontSize={11} fontWeight="700" letterSpacing={2.5} fill={look.soft} fontFamily={FONT}>{p.timeLabel.toUpperCase()}</SvgText>}
-      <SvgText x={M + 150} y={560} fontSize={21} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.time}</SvgText>
+      {/* the numbers, stacked and centred */}
+      {stat(384, cap(distName), `${p.km} ${distUnit.toLowerCase()}`)}
+      {stat(456, p.paceLabel, p.pace)}
+      {stat(528, p.timeLabel, p.time)}
 
       <SvgText x={STORY_W / 2} y={618} fontSize={9} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.footer}</SvgText>
     </Svg>

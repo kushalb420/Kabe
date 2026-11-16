@@ -5,6 +5,8 @@ import { Alert } from '../lib/alert';
 import type { Food } from '../data/foods';
 import { useT } from '../i18n/useT';
 import { searchMine } from '../lib/myFoods';
+import { SavedDiet, dietsInUse, filterMeals } from '../lib/savedMeals';
+import type { Key } from '../i18n';
 import { macrosFor, r0, r1 } from '../lib/nutrition';
 import { MealType, useKabe } from '../store/kabe';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../theme';
@@ -23,6 +25,9 @@ export function MyFoods({ meal, date }: { meal: MealType; date: string }) {
   const { t } = useT();
   const { historyFoods, customFoods, favorites, allFoods, savedMeals, addEntry, toggleFavorite, deleteSavedMeal } = useKabe();
   const [openMeal, setOpenMeal] = useState<string | null>(null);
+  const [dietFilter, setDietFilter] = useState<SavedDiet | null>(null);
+  const diets = useMemo(() => dietsInUse(savedMeals), [savedMeals]);
+  const shownMeals = useMemo(() => filterMeals(savedMeals, dietFilter), [savedMeals, dietFilter]);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Food | null>(null);
   const [grams, setGrams] = useState('');
@@ -88,7 +93,17 @@ export function MyFoods({ meal, date }: { meal: MealType; date: string }) {
       {!q && savedMeals.length > 0 && (
         <View style={{ gap: 8 }}>
           <Text style={styles.heading}>{t('addFood.savedMeals')}</Text>
-          {savedMeals.map((sm) => (
+          {diets.length > 0 && (
+            <View style={styles.chips}>
+              {([null, ...diets] as (SavedDiet | null)[]).map((d) => (
+                <Pressable key={d ?? 'all'} onPress={() => setDietFilter(d)} style={[styles.dietChip, dietFilter === d && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+                  <Text style={[styles.chipText, dietFilter === d && { color: colors.onPrimary }]}>{d ? t(`saved.diet.${d}` as Key) : t('saved.diet.all')}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          {shownMeals.length === 0 && <Text style={styles.sub}>{t('saved.noneInDiet')}</Text>}
+          {shownMeals.map((sm) => (
             <View key={sm.id} style={{ gap: 8 }}>
             <Pressable
               style={styles.savedRow}
@@ -104,6 +119,7 @@ export function MyFoods({ meal, date }: { meal: MealType; date: string }) {
               <Text style={styles.savedName} numberOfLines={1}>
                 {sm.name}
               </Text>
+              {sm.diet ? <Text style={styles.dietTag}>{t(`saved.diet.${sm.diet}` as Key)}</Text> : null}
               <Text style={styles.sub}>{r0(sm.items.reduce((a, i) => a + i.kcal, 0))} kcal</Text>
             </Pressable>
             {openMeal === sm.id && <SavedMealCard key={sm.id} id={sm.id} meal={meal} date={date} />}
@@ -164,6 +180,8 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { maxWidth: 180, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: colors.primarySoft, borderWidth: BORDER, borderColor: colors.cardBorder },
   chipText: { fontSize: 13, fontWeight: '600', color: colors.ink },
+  dietChip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: colors.card, borderWidth: BORDER, borderColor: colors.line },
+  dietTag: { fontSize: 11, fontWeight: '800', color: colors.good },
   savedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.card, borderRadius: radius.sm, padding: 12, borderWidth: BORDER, borderColor: colors.line },
   savedName: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.ink },
   item: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 8, borderRadius: radius.sm },

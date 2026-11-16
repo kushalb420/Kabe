@@ -1,3 +1,4 @@
+import type { SavedDiet } from '../lib/savedMeals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BUILTIN_BACKEND, effectiveAiKey } from '../lib/backend';
 import { foodFromMealItem, foodsFromEntries } from '../lib/myFoods';
@@ -37,7 +38,7 @@ export type Entry = Macros & Extras & {
 
 export type SavedMealItem = Macros & Extras & { name: string; grams: number; foodId?: string; source: Entry['source'] };
 /** `restaurant` is set for orders saved from the restaurant screen ("my usual"). */
-export type SavedMeal = { id: string; name: string; items: SavedMealItem[]; restaurant?: string };
+export type SavedMeal = { id: string; name: string; items: SavedMealItem[]; restaurant?: string; /** what kind of diet the meal suits, chosen when it was saved */ diet?: SavedDiet };
 
 type Persisted = {
   entries: Entry[];
@@ -148,14 +149,14 @@ type Ctx = Persisted & {
   createRoutine: (name: string, exercises: Routine['exercises']) => void;
   updateRoutine: (id: string, name: string, exercises: Routine['exercises']) => void;
   addCustomExercise: (name: string, muscle: Exercise['muscle']) => Exercise;
-  saveMeal: (name: string, items: Entry[]) => void;
+  saveMeal: (name: string, items: Entry[], diet?: SavedDiet) => void;
   /** Save a restaurant order ("my usual") so it can be logged again in one tap. */
   saveOrder: (name: string, restaurant: string, items: SavedMealItem[]) => void;
   addSavedMeal: (mealId: string, meal: MealType, date: string) => void;
   /** Log these items (for example a saved meal after editing it). */
   addMealItems: (items: SavedMealItem[], meal: MealType, date: string) => void;
-  /** Replace the items of a saved meal. */
-  updateSavedMeal: (mealId: string, items: SavedMealItem[]) => void;
+  /** Replace the items of a saved meal, and optionally rename it or change its diet (null clears the diet). */
+  updateSavedMeal: (mealId: string, items: SavedMealItem[], extra?: { name?: string; diet?: SavedDiet | null }) => void;
   /** Keep each of these foods on its own in Saved foods (the favourites). Foods already saved are left alone. */
   saveFoods: (items: SavedMealItem[]) => void;
   deleteSavedMeal: (mealId: string) => void;
@@ -295,11 +296,12 @@ export function KabeProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const saveMeal = useCallback((name: string, items: Entry[]) => {
+  const saveMeal = useCallback((name: string, items: Entry[], diet?: SavedDiet) => {
     if (!items.length) return;
     const saved: SavedMeal = {
       id: uid(),
       name,
+      ...(diet ? { diet } : {}),
       items: items.map(({ name: n, grams, foodId, source, kcal, protein, carbs, fat, fiber, sugar, sodium, satFat }) => ({
         name: n, grams, foodId, source, kcal, protein, carbs, fat, fiber, sugar, sodium, satFat,
       })),
@@ -327,9 +329,21 @@ export function KabeProvider({ children }: { children: React.ReactNode }) {
     setData((d) => ({ ...d, entries: [...d.entries, ...items.map((it) => ({ ...it, id: uid(), date, meal }))] }));
   }, []);
 
-  const updateSavedMeal = useCallback<Ctx['updateSavedMeal']>((mealId, items) => {
+  const updateSavedMeal = useCallback<Ctx['updateSavedMeal']>((mealId, items, extra) => {
     if (!items.length) return;
-    setData((d) => ({ ...d, savedMeals: d.savedMeals.map((m) => (m.id === mealId ? { ...m, items } : m)) }));
+    setData((d) => ({
+      ...d,
+      savedMeals: d.savedMeals.map((m) => {
+        if (m.id !== mealId) return m;
+        const next: SavedMeal = { ...m, items };
+        if (extra?.name && extra.name.trim()) next.name = extra.name.trim().slice(0, 60);
+        if (extra && 'diet' in extra) {
+          if (extra.diet) next.diet = extra.diet;
+          else delete next.diet;
+        }
+        return next;
+      }),
+    }));
   }, []);
 
   const saveFoods = useCallback<Ctx['saveFoods']>((items) => {

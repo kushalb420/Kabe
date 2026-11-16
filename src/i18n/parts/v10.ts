@@ -1,0 +1,53 @@
+import { part } from '../define';
+
+/** Saved meals: rename, add foods, and the kind of diet. */
+export const v10 = part({
+  en: {
+    'saved.rename': 'Meal name',
+    'saved.addFood': 'Add a food',
+    'saved.dietAsk': 'What kind of meal is it?',
+    'saved.dietHint': 'So you can filter your saved meals later. You can change it any time.',
+    'saved.noneInDiet': 'No saved meals of this kind yet.',
+    'saved.diet.all': 'All',
+    'saved.diet.vegan': 'Vegan',
+    'saved.diet.veg': 'Vegetarian',
+    'saved.diet.egg': 'Eggetarian',
+    'saved.diet.nonveg': 'Non-vegetarian',
+  },
+  hi: {
+    'saved.rename': 'भोजन का नाम',
+    'saved.addFood': 'खाना जोड़ें',
+    'saved.dietAsk': 'यह किस तरह का भोजन है?',
+    'saved.dietHint': 'ताकि आप बाद में सेव किए भोजन को फ़िल्टर कर सकें। इसे कभी भी बदल सकते हैं।',
+    'saved.noneInDiet': 'इस तरह का कोई सेव किया भोजन अभी नहीं है।',
+    'saved.diet.all': 'सभी',
+    'saved.diet.vegan': 'वीगन',
+    'saved.diet.veg': 'शाकाहारी',
+    'saved.diet.egg': 'अंडाहारी',
+    'saved.diet.nonveg': 'मांसाहारी',
+  },
+  te: {
+    'saved.rename': 'భోజనం పేరు',
+    'saved.addFood': 'ఆహారం జోడించండి',
+    'saved.dietAsk': 'ఇది ఏ రకమైన భోజనం?',
+    'saved.dietHint': 'తర్వాత సేవ్ చేసిన భోజనాలను ఫిల్టర్ చేయడానికి. దీన్ని ఎప్పుడైనా మార్చవచ్చు.',
+    'saved.noneInDiet': 'ఈ రకమైన సేవ్ చేసిన భోజనాలు ఇంకా లేవు.',
+    'saved.diet.all': 'అన్నీ',
+    'saved.diet.vegan': 'వీగన్',
+    'saved.diet.veg': 'శాకాహారం',
+    'saved.diet.egg': 'గుడ్డు శాకాహారం',
+    'saved.diet.nonveg': 'మాంసాహారం',
+  },
+  ta: {
+    'saved.rename': 'உணவின் பெயர்',
+    'saved.addFood': 'உணவைச் சேர்',
+    'saved.dietAsk': 'இது எந்த வகை உணவு?',
+    'saved.dietHint': 'பின்னர் சேமித்த உணவுகளை வடிகட்ட. இதை எப்போது வேண்டுமானாலும் மாற்றலாம்.',
+    'saved.noneInDiet': 'இந்த வகையில் சேமித்த உணவுகள் இன்னும் இல்லை.',
+    'saved.diet.all': 'அனைத்தும்',
+    'saved.diet.vegan': 'வீகன்',
+    'saved.diet.veg': 'சைவம்',
+    'saved.diet.egg': 'முட்டை சைவம்',
+    'saved.diet.nonveg': 'அசைவம்',
+  },
+});

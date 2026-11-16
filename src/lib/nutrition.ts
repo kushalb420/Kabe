@@ -77,6 +77,8 @@ export type Profile = {
   targetKg?: number;
   /** Optional: how many of the calories come from carbs. Unset keeps the usual balanced split. */
   carbLevel?: CarbLevel;
+  /** Optional: in how many weeks the person wants to reach the target weight. Sets how big the daily calorie change is. */
+  weeks?: number;
 };
 
 export type CarbLevel = 'low' | 'mid' | 'high';
@@ -91,12 +93,15 @@ const ACTIVITY ={ sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725 };
 
 /** Grams of protein per kg of body weight for each goal. */
 export const PROTEIN_PER_KG = { lose: 1.8, maintain: 2, gain: 2.2 } as const;
+/** Protein is never set above this many grams per kg of body weight. */
+export const MAX_PROTEIN_PER_KG = 2.2;
 
 /** Split a calorie target into macros: protein by body weight and goal, fat ~27% of calories, carbs the rest. */
 export const macrosForCalories = (kcal: number, weightKg: number, goal: Profile['goal'], carbLevel?: CarbLevel): Macros => {
-  const protein = Math.round(weightKg * PROTEIN_PER_KG[goal]);
+  const protein = Math.min(Math.round(weightKg * PROTEIN_PER_KG[goal]), Math.round(weightKg * MAX_PROTEIN_PER_KG), Math.round((kcal * 0.35) / 4));
   if (!carbLevel) {
-    const fat = Math.round((kcal * 0.27) / 9);
+    let fat = Math.round((kcal * 0.27) / 9);
+    if (kcal - protein * 4 - fat * 9 < kcal * 0.25) fat = Math.max(Math.round((kcal * 0.2) / 9), Math.round((kcal * 0.75 - protein * 4) / 9)); // keep carbs at least a quarter of the calories when fat can give a little
     const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
     return { kcal, protein, carbs, fat, fiber: 30 };
   }
@@ -144,9 +149,55 @@ export const weeksToTarget = (p: Profile): number | null => {
   return Math.max(1, Math.round(Math.abs(p.targetKg - p.weightKg) / PACE_KG_WEEK[g]));
 };
 
+/** About how many calories one kilo of body weight is worth. */
+export const KCAL_PER_KG = 7700;
+const DAY_PER_KG_WEEK = KCAL_PER_KG / 7; // calories a day for each kg a week
+
+/** The fastest steady rate (kg a week) that is still safe: losing at most 1% of body weight (never over 1 kg) and a quarter of the day's energy; gaining at most half a percent. */
+export const maxRateKgWeek = (p: Profile): number => {
+  const goal = goalFor(p);
+  if (goal === 'maintain') return 0;
+  if (goal === 'gain') return Math.min(0.5, 0.005 * p.weightKg);
+  const tdee = formulaTdee(p);
+  return Math.max(0.1, Math.min(1, 0.01 * p.weightKg, (0.25 * tdee) / DAY_PER_KG_WEEK, (tdee - MIN_KCAL[p.sex]) / DAY_PER_KG_WEEK));
+};
+
+export type PlanOption = { weeks: number; kgPerWeek: number; kcal: number; recommended: boolean };
+
+/** Daily calories for reaching the target in `weeks` weeks (the rate is kept inside the safe range). */
+export const kcalForWeeks = (p: Profile, weeks: number): { kcal: number; kgPerWeek: number } => {
+  const goal = goalFor(p);
+  const tdee = formulaTdee(p);
+  if (!p.targetKg || goal === 'maintain') return { kcal: Math.round(tdee / 10) * 10, kgPerWeek: 0 };
+  const diff = Math.abs(p.targetKg - p.weightKg);
+  const rate = Math.min(diff / Math.max(1, weeks), maxRateKgWeek(p));
+  const perDay = rate * DAY_PER_KG_WEEK;
+  const raw = goal === 'lose' ? tdee - perDay : tdee + Math.min(perDay, 500);
+  return { kcal: Math.max(Math.round(raw / 10) * 10, goal === 'lose' ? MIN_KCAL[p.sex] : 0), kgPerWeek: Math.round(rate * 100) / 100 };
+};
+
+const WEEK_CHOICES = [4, 6, 8, 12, 16, 20, 24, 32, 40, 52, 64, 78, 104];
+
+/** A few time frames to reach the target weight (only safe ones), with the calories each needs. Empty when there is nothing to reach. */
+export const planOptions = (p: Profile): PlanOption[] => {
+  const goal = goalFor(p);
+  if (!p.targetKg || goal === 'maintain') return [];
+  const diff = Math.abs(p.targetKg - p.weightKg);
+  const fastest = Math.ceil(diff / maxRateKgWeek(p));
+  const slowest = Math.max(fastest, Math.floor(diff / 0.1));
+  const steady = Math.min(Math.max(weeksToTarget(p) ?? fastest, fastest), slowest);
+  let weeks = WEEK_CHOICES.filter((w) => w >= fastest && w <= slowest);
+  if (!weeks.length) weeks = [fastest];
+  const best = weeks.reduce((a, b) => (Math.abs(b - steady) < Math.abs(a - steady) ? b : a), weeks[0]);
+  const at = weeks.indexOf(best);
+  const from = Math.max(0, Math.min(at - 1, weeks.length - 4)); // one quicker than the recommended, and slower ones
+  weeks = weeks.slice(from, from + 4);
+  return weeks.map((w) => ({ weeks: w, ...kcalForWeeks(p, w), recommended: w === best }));
+};
+
 export const suggestGoals = (p: Profile): Macros => {
   const goal = goalFor(p);
-  let kcal = Math.round((formulaTdee(p) + GOAL_ADJUST[goal]) / 10) * 10;
+  let kcal = p.weeks && p.targetKg && goal !== 'maintain' ? kcalForWeeks(p, p.weeks).kcal : Math.round((formulaTdee(p) + GOAL_ADJUST[goal]) / 10) * 10;
   kcal = Math.max(kcal, MIN_KCAL[p.sex]); // never suggest eating below the safe floor
   return macrosForCalories(kcal, p.weightKg, goal); // the carb level is no longer offered: the usual balanced split
 };

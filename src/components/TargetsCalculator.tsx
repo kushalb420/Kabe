@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
 import { Alert } from '../lib/alert';
-import { DEFAULT_PROFILE, Profile, goalFor, suggestGoals, weeksToTarget } from '../lib/nutrition';
+import { DEFAULT_PROFILE, MAX_PROTEIN_PER_KG, Profile, goalFor, planOptions, suggestGoals } from '../lib/nutrition';
 import { useKabe } from '../store/kabe';
 import { radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { Text, TextInput } from './Text';
@@ -33,6 +33,7 @@ export function TargetsCalculator({ onDone }: { onDone?: () => void }) {
   const { profile, setProfile, setGoals } = useKabe();
   const [p, setP] = useState<Profile>(profile ?? DEFAULT_PROFILE);
   const [targetText, setTargetText] = useState(profile?.targetKg ? String(profile.targetKg) : '');
+  const [weeksPick, setWeeksPick] = useState<number | undefined>(profile?.weeks);
 
   const num = (k: 'age' | 'heightCm' | 'weightKg', label: string) => (
     <View style={{ flex: 1 }}>
@@ -42,10 +43,12 @@ export function TargetsCalculator({ onDone }: { onDone?: () => void }) {
   );
 
   const target = parseFloat(targetText.replace(',', '.'));
-  const withTarget: Profile = { ...p, targetKg: target > 0 ? target : undefined };
+  const base: Profile = { ...p, targetKg: target > 0 ? target : undefined, weeks: undefined };
   const valid = p.age >= 10 && p.heightCm >= 100 && p.weightKg >= 25 && (!(target > 0) || (target >= 30 && target <= 250));
+  const options = valid ? planOptions(base) : [];
+  const chosen = options.find((o) => o.weeks === weeksPick) ?? options.find((o) => o.recommended); // the picked time frame, or the recommended one
+  const withTarget: Profile = { ...base, weeks: chosen?.weeks };
   const plan = valid ? suggestGoals(withTarget) : null;
-  const weeks = valid ? weeksToTarget(withTarget) : null;
   const goal = goalFor(withTarget);
 
   const apply = () => {
@@ -100,11 +103,29 @@ export function TargetsCalculator({ onDone }: { onDone?: () => void }) {
       <TextInput style={styles.input} keyboardType="decimal-pad" value={targetText} onChangeText={setTargetText} placeholder={t('me.targetPh')} placeholderTextColor={styles.sub.color} />
       <Text style={styles.sub}>{target > 0 ? t(`me.goalFrom.${goal}` as Key) : t('me.targetHint')}</Text>
 
+      {options.length > 0 && (
+        <>
+          <Text style={styles.label}>{t('me.pace.title')}</Text>
+          <Seg
+            value={String(chosen?.weeks ?? '')}
+            options={options.map((o) => ({ key: String(o.weeks), label: t('me.pace.weeks', { w: o.weeks }) }))}
+            onChange={(w) => setWeeksPick(parseInt(w, 10))}
+          />
+          {chosen && (
+            <Text style={styles.sub}>
+              {t('me.pace.rate', { kg: chosen.kgPerWeek, kcal: chosen.kcal })}
+              {chosen.recommended ? ` · ${t('me.pace.rec')}` : ''}
+            </Text>
+          )}
+        </>
+      )}
+
       {plan && (
         <View style={styles.plan}>
           <Text style={styles.planTitle}>{t('me.planTitle')}</Text>
           <Text style={styles.planBody}>{t('me.plan', { kcal: plan.kcal, p: plan.protein, c: plan.carbs, f: plan.fat })}</Text>
-          {weeks !== null ? <Text style={styles.sub}>{t('me.planWeeks', { w: weeks, kg: target })}</Text> : target > 0 ? <Text style={styles.sub}>{t('me.planKeep')}</Text> : null}
+          {chosen ? <Text style={styles.sub}>{t('me.planWeeks', { w: chosen.weeks, kg: target })}</Text> : target > 0 ? <Text style={styles.sub}>{t('me.planKeep')}</Text> : null}
+          <Text style={styles.sub}>{t('me.protNote', { p: Math.round((plan.protein / Math.max(1, p.weightKg)) * 10) / 10, max: MAX_PROTEIN_PER_KG })}</Text>
         </View>
       )}
 

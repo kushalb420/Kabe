@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { Text } from './Text';
 import { useColors } from '../theme';
 
@@ -6,7 +7,7 @@ import { useColors } from '../theme';
 export function Brand({ size = 22, style }: { size?: number; style?: object }) {
   const colors = useColors();
   return (
-    <Text style={[{ fontSize: size, lineHeight: Math.round(size * 1.27), fontWeight: '900', letterSpacing: size * 0.27, color: colors.ink, includeFontPadding: false }, style]} accessibilityRole="header">
+    <Text style={[{ fontSize: size, lineHeight: Math.round(size * 1.27), fontWeight: '900', ...(Platform.OS === 'web' ? { fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' } : {}), letterSpacing: size * 0.27, color: colors.ink, includeFontPadding: false }, style]} accessibilityRole="header">
       KABE
     </Text>
   );

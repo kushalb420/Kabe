@@ -48,7 +48,7 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
   const proj = projectRoute(p.route, STORY_W - 2 * M, 280, 22);
   const dots: { x: number; y: number }[] = [];
   if (look.dotOp > 0) for (let x = 20; x < STORY_W; x += 40) for (let y = 20; y < STORY_H; y += 40) dots.push({ x, y });
-  const kmSize = p.km.length > 5 ? 70 : 84;
+  const kmSize = p.km.length > 5 ? 54 : 66;
   const label = (x: number, y: number, text: string) => (
     <SvgText x={x} y={y} fontSize={11} fontWeight="700" letterSpacing={2.5} fill={look.soft} fontFamily={FONT}>{text}</SvgText>
   );
@@ -84,15 +84,15 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
 
       {/* the numbers, stacked and left-aligned */}
       <Rect x={M} y={420} width={STORY_W - 2 * M} height={1.5} fill={look.ink} opacity={0.22} />
-      {label(M, 452, p.distanceLabel)}
-      <SvgText x={M - 2} y={528} fontSize={kmSize} fontWeight="900" letterSpacing={-2} fill={look.ink} fontFamily={FONT}>{p.km}</SvgText>
+      {label(M, 450, p.distanceLabel)}
+      <SvgText x={M - 1} y={506} fontSize={kmSize} fontWeight="900" letterSpacing={-2} fill={look.ink} fontFamily={FONT}>{p.km}</SvgText>
 
-      {label(M, 566, p.paceLabel.toUpperCase())}
-      <SvgText x={M} y={598} fontSize={27} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.pace}</SvgText>
-      {label(M + 150, 566, p.timeLabel.toUpperCase())}
-      <SvgText x={M + 150} y={598} fontSize={27} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.time}</SvgText>
+      {label(M, 538, p.paceLabel.toUpperCase())}
+      <SvgText x={M} y={568} fontSize={24} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.pace}</SvgText>
+      {<SvgText x={STORY_W - M} y={538} fontSize={11} fontWeight="700" letterSpacing={2.5} textAnchor="end" fill={look.soft} fontFamily={FONT}>{p.timeLabel.toUpperCase()}</SvgText>}
+      <SvgText x={STORY_W - M} y={568} fontSize={24} textAnchor="end" fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.time}</SvgText>
 
-      <SvgText x={STORY_W / 2} y={628} fontSize={9} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.footer}</SvgText>
+      <SvgText x={STORY_W / 2} y={618} fontSize={9} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.footer}</SvgText>
     </Svg>
   );
 });

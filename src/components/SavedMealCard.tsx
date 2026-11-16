@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
@@ -30,14 +30,6 @@ export function SavedMealCard({ id, meal, date }: { id: string; meal: MealType; 
   const [diet, setDiet] = useState<SavedDiet | undefined>(sm?.diet);
   const [adding, setAdding] = useState(false);
   const [dirty, setDirty] = useState(false);
-  useEffect(() => {
-    // the saved meal changed elsewhere (for example after saving here): start from what is stored
-    if (sm && !dirty) {
-      setDraft(sm.items);
-      setName(sm.name);
-      setDiet(sm.diet);
-    }
-  }, [sm, dirty]);
   if (!sm) return null;
 
   const items = draft.map((orig, i) => {

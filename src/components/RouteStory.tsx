@@ -1,9 +1,7 @@
 import React, { useId } from 'react';
 import Svg, { Circle, Defs, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
-import { LOGO_DATA } from '../lib/logoData';
 import { projectRoute, type Route } from '../lib/routeCard';
 import { useColors } from '../theme';
-import { isDark } from './Brand';
 
 /** What is behind the route: the colours of the chosen theme, plain black, plain off-white, or the person's own photo. */
 export type StoryBg = 'theme' | 'black' | 'cream' | 'photo';
@@ -50,7 +48,6 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
         ? { bg: '#F4F0E6', ink: '#1B1B1B', soft: '#6F6A5E', dot: '#1B1B1B', dotOp: 0.09, casing: 'rgba(27,27,27,0.14)' }
         : { bg: c.bg, ink: c.ink, soft: c.inkSoft, dot: c.ink, dotOp: 0.1, casing: 'rgba(0,0,0,0.14)' };
   const ROUTE_Y = 92;
-  const logo = look.ink === "#FFFFFF" ? (mode === "black" ? LOGO_DATA.yellow : LOGO_DATA.white) : isDark(look.ink) ? LOGO_DATA.black : LOGO_DATA.white;
   const proj = projectRoute(p.route, STORY_W - 2 * M, 250, 20);
   const dots: { x: number; y: number }[] = [];
   if (look.dotOp > 0) for (let x = 20; x < STORY_W; x += 40) for (let y = 20; y < STORY_H; y += 40) dots.push({ x, y });
@@ -78,7 +75,7 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       {dots.map((d) => <Circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={2} fill={look.dot} opacity={look.dotOp} />)}
 
       {/* top: the name on the left, the day on the right */}
-      <SvgImage x={M} y={55} width={78} height={78 / logo.ratio} href={{ uri: logo.uri }} />
+      <SvgText x={M} y={72} fontSize={19} fontWeight="900" letterSpacing={5} fill={look.ink} fontFamily={FONT}>KABE</SvgText>
       <SvgText x={STORY_W - M} y={72} fontSize={12} fontWeight="700" letterSpacing={1} textAnchor="end" fill={look.soft} fontFamily={FONT}>{`${p.kind} · ${p.date}`}</SvgText>
 
       {/* the route, big and bare */}

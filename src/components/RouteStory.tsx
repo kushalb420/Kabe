@@ -75,8 +75,8 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       {dots.map((d) => <Circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={2} fill={look.dot} opacity={look.dotOp} />)}
 
       {/* top: the name on the left, the day on the right */}
-      <SvgText x={M} y={72} fontSize={19} fontWeight="900" letterSpacing={5} fill={look.ink} fontFamily={FONT}>KABE</SvgText>
-      <SvgText x={STORY_W - M} y={72} fontSize={12} fontWeight="700" letterSpacing={1} textAnchor="end" fill={look.soft} fontFamily={FONT}>{`${p.kind} · ${p.date}`}</SvgText>
+      <SvgText x={M} y={84} fontSize={16} fontWeight="900" letterSpacing={5} fill={look.ink} fontFamily={FONT}>KABE</SvgText>
+      <SvgText x={STORY_W - M} y={84} fontSize={16} fontWeight="700" letterSpacing={1} textAnchor="end" fill={look.soft} fontFamily={FONT}>{`${p.kind} · ${p.date}`}</SvgText>
 
       {/* the route, big and bare */}
       {proj ? (

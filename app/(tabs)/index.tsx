@@ -15,7 +15,7 @@ import { useGamify } from '../../src/store/gamify';
 import { useKabe } from '../../src/store/kabe';
 import { useTracker } from '../../src/store/tracker';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../../src/theme';
-import { Brand } from '../../src/components/Brand';
+import { BrandLogo } from '../../src/components/BrandLogo';
 import { Sticker } from '../../src/components/Sticker';
 import { progressOn } from '../../src/lib/supplements';
 import { useCloud } from '../../src/store/cloud';
@@ -98,7 +98,7 @@ export default function Home() {
   );
 
   return (
-    <Screen title={userName ? `${greeting}, ${userName}` : greeting} subtitle={t('today.subtitle')} headerRight={streak} eyebrow={<Brand />}>
+    <Screen title={userName ? `${greeting}, ${userName}` : greeting} subtitle={t('today.subtitle')} headerRight={streak} eyebrow={<BrandLogo width={104} />}>
       {cloud.user?.email && (cloud.status === 'conflict' || cloud.status === 'error') ? (
         <LinkRow
           icon="sync-outline"

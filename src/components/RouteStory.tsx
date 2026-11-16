@@ -1,7 +1,10 @@
-import React from 'react';
-import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
+import React, { useId } from 'react';
+import Svg, { Circle, Defs, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { projectRoute, type Route } from '../lib/routeCard';
 import { useColors } from '../theme';
+
+/** What is behind the route: the colours of the chosen theme, plain black, plain off-white, or the person's own photo. */
+export type StoryBg = 'theme' | 'black' | 'cream' | 'photo';
 
 export type StoryProps = {
   route: Route;
@@ -14,67 +17,82 @@ export type StoryProps = {
   timeLabel: string;
   time: string;
   footer: string; // "MOVED WITH KABE"
-  emptyText?: string; // shown in the panel when there is no route to draw
+  emptyText?: string; // shown when there is no route to draw
   width?: number; // on-screen width; the picture itself is always 360 x 640 units (9:16)
+  bg?: StoryBg;
+  photo?: string | null; // the person's picture as a data address (used when bg is 'photo')
 };
 
 export const STORY_W = 360;
 export const STORY_H = 640;
 
 const FONT = 'Helvetica Neue, Helvetica, Arial, sans-serif';
+const M = 40; // the margin on both sides
 
 /**
- * The shareable route card, drawn as one 9:16 picture in the colours of the chosen theme. The same drawing is shown in the app
- * and turned into the PNG that is shared (ask the Svg ref for toDataURL).
+ * The shareable route card, drawn as one 9:16 picture. Like a running-app stats card: the route drawn big and clean, the numbers
+ * stacked underneath, lots of room around everything. The same drawing is shown in the app and turned into the PNG that is shared.
  */
 export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(p, ref) {
   const c = useColors();
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const w = p.width ?? STORY_W;
-  const proj = projectRoute(p.route, 300, 240, 32);
+  const photo = p.bg === 'photo' && p.photo ? p.photo : null;
+  const mode: StoryBg = p.bg === 'photo' && !photo ? 'theme' : p.bg ?? 'theme';
+  const look =
+    mode === 'black' || mode === 'photo'
+      ? { bg: '#0E0E0E', ink: '#FFFFFF', soft: 'rgba(255,255,255,0.68)', dot: '#FFFFFF', dotOp: mode === 'photo' ? 0 : 0.09, casing: 'rgba(0,0,0,0.55)' }
+      : mode === 'cream'
+        ? { bg: '#F4F0E6', ink: '#1B1B1B', soft: '#6F6A5E', dot: '#1B1B1B', dotOp: 0.09, casing: 'rgba(27,27,27,0.14)' }
+        : { bg: c.bg, ink: c.ink, soft: c.inkSoft, dot: c.ink, dotOp: 0.1, casing: 'rgba(0,0,0,0.14)' };
+  const proj = projectRoute(p.route, STORY_W - 2 * M, 280, 22);
   const dots: { x: number; y: number }[] = [];
-  for (let x = 20; x < STORY_W; x += 40) for (let y = 20; y < STORY_H; y += 40) dots.push({ x, y });
-  const kmSize = p.km.length > 5 ? 84 : 104;
-  const pillW = 26 + p.kind.length * 11;
-  const chip = (x: number, label: string, value: string) => (
-    <G key={label}>
-      <Rect x={x + 6} y={551} width={146} height={64} rx={16} fill={c.ink} />
-      <Rect x={x} y={545} width={146} height={64} rx={16} fill={c.card} stroke={c.ink} strokeWidth={3} />
-      <SvgText x={x + 16} y={567} fontSize={11} fontWeight="700" letterSpacing={2} fill={c.inkSoft} fontFamily={FONT}>{label}</SvgText>
-      <SvgText x={x + 16} y={597} fontSize={25} fontWeight="900" fill={c.ink} fontFamily={FONT}>{value}</SvgText>
-    </G>
+  if (look.dotOp > 0) for (let x = 20; x < STORY_W; x += 40) for (let y = 20; y < STORY_H; y += 40) dots.push({ x, y });
+  const kmSize = p.km.length > 5 ? 70 : 84;
+  const label = (x: number, y: number, text: string) => (
+    <SvgText x={x} y={y} fontSize={11} fontWeight="700" letterSpacing={2.5} fill={look.soft} fontFamily={FONT}>{text}</SvgText>
   );
   return (
     <Svg ref={ref} width={w} height={(w * STORY_H) / STORY_W} viewBox={`0 0 ${STORY_W} ${STORY_H}`}>
-      <Rect x={0} y={0} width={STORY_W} height={STORY_H} fill={c.bg} />
-      {dots.map((d) => <Circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={2} fill={c.ink} opacity={0.1} />)}
+      <Defs>
+        <LinearGradient id={`shade-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#000000" stopOpacity={0.45} />
+          <Stop offset="0.45" stopColor="#000000" stopOpacity={0.25} />
+          <Stop offset="1" stopColor="#000000" stopOpacity={0.72} />
+        </LinearGradient>
+      </Defs>
+      <Rect x={0} y={0} width={STORY_W} height={STORY_H} fill={look.bg} />
+      {photo && <SvgImage x={0} y={0} width={STORY_W} height={STORY_H} href={{ uri: photo }} preserveAspectRatio="xMidYMid slice" />}
+      {photo && <Rect x={0} y={0} width={STORY_W} height={STORY_H} fill={`url(#shade-${uid})`} />}
+      {dots.map((d) => <Circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={2} fill={look.dot} opacity={look.dotOp} />)}
 
-      <SvgText x={30} y={58} fontSize={20} fontWeight="900" letterSpacing={5} fill={c.ink} fontFamily={FONT}>KABE</SvgText>
-      <SvgText x={330} y={56} fontSize={13} fontWeight="700" textAnchor="end" fill={c.inkSoft} fontFamily={FONT}>{p.date}</SvgText>
+      {/* top: the name on the left, the day on the right */}
+      <SvgText x={M} y={72} fontSize={19} fontWeight="900" letterSpacing={5} fill={look.ink} fontFamily={FONT}>KABE</SvgText>
+      <SvgText x={STORY_W - M} y={72} fontSize={12} fontWeight="700" letterSpacing={1} textAnchor="end" fill={look.soft} fontFamily={FONT}>{`${p.kind} · ${p.date}`}</SvgText>
 
-      <Rect x={36} y={98} width={pillW} height={30} rx={15} fill={c.ink} />
-      <Rect x={30} y={92} width={pillW} height={30} rx={15} fill={c.accent} stroke={c.ink} strokeWidth={3} />
-      <SvgText x={30 + pillW / 2} y={112} fontSize={13} fontWeight="900" letterSpacing={2} textAnchor="middle" fill={c.ink} fontFamily={FONT}>{p.kind}</SvgText>
-
-      <SvgText x={28} y={220} fontSize={kmSize} fontWeight="900" letterSpacing={-3} fill={c.ink} fontFamily={FONT}>{p.km}</SvgText>
-      <SvgText x={32} y={250} fontSize={13} fontWeight="800" letterSpacing={4} fill={c.inkSoft} fontFamily={FONT}>{p.distanceLabel}</SvgText>
-
-      <Rect x={36} y={283} width={300} height={240} rx={24} fill={c.ink} />
-      <Rect x={30} y={277} width={300} height={240} rx={24} fill={c.card} stroke={c.ink} strokeWidth={3} />
+      {/* the route, big and bare */}
       {proj ? (
-        <G x={30} y={277}>
-          <Path d={proj.path} stroke={c.ink} strokeWidth={12} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <Path d={proj.path} stroke={c.accent} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <Circle cx={proj.start.x} cy={proj.start.y} r={8} fill={c.card} stroke={c.ink} strokeWidth={3.5} />
-          <Circle cx={proj.end.x} cy={proj.end.y} r={9} fill={c.ink} stroke={c.card} strokeWidth={3} />
-        </G>
+        <>
+          <Path transform={`translate(${M} 110)`} d={proj.path} stroke={look.casing} strokeWidth={13} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <Path transform={`translate(${M} 110)`} d={proj.path} stroke={c.accent} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <Circle cx={M + proj.start.x} cy={110 + proj.start.y} r={7} fill={look.bg === '#0E0E0E' ? '#FFFFFF' : look.bg} stroke={look.ink} strokeWidth={3} />
+          <Circle cx={M + proj.end.x} cy={110 + proj.end.y} r={8} fill={look.ink} stroke={look.bg === '#0E0E0E' ? '#0E0E0E' : look.bg} strokeWidth={3} />
+        </>
       ) : p.emptyText ? (
-        <SvgText x={180} y={403} fontSize={13} fontWeight="700" textAnchor="middle" fill={c.inkSoft} fontFamily={FONT}>{p.emptyText}</SvgText>
+        <SvgText x={STORY_W / 2} y={255} fontSize={13} fontWeight="700" textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.emptyText}</SvgText>
       ) : null}
 
-      {chip(30, p.paceLabel.toUpperCase(), p.pace)}
-      {chip(184, p.timeLabel.toUpperCase(), p.time)}
+      {/* the numbers, stacked and left-aligned */}
+      <Rect x={M} y={420} width={STORY_W - 2 * M} height={1.5} fill={look.ink} opacity={0.22} />
+      {label(M, 452, p.distanceLabel)}
+      <SvgText x={M - 2} y={528} fontSize={kmSize} fontWeight="900" letterSpacing={-2} fill={look.ink} fontFamily={FONT}>{p.km}</SvgText>
 
-      <SvgText x={180} y={634} fontSize={11} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={c.inkSoft} fontFamily={FONT}>{p.footer}</SvgText>
+      {label(M, 566, p.paceLabel.toUpperCase())}
+      <SvgText x={M} y={598} fontSize={27} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.pace}</SvgText>
+      {label(M + 150, 566, p.timeLabel.toUpperCase())}
+      <SvgText x={M + 150} y={598} fontSize={27} fontWeight="900" fill={look.ink} fontFamily={FONT}>{p.time}</SvgText>
+
+      <SvgText x={STORY_W / 2} y={628} fontSize={9} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.footer}</SvgText>
     </Svg>
   );
 });

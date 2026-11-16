@@ -1,6 +1,7 @@
 # Changelog
 
 ## 7.0.4 update — Typed meals, supplement schedules, permissions (2026-11-11)
+- **Route card redesigned** like a running-app stats card: wide margins, the route drawn big and clean, distance in large type with pace and time stacked underneath. You can now choose its background: your app theme, black, off-white (same dot texture as the app), or your own photo from your gallery. The choice (except the photo) is remembered.
 - **Typing a meal:** write items one per line or separated by commas, with or without amounts (no amount means one usual serving). Add detail in brackets, like "Pepper paneer curry 250 ml (45 g of paneer)" or "150 g curd (loose)": the whole serving stays the amount and the detail changes the nutrition. Each item shows how your note was used, and has a box to add detail afterwards and work it out again. Fixed amounts in g or ml (such as 250 ml) being dropped, and millilitre items now show as ml.
 - **Supplements:** choose how often each one is taken: every day with 1 to 6 doses, every few days (every 2, 3, 7, 14, 30 or any number up to 60), chosen weekdays, or only when needed. Reminders skip days it is not due, and streaks skip them too.
 - **Supplement ingredients:** the first time you add one, Kabe works out what one dose contains (from its name, or exact numbers from a photo of the label) and every dose you tick adds those vitamins and minerals to Vitamins & minerals.

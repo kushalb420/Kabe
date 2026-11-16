@@ -6,6 +6,7 @@ import type Svg from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dots } from '../src/components/Dots';
 import { RouteStory } from '../src/components/RouteStory';
+import { StoryBgPicker, useStoryBg } from '../src/components/StoryBackground';
 import { Text } from '../src/components/Text';
 import { Button } from '../src/components/ui';
 import { useT } from '../src/i18n/useT';
@@ -27,6 +28,7 @@ export default function RouteView() {
   const { width } = useWindowDimensions();
   const ref = useRef<Svg>(null);
   const [note, setNote] = useState('');
+  const { bg, photo, setBg, setPhoto } = useStoryBg();
   const a = activities.find((x) => x.id === id);
   const story = useMemo(() => {
     if (!a || (a.type !== 'walk' && a.type !== 'run' && a.type !== 'cycle')) return null;
@@ -46,8 +48,9 @@ export default function RouteView() {
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 18, gap: 14, paddingBottom: 60 }}>
         {story && a ? (
           <>
-            <RouteStory ref={ref} {...story} emptyText={a.route ? undefined : t('route.noMap')} width={w} route={decodeRoute(a.route ?? '')} />
-            <View style={{ alignSelf: 'stretch', gap: 10 }}>
+            <RouteStory ref={ref} {...story} emptyText={a.route ? undefined : t('route.noMap')} width={w} route={decodeRoute(a.route ?? '')} bg={bg} photo={photo} />
+            <View style={{ alignSelf: 'stretch', gap: 12 }}>
+              <StoryBgPicker bg={bg} setBg={setBg} setPhoto={setPhoto} />
               <Button
                 title={t('route.share')}
                 icon="share-social"

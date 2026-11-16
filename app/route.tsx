@@ -3,6 +3,7 @@ import { Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'rea
 import type Svg from 'react-native-svg';
 import { Dots } from '../src/components/Dots';
 import { RouteStory } from '../src/components/RouteStory';
+import { StoryBgPicker, useStoryBg } from '../src/components/StoryBackground';
 import { Text } from '../src/components/Text';
 import { Button } from '../src/components/ui';
 import { useT } from '../src/i18n/useT';
@@ -21,6 +22,7 @@ export default function RoutePage() {
   const { width } = useWindowDimensions();
   const ref = useRef<Svg>(null);
   const [note, setNote] = React.useState('');
+  const { bg, photo, setBg, setPhoto } = useStoryBg();
   const data = useMemo(() => (Platform.OS === 'web' ? parseStoryHash((globalThis as any).location?.hash ?? '') : null), []);
   const route = useMemo(() => (data ? routeOfStory(data) : []), [data]);
   const w = Math.min(340, Math.max(240, width - 40));
@@ -30,8 +32,9 @@ export default function RoutePage() {
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 20, gap: 16, paddingBottom: 60 }}>
         {data ? (
           <>
-            <RouteStory ref={ref} {...data} width={w} route={route} />
-            <View style={{ alignSelf: 'stretch', maxWidth: 340, gap: 10 }}>
+            <RouteStory ref={ref} {...data} width={w} route={route} bg={bg} photo={photo} />
+            <View style={{ alignSelf: 'stretch', maxWidth: 340, gap: 12 }}>
+              <StoryBgPicker bg={bg} setBg={setBg} setPhoto={setPhoto} />
               <Button
                 title={t('route.download')}
                 icon="download-outline"

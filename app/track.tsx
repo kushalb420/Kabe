@@ -12,6 +12,7 @@ import { nowMs } from '../src/lib/clock';
 import { EMPTY_TRACK, Fix, Track, TrackKind, addFix, formatClock, formatPaceMin, routeOf, summarize } from '../src/lib/gps';
 import { RouteCard } from '../src/components/RouteCard';
 import { RouteStory } from '../src/components/RouteStory';
+import { StoryBgPicker, useStoryBg } from '../src/components/StoryBackground';
 import { shareRouteCard } from '../src/lib/routeStory';
 import { buildRoute, encodeRoute } from '../src/lib/routeCard';
 import { buildStoryData } from '../src/lib/routeShare';
@@ -46,6 +47,7 @@ export default function TrackScreen() {
   const fixesRef = useRef<Fix[]>([]); // every raw fix of this route, for drawing it
   const [route, setRoute] = useState<Fix[]>([]);
   const storyRef = useRef<Svg>(null);
+  const { bg: cardBg, photo, setBg: setCardBg, setPhoto } = useStoryBg();
   const [sharing, setSharing] = useState(false);
   const [shareNote, setShareNote] = useState('');
 
@@ -223,7 +225,9 @@ export default function TrackScreen() {
             <View style={{ alignItems: 'center' }}>
               <RouteStory
                 ref={storyRef}
-                width={250}
+                width={260}
+                bg={cardBg}
+                photo={photo}
                 route={drawn}
                 kind={story.kind}
                 date={story.date}
@@ -236,6 +240,7 @@ export default function TrackScreen() {
                 footer={story.footer}
               />
             </View>
+            <StoryBgPicker bg={cardBg} setBg={setCardBg} setPhoto={setPhoto} />
             <Text style={styles.sub}>{t('route.posterNote')}</Text>
             <Button title={t('route.share')} icon="share-social" disabled={sharing} onPress={() => void share()} />
             {shareNote ? <Text style={styles.sub}>{shareNote}</Text> : null}

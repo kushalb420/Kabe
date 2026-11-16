@@ -3,8 +3,8 @@ import { Image, type ImageStyle, type StyleProp } from 'react-native';
 import { useColors } from '../theme';
 
 const LOGOS = {
-  black: { src: require('../../assets/brand/kabe-black.png'), ratio: 720 / 138 },
-  white: { src: require('../../assets/brand/kabe-white.png'), ratio: 720 / 138 },
+  black: { src: require('../../assets/brand/kabe-black.png'), ratio: 1619 / 335 },
+  white: { src: require('../../assets/brand/kabe-white.png'), ratio: 1450 / 302 },
 };
 
 const isDark = (hex: string): boolean => {

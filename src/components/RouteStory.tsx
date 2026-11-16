@@ -91,9 +91,9 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       ) : null}
 
       {/* the numbers, stacked and centred */}
-      {stat(384, cap(distName), `${p.km} ${distUnit.toLowerCase()}`)}
-      {stat(456, p.paceLabel, p.pace)}
-      {stat(528, p.timeLabel, p.time)}
+      {stat(364, cap(distName), `${p.km} ${distUnit.toLowerCase()}`)}
+      {stat(424, p.paceLabel, p.pace)}
+      {stat(484, p.timeLabel, p.time)}
 
       <SvgText x={STORY_W / 2} y={618} fontSize={9} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.footer}</SvgText>
     </Svg>

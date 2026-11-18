@@ -1,5 +1,6 @@
 import React, { useId } from 'react';
-import Svg, { Circle, Defs, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, G, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import { GLYPHS } from '../lib/glyphData';
 import { projectRoute, type Route } from '../lib/routeCard';
 import { useColors } from '../theme';
 
@@ -28,8 +29,38 @@ export const STORY_H = 640;
 
 const FONT = 'Helvetica Neue, Helvetica, Arial, sans-serif';
 const M = 55;
-const LABEL_FONT = 'DMSans_500Medium, DM Sans, Helvetica Neue, Arial, sans-serif'; // the app's own fonts
-const VALUE_FONT = 'SpaceGrotesk_700Bold, Space Grotesk, Helvetica Neue, Arial, sans-serif'; // the margin on both sides
+
+type Anchor = 'start' | 'middle' | 'end';
+
+/**
+ * Text drawn as shapes (the letters of the app's own fonts), so the saved picture looks exactly like the card on screen. The phone's
+ * picture maker cannot use fonts the app loads while running, and swapped them for another font. Characters that are not in the
+ * built-in set (for example Hindi) fall back to ordinary text.
+ */
+function Glyphs({ x, y, size, text, font, fill, anchor = 'start', spacing = 0 }: { x: number; y: number; size: number; text: string; font: 'value' | 'label' | 'brand'; fill: string; anchor?: Anchor; spacing?: number }) {
+  const f = GLYPHS[font];
+  const chars = Array.from(text);
+  if (chars.some((c) => !f.glyphs[c])) {
+    return (
+      <SvgText x={x} y={y} fontSize={size} fontWeight="700" letterSpacing={spacing} textAnchor={anchor} fill={fill} fontFamily={FONT}>{text}</SvgText>
+    );
+  }
+  const k = size / f.upm;
+  let width = 0;
+  const placed = chars.map((c) => {
+    const g = f.glyphs[c];
+    const at = width;
+    width += g.adv * k + spacing;
+    return { c, g, at };
+  });
+  width -= spacing; // no space after the last letter
+  const start = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
+  return (
+    <G transform={`translate(${start} ${y})`}>
+      {placed.map((q, i) => (q.g.d ? <Path key={i} transform={`translate(${q.at} 0) scale(${k} ${-k})`} d={q.g.d} fill={fill} /> : null))}
+    </G>
+  );
+}
 
 /**
  * The shareable route card, drawn as one 9:16 picture. Like a running-app stats card: the route drawn big and clean, the numbers
@@ -56,8 +87,8 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
   // each number is centred under its small name, in the app's own fonts
   const stat = (y: number, name: string, value: string) => (
     <>
-      <SvgText x={STORY_W / 2} y={y} fontSize={14} textAnchor="middle" fill={look.soft} fontFamily={LABEL_FONT}>{name}</SvgText>
-      <SvgText x={STORY_W / 2} y={y + 36} fontSize={32} textAnchor="middle" fill={look.ink} fontFamily={VALUE_FONT}>{value}</SvgText>
+      <Glyphs x={STORY_W / 2} y={y} size={14} anchor="middle" fill={look.soft} font="label" text={name} />
+      <Glyphs x={STORY_W / 2} y={y + 36} size={32} anchor="middle" fill={look.ink} font="value" text={value} />
     </>
   );
   return (
@@ -75,8 +106,8 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       {dots.map((d) => <Circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={2} fill={look.dot} opacity={look.dotOp} />)}
 
       {/* top: the name on the left, the day on the right */}
-      <SvgText x={M} y={84} fontSize={16} fontWeight="900" letterSpacing={5} fill={look.ink} fontFamily={FONT}>KABE</SvgText>
-      <SvgText x={STORY_W - M} y={84} fontSize={16} fontWeight="700" letterSpacing={1} textAnchor="end" fill={look.soft} fontFamily={FONT}>{`${p.kind} · ${p.date}`}</SvgText>
+      <Glyphs x={M} y={84} size={16} spacing={5} fill={look.ink} font="brand" text="KABE" />
+      <Glyphs x={STORY_W - M} y={84} size={16} spacing={1} anchor="end" fill={look.soft} font="value" text={`${p.kind} · ${p.date}`} />
 
       {/* the route, big and bare */}
       {proj ? (
@@ -95,7 +126,7 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       {stat(424, p.paceLabel, p.pace)}
       {stat(484, p.timeLabel, p.time)}
 
-      <SvgText x={STORY_W / 2} y={618} fontSize={9} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.footer}</SvgText>
+      <Glyphs x={STORY_W / 2} y={618} size={9} spacing={3} anchor="middle" fill={look.soft} font="value" text={p.footer} />
     </Svg>
   );
 });

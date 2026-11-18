@@ -106,8 +106,8 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       {dots.map((d) => <Circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r={2} fill={look.dot} opacity={look.dotOp} />)}
 
       {/* top: the name on the left, the day on the right */}
-      <Glyphs x={M} y={84} size={16} spacing={5} fill={look.ink} font="brand" text="KABE" />
-      <Glyphs x={STORY_W - M} y={84} size={16} spacing={1} anchor="end" fill={look.soft} font="value" text={`${p.kind} · ${p.date}`} />
+      <SvgText x={M} y={84} fontSize={16} fontWeight="900" letterSpacing={5} fill={look.ink} fontFamily={FONT}>KABE</SvgText>
+      <SvgText x={STORY_W - M} y={84} fontSize={16} fontWeight="700" letterSpacing={1} textAnchor="end" fill={look.soft} fontFamily={FONT}>{`${p.kind} · ${p.date}`}</SvgText>
 
       {/* the route, big and bare */}
       {proj ? (
@@ -126,7 +126,7 @@ export const RouteStory = React.forwardRef<Svg, StoryProps>(function RouteStory(
       {stat(424, p.paceLabel, p.pace)}
       {stat(484, p.timeLabel, p.time)}
 
-      <Glyphs x={STORY_W / 2} y={618} size={9} spacing={3} anchor="middle" fill={look.soft} font="value" text={p.footer} />
+      <SvgText x={STORY_W / 2} y={618} fontSize={9} fontWeight="700" letterSpacing={3} textAnchor="middle" fill={look.soft} fontFamily={FONT}>{p.footer}</SvgText>
     </Svg>
   );
 });

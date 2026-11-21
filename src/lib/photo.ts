@@ -179,42 +179,58 @@ const DISH_CONTAINS: Record<string, string[]> = {
 };
 const sig = (s: string) => tokens(s).filter((t) => !SKIP_WORDS.has(t));
 
+export type Mergeable = { name: string; grams: number; includes?: string[] };
+
 /**
- * One food must count once. This merges the same food listed twice (adding the weights), and drops an item that is only an
- * ingredient of a dish already on the list (chicken pieces next to chicken biryani), so nothing is counted twice.
+ * One food must count once. Works out which items to drop: the same food listed twice (its weight moves to the first one), and an
+ * item that is only an ingredient of a dish already on the list (chicken pieces next to chicken biryani).
  */
-export function mergeDuplicates(items: RawItem[]): { items: RawItem[]; merged: string[] } {
-  const merged: string[] = [];
-  // 1. the same food listed more than once
-  const out: RawItem[] = [];
-  for (const it of items) {
-    const key = sig(it.name).sort().join(' ');
-    const same = key ? out.find((o) => sig(o.name).sort().join(' ') === key) : undefined;
-    if (same) {
-      same.grams += it.grams;
-      merged.push(`${it.name} added to ${same.name}`);
-    } else out.push({ ...it });
-  }
-  // 2. an ingredient that is already inside a bigger dish
+export function mergePlan(list: Mergeable[]): { drop: Set<number>; added: Map<number, number>; notes: string[] } {
+  const notes: string[] = [];
   const drop = new Set<number>();
-  out.forEach((b, bi) => {
+  const added = new Map<number, number>(); // kept index -> grams added from repeats
+  const grams = list.map((x) => x.grams);
+  const key = (n: string) => sig(n).sort().join(' ');
+  // 1. the same food listed more than once
+  list.forEach((it, i) => {
+    const k = key(it.name);
+    if (!k) return;
+    const prev = list.findIndex((o, j) => j < i && !drop.has(j) && key(o.name) === k);
+    if (prev >= 0) {
+      drop.add(i);
+      grams[prev] += grams[i];
+      added.set(prev, (added.get(prev) ?? 0) + grams[i]);
+      notes.push(`${it.name} added to ${list[prev].name}`);
+    }
+  });
+  // 2. an ingredient that is already inside a bigger dish
+  list.forEach((b, bi) => {
     const bt = sig(b.name);
-    if (!bt.length) return;
-    out.forEach((a, ai) => {
-      if (ai === bi || drop.has(ai) || drop.has(bi) || a.grams < b.grams) return;
+    if (!bt.length || drop.has(bi)) return;
+    for (let ai = 0; ai < list.length; ai++) {
+      const a = list[ai];
+      if (ai === bi || drop.has(ai) || drop.has(bi) || grams[ai] < grams[bi]) continue;
       const at = new Set(sig(a.name));
       const inName = bt.every((t) => at.has(t)) && at.size > bt.length;
       const listed = (a.includes ?? []).flatMap((x) => sig(x));
-      const inList = bt.every((t) => listed.includes(t)) && a.grams > b.grams;
-      const dishKey = [...Object.keys(DISH_CONTAINS)].find((k) => tokens(a.name).join(' ').includes(k));
-      const inDish = !!dishKey && a.grams > b.grams && bt.every((t) => DISH_CONTAINS[dishKey].includes(t));
+      const inList = bt.every((t) => listed.includes(t)) && grams[ai] > grams[bi];
+      const dishKey = Object.keys(DISH_CONTAINS).find((k) => tokens(a.name).join(' ').includes(k));
+      const inDish = !!dishKey && grams[ai] > grams[bi] && bt.every((t) => DISH_CONTAINS[dishKey].includes(t));
       if (inName || inList || inDish) {
         drop.add(bi);
-        merged.push(`${b.name} is already part of ${a.name}`);
+        notes.push(`${b.name} is already part of ${a.name}`);
       }
-    });
+    }
   });
-  return { items: out.filter((_, i) => !drop.has(i)), merged };
+  return { drop, added, notes };
+}
+
+export function mergeDuplicates(items: RawItem[]): { items: RawItem[]; merged: string[] } {
+  const plan = mergePlan(items);
+  const out = items
+    .map((it, i) => (plan.added.has(i) ? { ...it, grams: it.grams + plan.added.get(i)! } : { ...it }))
+    .filter((_, i) => !plan.drop.has(i));
+  return { items: out, merged: plan.notes };
 }
 
 /** Exact database_name from the model first; otherwise a strict word-overlap match; otherwise null (user chooses). */

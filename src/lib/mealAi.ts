@@ -1,10 +1,14 @@
 // The network side of meal understanding: one Gemini call per typed list, photo, recording or food search.
 // All parsing and checking is in gemFood.ts (pure, tested); `ask` is injectable so tests never touch the network.
 import type { Food } from '../data/foods';
-import { FOOD_SCHEMA, MEAL_SCHEMA, MealItem, buildFoodPrompt, buildMealPhotoPrompt, buildMealTextPrompt, itemGrams, parseFood, parseMeal, setGrams, withStatedAmounts } from './gemFood';
+import { FOOD_SCHEMA, MEAL_SCHEMA, MealItem, buildFoodPrompt, buildMealPhotoPrompt, mergeMealItems, buildMealTextPrompt, itemGrams, parseFood, parseMeal, setGrams, withStatedAmounts } from './gemFood';
 import { FoodMemory, Known, memKey, parseClause, resolveText } from './foodMemory';
 import { CacheClient, getSharedFoods, putSharedFood } from './sharedCache';
+import { PHOTO_MODELS } from './photo';
 import { askJson } from './vision';
+
+/** Photos get the strongest model first (the lighter ones are the fallback). */
+const askPhoto: Ask = (key, input, schema) => askJson(key, input, schema, undefined, PHOTO_MODELS);
 
 export type MealResult = { items: MealItem[]; meal: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null };
 type Ask = (key: string, input: unknown, schema: object) => Promise<unknown>;
@@ -16,8 +20,10 @@ export async function analyzeMealText(key: string, text: string, ask: Ask = askJ
   return { ...r, items: withStatedAmounts(r.items, text) }; // an amount the person typed is never asked about again
 }
 
-export async function analyzeMealPhoto(key: string, base64: string, mime: string, ask: Ask = askJson, note = ''): Promise<MealResult> {
-  return parseMeal(await ask(key, [{ type: 'text', text: buildMealPhotoPrompt(note) }, { type: 'image', data: base64, mime_type: mime }], MEAL_SCHEMA));
+export async function analyzeMealPhoto(key: string, base64: string, mime: string, ask: Ask = askPhoto, note = ''): Promise<MealResult> {
+  const r = parseMeal(await ask(key, [{ type: 'text', text: buildMealPhotoPrompt(note) }, { type: 'image', data: base64, mime_type: mime }], MEAL_SCHEMA));
+  const m = mergeMealItems(r.items); // a food the AI listed twice, or an ingredient of a dish already listed, counts once
+  return { ...r, items: m.items };
 }
 
 export async function analyzeMealAudio(key: string, base64: string, mime: string, ask: Ask = askJson): Promise<MealResult> {

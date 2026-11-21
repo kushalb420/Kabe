@@ -97,9 +97,10 @@ export async function askJson(
   input: unknown,
   schema: object,
   call: (body: unknown) => Promise<{ status: number; json: any }> = (b) => callGemini(key, b),
+  models: string[] = MODELS,
 ): Promise<any> {
   let lastErr: Error | null = null;
-  for (const model of MODELS) {
+  for (const model of models) {
     const { status, json } = await call({ model, input, response_format: { type: 'text', mime_type: 'application/json', schema } });
     if (status === 200) {
       const text = ((json?.steps ?? []) as any[])
@@ -117,7 +118,7 @@ export async function askJson(
       }
     }
     const err = friendlyError(status, json);
-    if (status === 404 || status === 503 || (status === 400 && /model/i.test(apiMessage(json)))) {
+    if (status === 404 || status === 503 || status === 429 || (status === 400 && /model/i.test(apiMessage(json)))) {
       lastErr = err;
       continue;
     }

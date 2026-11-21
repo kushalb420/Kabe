@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { buildMealPhotoPrompt, itemGrams, mergeMealItems, type MealItem } from '../src/lib/gemFood';
+import { analyzeMealPhoto } from '../src/lib/mealAi';
 import { PHOTO_MODELS, RawItem, buildPrompt, mergeDuplicates, parseResponse } from '../src/lib/photo';
 
 const item = (name: string, grams: number, includes: string[] = []): RawItem => ({ name, databaseName: null, searchTerm: name, grams, confidence: 'medium', includes });
@@ -51,4 +53,25 @@ assert.deepEqual(parsed.items[0].includes, ['rice', 'chicken']);
 const p = buildPrompt(['Egg, boiled']);
 for (const w of ['SCALE', 'katori', 'ONE ENTRY PER DISH', 'chicken biryani', 'scale_reference', 'includes']) assert.ok(p.includes(w), w);
 assert.ok(PHOTO_MODELS[0] === 'gemini-3.5-flash');
-console.log('Plate tests passed.');
+// the real scan path (gemFood): the same checks on meal items
+const P = { kcal: 200, protein: 10, carbs: 20, fat: 8, satFat: 2, sugar: 1, fiber: 2 };
+const mi = (name: string, unit: string, unitGrams: number, count: number, includes?: string[]): MealItem => ({ id: name, name, unit, unitGrams, count, note: '', stated: false, per100: P, includes });
+const m = mergeMealItems([mi('chicken biryani', 'g', 1, 300, ['rice', 'chicken']), mi('chicken pieces', 'g', 1, 150), mi('raita', 'katori', 120, 1), mi('roti', 'roti', 40, 1), mi('roti', 'roti', 40, 2)]);
+assert.deepEqual(m.items.map((i) => i.name), ['chicken biryani', 'raita', 'roti']);
+assert.equal(itemGrams(m.items[2]), 120, 'two entries of roti become one item of 3 rotis');
+const photoPrompt = buildMealPhotoPrompt('chicken biryani with raita');
+for (const w of ['STEP 1. SCALE', 'ONE ENTRY PER DISH', 'katori', 'chicken biryani', 'includes', 'chicken biryani with raita']) assert.ok(photoPrompt.includes(w), w);
+let askedKey = '';
+const fake = async (_k: string, _i: unknown, _s: object) => {
+  askedKey = 'asked';
+  return { meal: null, items: [
+    { name: 'chicken biryani', unit: 'g', unit_grams: 1, count: 300, quantity_stated: false, note: '', includes: ['rice', 'chicken'], per100: { kcal: 180, protein: 9, carbs: 22, fat: 6, satFat: 2, sugar: 1, fiber: 1 } },
+    { name: 'chicken pieces', unit: 'g', unit_grams: 1, count: 150, quantity_stated: false, note: '', per100: { kcal: 190, protein: 25, carbs: 0, fat: 9, satFat: 2, sugar: 0, fiber: 0 } },
+  ] };
+};
+void (async () => {
+  const scanned = await analyzeMealPhoto('k', 'b64', 'image/jpeg', fake);
+  assert.equal(askedKey, 'asked');
+  assert.deepEqual(scanned.items.map((i) => i.name), ['chicken biryani']);
+  console.log('Plate tests passed.');
+})();

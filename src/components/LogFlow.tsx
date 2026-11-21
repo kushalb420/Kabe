@@ -31,7 +31,7 @@ import { goBack, goHome } from '../lib/nav';
 import { ensurePermission, explainPermission } from '../lib/permissions';
 import { useDiscardPhoto } from '../lib/photoCache';
 
-type Stage = 'idle' | 'recording' | 'calculating' | 'review' | 'command';
+type Stage = 'idle' | 'recording' | 'describe' | 'calculating' | 'review' | 'command';
 type Mode = 'text' | 'photo' | 'voice';
 
 /**
@@ -70,6 +70,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
   }, []);
   const [items, setItems] = useState<MealItem[]>([]);
   const [uri, setUri] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ base64: string; mime: string } | null>(null); // a chosen picture waiting for the person's description
   useDiscardPhoto(uri); // the cached copy of the picture is removed when it is replaced or the screen closes
   const [error, setError] = useState('');
   const [cmd, setCmd] = useState<Command | null>(null);
@@ -139,14 +140,23 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
 
   const [webCam, setWebCam] = useState(false);
   /** A picture is ready (from the gallery, the phone camera or the web camera): send it for analysis. */
-  const analyzePicture = async (base64: string, mime: string, previewUri: string) => {
+  const analyzePicture = (base64: string, mime: string, previewUri: string) => {
     setUri(previewUri);
+    setPending({ base64, mime });
+    setError('');
+    setStage('describe'); // the picture is shown first; the person can say what they are having, then scan
+  };
+
+  /** Scan the picture that was chosen, together with what the person wrote about it. */
+  const scanPending = async () => {
+    if (!pending) return;
+    setError('');
     setStage('calculating');
     try {
-      finish(await analyzeMealPhoto(geminiKey, base64, mime, undefined, photoNote), 'photo', photoNote);
+      finish(await analyzeMealPhoto(geminiKey, pending.base64, pending.mime, undefined, photoNote), 'photo', photoNote);
     } catch (e) {
       setError(friendly(e));
-      setStage('idle');
+      setStage('describe');
     }
   };
 
@@ -170,14 +180,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
       return setError(friendly(e));
     }
     if (!asset?.base64) return setError(t('photo.errRead'));
-    setUri(asset.uri);
-    setStage('calculating');
-    try {
-      finish(await analyzeMealPhoto(geminiKey, asset.base64, asset.mimeType ?? 'image/jpeg', undefined, photoNote), 'photo', photoNote);
-    } catch (e) {
-      setError(friendly(e));
-      setStage('idle');
-    }
+    analyzePicture(asset.base64, asset.mimeType ?? 'image/jpeg', asset.uri);
   };
 
   const startRecording = async () => {
@@ -300,6 +303,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     setTyped('');
     setPhotoNote('');
     setUri(null);
+    setPending(null);
     setError('');
     setCmd(null);
     setCmdDone(false);
@@ -311,7 +315,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
           <WebCamera
             onCancel={() => setWebCam(false)}
             onError={(m) => { setWebCam(false); setError(m); }}
-            onShot={(b64, u) => { setWebCam(false); void analyzePicture(b64, 'image/jpeg', u); }}
+            onShot={(b64, u) => { setWebCam(false); analyzePicture(b64, 'image/jpeg', u); }}
           />
         )}
 
@@ -343,7 +347,6 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
               <Card style={{ gap: 10 }}>
                 <Text style={styles.body}>{t('log.photoIntro')}</Text>
                 <Text style={styles.sub}>{t('log.sizeTip')}</Text>
-                <TextInput value={photoNote} onChangeText={setPhotoNote} placeholder={t('log.photoNotePh')} placeholderTextColor={colors.inkSoft} maxLength={300} multiline style={[styles.input, { minHeight: 64, textAlignVertical: 'top' }]} />
                 <Button title={t('log.photo')} icon="camera" disabled={!ready} onPress={() => fromPhoto('camera')} />
                 <Button title={t('log.gallery')} icon="images" variant="ghost" disabled={!ready} onPress={() => fromPhoto('library')} />
                 {!geminiKey ? <Text style={styles.sub}>{t('rest.needKey')}</Text> : null}
@@ -373,6 +376,19 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
             <Ionicons name="mic" size={48} color={colors.danger} />
             <Text style={styles.body}>{t('log.recording')}</Text>
             <Button title={t('log.stop')} icon="stop" onPress={stopRecording} />
+          </Card>
+        )}
+
+        {stage === 'describe' && (
+          <Card style={{ gap: 10 }}>
+            {uri ? <Image source={{ uri }} style={styles.photoBig} /> : null}
+            <Text style={styles.h2}>{t('log.describeTitle')}</Text>
+            <Text style={styles.sub}>{t('log.describeHint')}</Text>
+            <TextInput value={photoNote} onChangeText={setPhotoNote} placeholder={t('log.photoNotePh')} placeholderTextColor={colors.inkSoft} maxLength={300} multiline style={[styles.input, { minHeight: 80, textAlignVertical: 'top' }]} />
+            <Text style={styles.sub}>{t('log.sizeTip')}</Text>
+            <Button title={t('log.scanPhoto')} icon="sparkles" disabled={!ready || !pending} onPress={() => void scanPending()} />
+            <Button title={t('log.another')} icon="images" variant="ghost" onPress={reset} />
+            {error ? <Text style={styles.err}>{error}</Text> : null}
           </Card>
         )}
 
@@ -538,6 +554,7 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   err: { fontSize: 13, color: colors.danger },
   link: { fontSize: 13, fontWeight: '700', color: colors.primary },
   note: { fontSize: 12, color: colors.ink, lineHeight: 17, fontStyle: 'italic' },
+  photoBig: { width: '100%', height: 240, borderRadius: radius.md, borderWidth: BORDER, borderColor: colors.cardBorder },
   photo: { width: '100%', height: 150, borderRadius: radius.md, borderWidth: BORDER, borderColor: colors.cardBorder },
   input: { borderWidth: BORDER, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, fontSize: 15, color: colors.ink, backgroundColor: colors.card },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, LayoutChangeEvent, PanResponder, Platform, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { MOTION } from '../config/app';
-import { SHADOW_OFFSET, radius, useColors } from '../theme';
+import { SHADOW_OFFSET, radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { isDarkColors } from '../palette';
 import type { HeroMetric } from './HeroTank';
 import { HardShadow } from './HardShadow';
@@ -51,6 +51,7 @@ const BUBBLES = [
  */
 export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
   const dark = isDarkColors(colors);
   const [i, setI] = useState(0);
   const [width, setWidth] = useState(0);
@@ -220,7 +221,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (_colors: Colors) => StyleSheet.create({
   center: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 2 },
   label: { fontSize: 13, fontWeight: '800', letterSpacing: 0.4 },
   names: { flexDirection: 'row', gap: 18, flexWrap: 'wrap', justifyContent: 'center' },

@@ -1,4 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../../src/components/Ionicons';
+import { OnSurface } from '../../src/components/Surface';
 import { Tabs } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Animated } from 'react-native';
@@ -26,7 +27,9 @@ function TabIcon({ name, color, size, focused }: { name: IconName; color: string
   }, [focused, y]);
   return (
     <Animated.View style={{ transform: [{ translateY: y }] }}>
-      <Ionicons name={name} size={size} color={color} />
+      <OnSurface>
+        <Ionicons name={name} size={size} color={color} />
+      </OnSurface>
     </Animated.View>
   );
 }

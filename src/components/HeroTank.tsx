@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Animated, Easing, LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { Pressable } from './Pressable';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { MOTION } from '../config/app';
 import { SHADOW_OFFSET, radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { HardShadow } from './HardShadow';
 import { CountUp, useAnimatedNumber } from './Motion';
 import { Text } from './Text';
+import { OnSurface } from './Surface';
+import { isDarkColors } from '../palette';
 
 export type HeroMetric = { key: string; label: string; value: number; goal: number; unit: string; leftLabel: string; overLabel: string };
 
@@ -24,6 +27,7 @@ export function HeroTank({ metrics }: { metrics: HeroMetric[] }) {
   const styles = useThemedStyles(makeStyles);
   const [i, setI] = useState(0);
   const [w, setW] = useState(0);
+  const dark = isDarkColors(colors); // in Noir the ring around the screen is a plain black frame: nothing fills in it
   const m = metrics[i % metrics.length];
   const p = m.goal > 0 ? Math.max(0, Math.min(1, m.value / m.goal)) : 0;
   const over = m.value > m.goal;
@@ -72,22 +76,23 @@ export function HeroTank({ metrics }: { metrics: HeroMetric[] }) {
         {/* antennas */}
         <Animated.View style={{ height: 38, alignItems: 'center', transform: [{ rotate: bob.interpolate({ inputRange: [0, 1], outputRange: ['-2deg', '2deg'] }) }] }}>
           <Svg width={120} height={38}>
-            <Line x1={60} y1={38} x2={28} y2={8} stroke={colors.ink} strokeWidth={3} strokeLinecap="round" />
-            <Line x1={60} y1={38} x2={92} y2={8} stroke={colors.ink} strokeWidth={3} strokeLinecap="round" />
-            <Circle cx={28} cy={8} r={4.5} fill={colors.primary} stroke={colors.ink} strokeWidth={2} />
-            <Circle cx={92} cy={8} r={4.5} fill={colors.primary} stroke={colors.ink} strokeWidth={2} />
-            <Path d={star(108, 14, 6)} fill={colors.ink} opacity={0.85} />
-            <Path d={star(10, 22, 4)} fill={colors.ink} opacity={0.6} />
+            <Line x1={60} y1={38} x2={28} y2={8} stroke={colors.inkOnBg} strokeWidth={3} strokeLinecap="round" />
+            <Line x1={60} y1={38} x2={92} y2={8} stroke={colors.inkOnBg} strokeWidth={3} strokeLinecap="round" />
+            <Circle cx={28} cy={8} r={4.5} fill={colors.primaryOnBg} stroke={colors.inkOnBg} strokeWidth={2} />
+            <Circle cx={92} cy={8} r={4.5} fill={colors.primaryOnBg} stroke={colors.inkOnBg} strokeWidth={2} />
+            <Path d={star(108, 14, 6)} fill={colors.inkOnBg} opacity={0.85} />
+            <Path d={star(10, 22, 4)} fill={colors.inkOnBg} opacity={0.6} />
           </Svg>
         </Animated.View>
         {/* the TV body */}
         <HardShadow offset={SHADOW_OFFSET} color={colors.shadowInk} radius={30}>
           <View style={[styles.body, { backgroundColor: colors.primarySoft, borderColor: colors.ink }]}>
+            <OnSurface>
             <View style={{ padding: PAD }} onLayout={(e) => setCw(e.nativeEvent.layout.width)}>
               {cw > 0 && (
                 <Svg width={cw} height={H + 2 * PAD} style={StyleSheet.absoluteFill} pointerEvents="none">
-                  <Rect x={RING / 2} y={RING / 2} width={rw} height={rh} rx={rr} ry={rr} fill="none" stroke={colors.line} strokeWidth={RING} />
-                  <Rect x={RING / 2} y={RING / 2} width={rw} height={rh} rx={rr} ry={rr} fill="none" stroke={kc.value > kc.goal ? colors.danger : colors.primary} strokeWidth={RING} strokeLinecap="round" strokeDasharray={`${perim * ringP} ${perim}`} />
+                  <Rect x={RING / 2} y={RING / 2} width={rw} height={rh} rx={rr} ry={rr} fill="none" stroke={dark ? '#000000' : colors.line} strokeWidth={RING} />
+                  {!dark && <Rect x={RING / 2} y={RING / 2} width={rw} height={rh} rx={rr} ry={rr} fill="none" stroke={kc.value > kc.goal ? colors.danger : colors.primary} strokeWidth={RING} strokeLinecap="round" strokeDasharray={`${perim * ringP} ${perim}`} />}
                 </Svg>
               )}
               <View onLayout={onLayout} style={[styles.screen, { borderColor: colors.ink, backgroundColor: colors.card }]}>
@@ -141,6 +146,7 @@ export function HeroTank({ metrics }: { metrics: HeroMetric[] }) {
                 ))}
               </View>
             </View>
+            </OnSurface>
           </View>
         </HardShadow>
       </Animated.View>

@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { Alert } from '../src/lib/alert';
 import { Text, TextInput } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -213,6 +214,6 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   label: { fontSize: 12, fontWeight: '600', color: colors.inkSoft },
   err: { fontSize: 13, color: colors.danger, lineHeight: 18 },
   link: { fontSize: 13, fontWeight: '700', color: colors.primary },
-  mono: { fontFamily: 'monospace', fontSize: 11, color: colors.inkSoft, backgroundColor: colors.bg, padding: 10, borderRadius: radius.sm },
+  mono: { fontFamily: 'monospace', fontSize: 11, color: colors.inkSoft, backgroundColor: colors.chip, padding: 10, borderRadius: radius.sm },
   input: { borderWidth: 2, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, fontSize: 15, color: colors.ink, backgroundColor: colors.card },
 });

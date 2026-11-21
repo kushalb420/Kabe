@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from './Ionicons';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from './Pressable';
 import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
 import { foodFromMealItem } from '../lib/myFoods';

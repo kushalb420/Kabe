@@ -25,6 +25,12 @@ export const baseColors = {
   fat: '#E86A92',
   satFat: '#8E1F4B', // the saturated part of fat
   fiber: '#7AB648',
+  inkOnBg: '#000000', // text and icons drawn straight on the page (not inside a card)
+  inkSoftOnBg: '#3A3F3C',
+  primaryOnBg: '#000000', // the colour of links and icons drawn straight on the page
+  dangerOnBg: '#8E1A12', // error and warning text drawn straight on the page
+  warnOnBg: '#6E3200',
+  chip: BRAND.yellow, // the resting fill of chips and small controls inside cards
   dot: '#000000', // the dot grid on the page
   water: '#C6E6F8', // the glass on the Today TV
   waterOver: '#F5B5C0', // the glass once a keep-under number is passed
@@ -51,34 +57,44 @@ export const isAccentUnlocked = (id: AccentId, level: number): boolean => level 
 export const darkColors: Colors = {
   ...baseColors,
   bg: '#0D0F0E',
-  card: '#171C19',
-  cardBorder: '#E9EEEA',
-  ink: '#F3F5F1',
-  inkSoft: '#A8B3AD',
-  line: '#E9EEEA',
-  primary: '#F3F5F1',
-  onPrimary: '#0D0F0E',
-  primaryDark: '#FFFFFF',
-  primarySoft: '#2A332F',
+  card: '#F3EFE4', // off-white cards on the black page: the contrast of the whole theme
+  cardBorder: '#0D0F0E',
+  ink: '#161A18', // text inside cards
+  inkSoft: '#4B534F',
+  inkOnBg: '#F3F5F1', // text straight on the black page
+  inkSoftOnBg: '#A8B3AD',
+  primaryOnBg: '#FF8F4F',
+  dangerOnBg: '#FF8279',
+  warnOnBg: '#FFB383',
+  line: '#161A18',
+  primary: '#8A2F0E', // deep burnt orange buttons: seen on the black page and on off-white cards alike
+  onPrimary: '#FFFFFF',
+  primaryDark: '#161A18',
+  primarySoft: '#B7C6C2', // the greenish grey of the original theme, for secondary buttons
+  chip: '#E4DFD0',
   strong: '#000000',
-  shadowInk: '#B5481A',
-  accent: '#F0661F',
-  warn: '#FFB383',
-  danger: '#FF8279',
-  good: '#7ED99B',
-  info: '#7FB9F2',
-  protein: '#6C95FF',
+  shadowInk: '#B8420F',
+  accent: '#E8591A',
+  warn: '#8A3208',
+  danger: '#9B1C1C',
+  good: '#14532D',
+  info: '#174B78',
+  protein: '#4F7CFF',
   carbs: '#F5A623',
-  fat: '#F27AA2',
-  satFat: '#B83A66',
-  fiber: '#8CC85A',
+  fat: '#E86A92',
+  satFat: '#8E1F4B',
+  fiber: '#7AB648',
   dot: '#FFFFFF',
-  water: '#1F5666',
-  waterOver: '#7A2338',
-  tagGoodBg: '#15301F',
-  tagGoodLine: '#7ED99B',
-  tagWarnBg: '#3A2112',
-  tagWarnLine: '#FFB383',
+};
+
+/** The dark theme again, with red wine in place of every orange. */
+export const wineColors: Colors = {
+  ...darkColors,
+  primary: '#7A1F2B',
+  primaryOnBg: '#E8788A',
+  shadowInk: '#7A1F2B',
+  accent: '#A32638',
+  warn: '#7A1F2B',
 };
 
 /** True for a dark palette (its page is dark): used for the status bar and the logo colour. */
@@ -90,7 +106,7 @@ export const isDarkColors = (c: Pick<Colors, 'bg'>): boolean => {
 const cache = new Map<string, Colors>();
 export const paletteFor = (accent: AccentId = 'forest'): Colors => {
   const theme = THEMES.find((t) => t.id === accent) ?? THEMES[0];
-  if ('dark' in theme && theme.dark) return darkColors;
+  if ('dark' in theme && theme.dark) return theme.id === 'noirwine' ? wineColors : darkColors;
   if (theme.bg === baseColors.bg && theme.soft === baseColors.primarySoft) return baseColors;
   let p = cache.get(theme.id);
   if (!p) {

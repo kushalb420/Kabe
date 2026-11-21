@@ -166,7 +166,7 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   sub: { fontSize: 12, color: colors.inkSoft },
   label: { fontSize: 12, fontWeight: '600', color: colors.inkSoft, marginBottom: 4 },
   input: { borderWidth: 2, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, fontSize: 16, color: colors.ink, backgroundColor: colors.card },
-  seg: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.bg, borderWidth: 2, borderColor: colors.line },
+  seg: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.chip, borderWidth: 2, borderColor: colors.line },
   segOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   segText: { fontSize: 13, fontWeight: '600', color: colors.ink },
 });

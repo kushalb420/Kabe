@@ -1,9 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { FEATURES } from '../src/config/app';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { Alert } from '../src/lib/alert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dots } from '../src/components/Dots';
@@ -312,7 +313,7 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   stepVal: { fontSize: 16, fontWeight: '800', color: colors.ink, minWidth: 48, textAlign: 'center' },
   input: { borderWidth: BORDER, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, fontSize: 15, color: colors.ink, backgroundColor: colors.card },
   dayRow: { flexDirection: 'row', gap: 6 },
-  dayChip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: radius.sm, backgroundColor: colors.bg, borderWidth: BORDER, borderColor: colors.line },
+  dayChip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: radius.sm, backgroundColor: colors.chip, borderWidth: BORDER, borderColor: colors.line },
   dayOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   dayText: { fontSize: 12, fontWeight: '700', color: colors.ink },
 });

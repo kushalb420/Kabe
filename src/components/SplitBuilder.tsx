@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from './Ionicons';
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from './Pressable';
 import type { Routine } from '../store/kabe';
 import { useKabe } from '../store/kabe';
 import { useT } from '../i18n/useT';

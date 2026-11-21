@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../../src/components/Ionicons';
 import React, { useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, ScrollViewInstance, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, ScrollViewInstance, StyleSheet, View } from 'react-native';
+import { Pressable } from '../../src/components/Pressable';
 import { Loading } from '../../src/components/Loading';
 import { Alert } from '../../src/lib/alert';
 import { Dots } from '../../src/components/Dots';

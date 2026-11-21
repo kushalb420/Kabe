@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from './Ionicons';
 import React, { useEffect, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
+import { Pressable } from './Pressable';
 import { useT } from '../i18n/useT';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { Text } from './Text';

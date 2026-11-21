@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler, Modal, Pressable, StyleSheet, View, type AlertButton } from 'react-native';
+import { BackHandler, Modal, StyleSheet, View, type AlertButton } from 'react-native';
+import { Pressable } from './Pressable';
 import { registerAlertHost } from '../lib/alert';
 import { useThemedStyles, type Colors } from '../theme';
 import { Text } from './Text';

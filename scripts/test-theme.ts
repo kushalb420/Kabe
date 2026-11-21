@@ -36,7 +36,11 @@ const PAIRS: [keyof Colors, keyof Colors][] = [
 for (const id of ACCENT_IDS) {
   const p = paletteFor(id);
   assert.deepEqual(Object.keys(p).sort(), Object.keys(baseColors).sort(), `${id} defines every colour`);
-  for (const [fg, bg] of PAIRS) assert.ok(contrast(p[fg], p[bg]) >= 4.5, `${id}: ${fg} on ${bg} is only ${contrast(p[fg], p[bg]).toFixed(2)}:1`);
+  const ON_PAGE: Partial<Record<keyof Colors, keyof Colors>> = { ink: 'inkOnBg', primaryDark: 'inkOnBg', inkSoft: 'inkSoftOnBg', primary: 'primaryOnBg', danger: 'dangerOnBg', warn: 'warnOnBg' };
+  for (const [fg, bg] of PAIRS) {
+    const real = bg === 'bg' ? ON_PAGE[fg] ?? fg : fg; // text drawn straight on the page uses the on-page colours (the same colours on a light page)
+    assert.ok(contrast(p[real], p[bg]) >= 4.5, `${id}: ${fg} on ${bg} is only ${contrast(p[real], p[bg]).toFixed(2)}:1`);
+  }
   assert.ok(contrast('#FFFFFF', p.strong) >= 7, `${id}: white on the rest-timer bar`);
   assert.equal(paletteFor(id), p, 'palettes are cached, so screens do not re-render for nothing');
   if (!isDarkColors(p)) assert.equal(p.card, baseColors.card, `${id}: a light theme never changes cards`);
@@ -55,7 +59,9 @@ assert.ok(contrast(baseColors.satFat, baseColors.fat) > 1.5, 'saturated fat stan
 assert.ok(lum(baseColors.bg) > 0.5);
 assert.ok(isDarkColors(paletteFor('noir')) && !isDarkColors(baseColors));
 assert.ok(lum(paletteFor('noir').bg) < 0.05);
-for (const id of ACCENT_IDS) if (id !== 'noir') assert.ok(!isDarkColors(paletteFor(id)), `${id} stays light`);
+assert.ok(isDarkColors(paletteFor('noirwine')));
+assert.notEqual(paletteFor('noirwine').primary, paletteFor('noir').primary, 'the wine theme swaps the orange');
+for (const id of ACCENT_IDS) if (id !== 'noir' && id !== 'noirwine') assert.ok(!isDarkColors(paletteFor(id)), `${id} stays light`);
 
 // ---- every screen follows the theme: nobody uses a fixed colour object or a fixed white background ----
 const files: string[] = [];

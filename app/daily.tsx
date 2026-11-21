@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { Alert } from '../src/lib/alert';
 import type { Remind } from '../src/lib/itemReminders';
 import { ItemReminder } from '../src/components/ItemReminder';
@@ -49,7 +50,7 @@ export default function Daily() {
                 <Text style={styles.pillText}>+{v} ml</Text>
               </Pressable>
             ))}
-            <Pressable style={[styles.pill, { backgroundColor: colors.bg }]} onPress={() => tk.addWater(today, -250)} disabled={ml === 0}>
+            <Pressable style={[styles.pill, { backgroundColor: colors.chip }]} onPress={() => tk.addWater(today, -250)} disabled={ml === 0}>
               <Text style={[styles.pillText, { color: colors.inkSoft }]}>−250</Text>
             </Pressable>
           </View>

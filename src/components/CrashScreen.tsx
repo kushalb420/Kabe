@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 import { clearCrash, onCrash, onCrashCleared, reportCrash } from '../lib/crashCatcher';
 

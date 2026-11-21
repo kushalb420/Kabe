@@ -1,12 +1,14 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dots } from '../src/components/Dots';
 import { LogFlow } from '../src/components/LogFlow';
 import { MyFoods } from '../src/components/MyFoods';
 import { PressScale } from '../src/components/Motion';
+import { OnSurface } from '../src/components/Surface';
 import { Text } from '../src/components/Text';
 import type { Key } from '../src/i18n';
 import { useT } from '../src/i18n/useT';
@@ -55,8 +57,9 @@ export default function AddFood() {
           {WAYS.map((w) => (
             <PressScale key={w.path} style={{ flex: 1, alignSelf: 'stretch' }} onPress={() => router.push({ pathname: w.path, params: { date, meal } })} accessibilityLabel={t(w.label)}>
               <View style={styles.way}>
+                <OnSurface>
                 <Ionicons name={w.icon} size={24} color={colors.ink} />
-                <Text style={styles.wayText} numberOfLines={2}>{t(w.label)}</Text>
+                <Text style={styles.wayText} numberOfLines={2}>{t(w.label)}</Text></OnSurface>
               </View>
             </PressScale>
           ))}

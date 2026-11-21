@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { Text } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card } from '../src/components/ui';
@@ -95,7 +96,7 @@ export default function Achievements() {
             {g.badges.filter((b) => b.group === grp).map((b) => (
               <View key={b.id} style={[styles.badge, !b.earned && { opacity: 0.8 }]}>
                 <View style={[styles.medal, { backgroundColor: b.earned ? TIER_COLOR[b.tier] : colors.line }]}>
-                  <Ionicons name={(b.earned ? b.icon : 'lock-closed') as keyof typeof Ionicons.glyphMap} size={20} color={b.earned ? colors.onPrimary : colors.inkSoft} />
+                  <Ionicons name={(b.earned ? b.icon : 'lock-closed') as keyof typeof Ionicons.glyphMap} size={20} color={b.earned ? colors.onPrimary : colors.inkOnBg === colors.ink ? colors.inkSoft : colors.card} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={styles.name}>{badgeName(lang, b.id, b.name)} <Text style={styles.sub}>· {t(`tier.${b.tier}` as Key)}</Text></Text>

@@ -1,7 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Vibration, View } from 'react-native';
+import { ScrollView, StyleSheet, Vibration, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { Alert } from '../src/lib/alert';
 import { Text, TextInput } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -276,8 +277,8 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   col: { fontSize: 11, fontWeight: '700', color: colors.inkSoft, textAlign: 'center' },
   setNo: { fontSize: 15, fontWeight: '700', color: colors.inkSoft, textAlign: 'center' },
-  num: { backgroundColor: colors.bg, borderRadius: radius.sm, paddingVertical: 8, textAlign: 'center', fontSize: 17, fontWeight: '700', color: colors.ink },
-  check: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+  num: { backgroundColor: colors.chip, borderRadius: radius.sm, paddingVertical: 8, textAlign: 'center', fontSize: 17, fontWeight: '700', color: colors.ink },
+  check: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.chip, alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.primary },
   addSet: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8 },
   nameInput: { borderWidth: 2, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, fontSize: 16, color: colors.ink },

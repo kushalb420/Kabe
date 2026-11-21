@@ -1,7 +1,8 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Ionicons } from '../src/components/Ionicons';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { Dots } from '../src/components/Dots';
 import { Text, TextInput } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

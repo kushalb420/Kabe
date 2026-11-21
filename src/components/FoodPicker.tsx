@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from './Pressable';
 import { Text, TextInput } from './Text';
 import type { Food } from '../data/foods';
 import { nativeToEnglish } from '../data/nativeFoods';
@@ -40,7 +41,7 @@ export function FoodPicker({ initialQuery, onPick }: { initialQuery: string; onP
 }
 
 const makeStyles = (colors: Colors) => StyleSheet.create({
-  wrap: { gap: 6, backgroundColor: colors.bg, borderRadius: radius.md, padding: 10 },
+  wrap: { gap: 6, backgroundColor: colors.chip, borderRadius: radius.md, padding: 10 },
   input: { backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 8, paddingHorizontal: 10, fontSize: 15, color: colors.ink },
   row: { paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
   name: { fontSize: 14, fontWeight: '600', color: colors.ink },

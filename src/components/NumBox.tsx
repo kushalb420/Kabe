@@ -70,5 +70,5 @@ export function NumBox({
 const makeStyles = (colors: Colors) => StyleSheet.create({
   wrap: { flex: 1, gap: 2 },
   label: { fontSize: 11, fontWeight: '700', color: colors.inkSoft, textAlign: 'center' },
-  input: { backgroundColor: colors.bg, borderRadius: radius.sm, paddingVertical: 8, textAlign: 'center', fontSize: 15, fontWeight: '700', color: colors.ink, borderWidth: 2, borderColor: colors.line },
+  input: { backgroundColor: colors.chip, borderRadius: radius.sm, paddingVertical: 8, textAlign: 'center', fontSize: 15, fontWeight: '700', color: colors.ink, borderWidth: 2, borderColor: colors.line },
 });

@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../Ionicons';
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from '../Pressable';
 import { BUY_CATEGORIES, buyIdeas, type BuyCategory, type BuyIdea } from '../../lib/buyIdeas';
 import { inPantry } from '../../lib/kitchenAi';
 import { moreBuyIdeas } from '../../lib/kitchenNet';
@@ -126,7 +127,7 @@ export function BuyTab() {
 
 const makeStyles = (colors: Colors) => StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 999, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card },
-  cat: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.bg },
+  cat: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.chip },
   catText: { fontSize: 12, fontWeight: '700', color: colors.ink },
   more: { fontSize: 13, fontWeight: '800', color: colors.primaryDark, textAlign: 'center', paddingTop: 4 },
   chipText: { fontSize: 13, fontWeight: '700', color: colors.ink },

@@ -1,7 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../../src/components/Ionicons';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from '../../src/components/Pressable';
 import { CountUp } from '../../src/components/Motion';
 import { Screen } from '../../src/components/Screen';
 import { Text } from '../../src/components/Text';
@@ -16,6 +17,7 @@ import { useKabe } from '../../src/store/kabe';
 import { useTracker } from '../../src/store/tracker';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../../src/theme';
 import { BrandLogo } from '../../src/components/BrandLogo';
+import { OnSurface } from '../../src/components/Surface';
 import { Sticker } from '../../src/components/Sticker';
 import { progressOn } from '../../src/lib/supplements';
 import { useCloud } from '../../src/store/cloud';
@@ -92,8 +94,10 @@ export default function Home() {
 
   const streak = (
     <Pressable onPress={() => router.push('/achievements')} style={styles.streak} accessibilityRole="button" accessibilityLabel={tn('today.streak', game.streaks.log.current)}>
-      <Text style={styles.streakEmoji}>🔥</Text>
-      <Text style={styles.streakNum}>{game.streaks.log.current}</Text>
+      <OnSurface>
+        <Text style={styles.streakEmoji}>🔥</Text>
+        <Text style={styles.streakNum}>{game.streaks.log.current}</Text>
+      </OnSurface>
     </Pressable>
   );
 

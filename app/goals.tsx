@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dots } from '../src/components/Dots';
 import { TargetsCalculator } from '../src/components/TargetsCalculator';

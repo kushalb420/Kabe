@@ -44,7 +44,7 @@ export function NutrientGrid({ values, compact }: { values: Nutrients; compact?:
 
 const makeStyles = (colors: Colors) => StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tile: { flexBasis: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.bg, borderWidth: BORDER, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 8, paddingHorizontal: 10 },
+  tile: { flexBasis: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.chip, borderWidth: BORDER, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 8, paddingHorizontal: 10 },
   small: { flexBasis: '31%', flexDirection: 'column', alignItems: 'flex-start', gap: 2, paddingVertical: 6, paddingHorizontal: 8 },
   wide: { flexBasis: '100%', backgroundColor: colors.primarySoft },
   dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1, borderColor: colors.line },

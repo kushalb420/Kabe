@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from './Ionicons';
 import React from 'react';
-import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 import Svg, { Circle } from 'react-native-svg';
 import { BORDER, SHADOW_OFFSET, radius, useColors, useThemedStyles, type Colors } from '../theme';
@@ -8,6 +9,7 @@ import { MOTION } from '../config/app';
 import { HardShadow, splitStyle } from './HardShadow';
 import { Enter, PressScale, useAnimatedNumber } from './Motion';
 import { Sticker, type StickerName } from './Sticker';
+import { OnSurface } from './Surface';
 
 /** A tappable row that opens another screen: icon, title, one line of help, chevron. */
 export function LinkRow({ icon, title, sub, onPress, sticker }: { icon: keyof typeof Ionicons.glyphMap; title: string; sub?: string; onPress: () => void; sticker?: StickerName }) {
@@ -34,7 +36,9 @@ export function Card({ children, style, index }: { children: React.ReactNode; st
   return (
     <HardShadow offset={SHADOW_OFFSET} color={colors.shadowInk} radius={radius.lg} outerStyle={outer}>
       <Enter index={index} style={{ flexGrow: 1 }}>
-        <View style={[styles.card, { flexGrow: 1 }, inner]}>{children}</View>
+        <View style={[styles.card, { flexGrow: 1 }, inner]}>
+          <OnSurface>{children}</OnSurface>
+        </View>
       </Enter>
     </HardShadow>
   );
@@ -148,8 +152,10 @@ export function Button({
       {({ pressed }) => (
         <HardShadow offset={SHADOW_OFFSET} color={colors.shadowInk} radius={radius.md} pressed={pressed} outerStyle={disabled ? { opacity: 0.4, flexGrow: 1 } : { flexGrow: 1 }}>
           <View style={[styles.btn, { flexGrow: 1 }, primary ? styles.btnPrimary : styles.btnGhost, variant === 'danger' && { borderColor: colors.danger }]}>
-            {icon && <Ionicons name={icon} size={18} color={primary ? colors.onPrimary : colors.ink} />}
-            <Text style={[styles.btnText, { color: primary ? colors.onPrimary : variant === 'danger' ? colors.danger : colors.ink }]}>{title}</Text>
+            <OnSurface>
+              {icon && <Ionicons name={icon} size={18} color={primary ? colors.onPrimary : colors.ink} />}
+              <Text style={[styles.btnText, { color: primary ? colors.onPrimary : variant === 'danger' ? colors.danger : colors.ink }]}>{title}</Text>
+            </OnSurface>
           </View>
         </HardShadow>
       )}

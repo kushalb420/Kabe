@@ -1,7 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dots } from '../src/components/Dots';
 import { Text, TextInput } from '../src/components/Text';
@@ -190,10 +191,10 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   rowName: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.ink },
   rowVal: { fontSize: 15, fontWeight: '800', color: colors.ink },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: colors.bg, borderWidth: BORDER, borderColor: colors.line },
+  chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: colors.chip, borderWidth: BORDER, borderColor: colors.line },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { fontSize: 13, fontWeight: '600', color: colors.ink },
-  detail: { gap: 10, padding: 12, marginVertical: 6, backgroundColor: colors.bg, borderRadius: radius.sm, borderWidth: BORDER, borderColor: colors.line },
+  detail: { gap: 10, padding: 12, marginVertical: 6, backgroundColor: colors.chip, borderRadius: radius.sm, borderWidth: BORDER, borderColor: colors.line },
   detailGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   detailCell: { flexBasis: '46%', flexGrow: 1 },
   detailVal: { fontSize: 18, fontWeight: '800', color: colors.ink },

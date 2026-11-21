@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, TextStyle, ViewStyle } from 'react-native';
+import { Animated, Easing, TextStyle, ViewStyle } from 'react-native';
+import { Pressable } from './Pressable';
 import { MOTION } from '../config/app';
 import { Text } from './Text';
 

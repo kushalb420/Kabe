@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { Dots } from '../src/components/Dots';
 import { Text, TextInput } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

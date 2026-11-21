@@ -1,6 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../Ionicons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from '../Pressable';
 import { Loading } from '../Loading';
 import { coachLanguageName } from '../../i18n';
 import type { Key } from '../../i18n';
@@ -184,6 +185,6 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   send: { width: 42, height: 42, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   bubble: { maxWidth: '90%', borderRadius: radius.md, paddingVertical: 8, paddingHorizontal: 12 },
   mine: { alignSelf: 'flex-end', backgroundColor: colors.primary },
-  theirs: { alignSelf: 'flex-start', backgroundColor: colors.bg, borderWidth: BORDER, borderColor: colors.line },
+  theirs: { alignSelf: 'flex-start', backgroundColor: colors.chip, borderWidth: BORDER, borderColor: colors.line },
   mineText: { color: colors.onPrimary, fontSize: 14, lineHeight: 20 },
 });

@@ -1,7 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../../src/components/Ionicons';
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from '../../src/components/Pressable';
 import { Alert } from '../../src/lib/alert';
 import { PressScale } from '../../src/components/Motion';
 import { SplitBuilder } from '../../src/components/SplitBuilder';

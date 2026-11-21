@@ -1,7 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../src/components/Ionicons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable } from '../src/components/Pressable';
 import { Alert } from '../src/lib/alert';
 import { Text, TextInput } from '../src/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -128,7 +129,7 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   h2: { fontSize: 17, fontWeight: '700', color: colors.ink },
   sub: { fontSize: 12, color: colors.inkSoft },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  seg: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.bg, borderWidth: 2, borderColor: colors.line },
+  seg: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.chip, borderWidth: 2, borderColor: colors.line },
   segOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   segText: { fontSize: 13, fontWeight: '600', color: colors.ink },
 });

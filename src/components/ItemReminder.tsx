@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from './Pressable';
 import { useT } from '../i18n/useT';
 import { DEFAULT_ITEM_REMIND, Remind, stepRemind } from '../lib/itemReminders';
 import { formatTime } from '../lib/reminders';

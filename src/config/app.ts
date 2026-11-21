@@ -24,7 +24,9 @@ export const THEMES = [
   { id: 'paper', level: 1, bg: '#F3F1EA', soft: '#DDE8D6' },
   { id: 'sand', level: 2, bg: '#EBDDBE', soft: '#C9E4D4' },
   { id: 'coral', level: 2, bg: '#FFA9A0', soft: '#FFF0B0' },
-  { id: 'noir', level: 1, bg: '#0D0F0E', soft: '#2A332F', dark: true }, // the dark theme: black page, white and greenish-grey, burnt orange
+  { id: 'noir', level: 1, bg: '#0D0F0E', soft: '#2A332F', dark: true }, // the dark theme: black page, off-white cards, greenish-grey, burnt orange
+  { id: 'noirwine', level: 1, bg: '#0D0F0E', soft: '#2A332F', dark: true }, // the same dark theme with red wine in place of every orange
+  // (the dark themes are the ones with dark: true)
 ] as const;
 
 /** The dot pattern behind pages. */

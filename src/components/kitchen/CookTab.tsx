@@ -1,7 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '../Ionicons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
+import { Pressable } from '../Pressable';
 import { Loading } from '../Loading';
 import { coachLanguageName } from '../../i18n';
 import type { Key } from '../../i18n';
@@ -192,7 +193,7 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   link: { fontSize: 13, fontWeight: '800', color: colors.primaryDark },
   input: { borderWidth: BORDER, borderColor: colors.line, borderRadius: radius.sm, paddingVertical: 12, paddingHorizontal: 12, fontSize: 15, color: colors.ink, backgroundColor: colors.card },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: colors.bg, borderWidth: BORDER, borderColor: colors.line },
+  chip: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: colors.chip, borderWidth: BORDER, borderColor: colors.line },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { fontSize: 13, fontWeight: '600', color: colors.ink },
   fitRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },

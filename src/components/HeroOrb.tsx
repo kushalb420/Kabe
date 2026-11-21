@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { Animated, Easing, LayoutChangeEvent, PanResponder, Platform, StyleSheet, View } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, G, Path, Rect } from 'react-native-svg';
 import { MOTION } from '../config/app';
 import { SHADOW_OFFSET, radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { isDarkColors } from '../palette';
@@ -11,8 +11,10 @@ import { Pressable } from './Pressable';
 import { OnSurface } from './Surface';
 import { Text } from './Text';
 
+const AnimatedG = Animated.createAnimatedComponent(G);
 const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
 const spark = (x: number, y: number, r: number) => `M${x} ${y - r} Q${x} ${y} ${x + r} ${y} Q${x} ${y} ${x} ${y + r} Q${x} ${y} ${x - r} ${y} Q${x} ${y} ${x} ${y - r} Z`;
+
 /** What the finger and the phone's sensor are each asking for, so one value drives the tilt of the water. */
 class Gesture {
   dragged = false;
@@ -37,37 +39,39 @@ class Gesture {
   }
 }
 const BUBBLES = [
-  { x: 0.28, size: 7, delay: 0, ms: 4200 },
-  { x: 0.46, size: 10, delay: 900, ms: 5200 },
-  { x: 0.62, size: 6, delay: 1800, ms: 3800 },
-  { x: 0.74, size: 9, delay: 600, ms: 4800 },
-  { x: 0.38, size: 5, delay: 2600, ms: 3500 },
+  { x: 0.28, size: 3.5, delay: 0, ms: 4200 },
+  { x: 0.46, size: 5, delay: 900, ms: 5200 },
+  { x: 0.62, size: 3, delay: 1800, ms: 3800 },
+  { x: 0.74, size: 4.5, delay: 600, ms: 4800 },
+  { x: 0.38, size: 2.5, delay: 2600, ms: 3500 },
 ];
 
 /**
  * Today's hero as a glass orb: a round vessel of water that fills as you eat. Tilt the phone and the water follows it (or drag a
  * finger across the orb); tap it, or tap a name underneath, to switch between calories and the macros. Bubbles rise, the surface
- * rolls, and past a limit the water turns a warning colour. All motion uses the native driver.
+ * rolls, and past a limit the water turns a warning colour. The water is one drawing (not stacked views), so it cannot upset the
+ * layout around it.
  */
 export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const dark = isDarkColors(colors);
+  const clipId = `orb-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const [i, setI] = useState(0);
   const [width, setWidth] = useState(0);
   const m = metrics[i % metrics.length];
   const p = m.goal > 0 ? clamp(m.value / m.goal, 0, 1) : 0;
   const over = m.value > m.goal;
   const left = Math.round(Math.abs(m.goal - m.value));
-  const S = Math.round(Math.min(Math.max(width - 24, 200), 276)); // the orb's width
+  const S = Math.round(Math.min(Math.max(width - 24, 200), 260)); // the orb's width
   const WAVE = Math.round(S * 0.9);
   const fill = over && m.key !== 'protein' ? colors.waterOver : colors.water;
-  const back = over && m.key !== 'protein' ? colors.waterOver : colors.water;
+  const C = S / 2;
 
+  const [gesture] = useState(() => new Gesture()); // a drag across the orb is not a tap
   const [rise] = useState(() => new Animated.Value(0));
   const [drift] = useState(() => new Animated.Value(0));
   const [drift2] = useState(() => new Animated.Value(0));
-  const [gesture] = useState(() => new Gesture()); // a drag across the orb is not a tap
   const [bob] = useState(() => new Animated.Value(0));
   const [pop] = useState(() => new Animated.Value(1));
   const [twinkle] = useState(() => new Animated.Value(0));
@@ -75,7 +79,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   const bubbles = useMemo(() => BUBBLES.map(() => new Animated.Value(0)), []);
 
   useEffect(() => {
-    const a = MOTION.enabled ? Animated.spring(rise, { toValue: p, friction: 8, tension: 36, useNativeDriver: true }) : Animated.timing(rise, { toValue: p, duration: 0, useNativeDriver: true });
+    const a = MOTION.enabled ? Animated.spring(rise, { toValue: p, friction: 8, tension: 36, useNativeDriver: false }) : Animated.timing(rise, { toValue: p, duration: 0, useNativeDriver: false });
     a.start();
     return () => a.stop();
   }, [p, rise]);
@@ -83,11 +87,11 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   useEffect(() => {
     if (!MOTION.enabled) return;
     const loops = [
-      Animated.loop(Animated.timing(drift, { toValue: 1, duration: 4200, easing: Easing.linear, useNativeDriver: true })),
-      Animated.loop(Animated.timing(drift2, { toValue: 1, duration: 6400, easing: Easing.linear, useNativeDriver: true })),
+      Animated.loop(Animated.timing(drift, { toValue: 1, duration: 4200, easing: Easing.linear, useNativeDriver: false })),
+      Animated.loop(Animated.timing(drift2, { toValue: 1, duration: 6400, easing: Easing.linear, useNativeDriver: false })),
       Animated.loop(Animated.sequence([Animated.timing(bob, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }), Animated.timing(bob, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.quad), useNativeDriver: true })])),
       Animated.loop(Animated.sequence([Animated.timing(twinkle, { toValue: 1, duration: 1600, useNativeDriver: true }), Animated.timing(twinkle, { toValue: 0, duration: 1600, useNativeDriver: true })])),
-      ...bubbles.map((b, k) => Animated.loop(Animated.sequence([Animated.timing(b, { toValue: 1, delay: BUBBLES[k].delay, duration: BUBBLES[k].ms, easing: Easing.out(Easing.quad), useNativeDriver: true }), Animated.timing(b, { toValue: 0, duration: 0, useNativeDriver: true })]))),
+      ...bubbles.map((b, k) => Animated.loop(Animated.sequence([Animated.timing(b, { toValue: 1, delay: BUBBLES[k].delay, duration: BUBBLES[k].ms, easing: Easing.out(Easing.quad), useNativeDriver: false }), Animated.timing(b, { toValue: 0, duration: 0, useNativeDriver: false })]))),
     ];
     loops.forEach((l) => l.start());
     return () => loops.forEach((l) => l.stop());
@@ -131,11 +135,11 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
         },
         onPanResponderRelease: () => {
           gesture.setTouch(0);
-          Animated.spring(tilt, { toValue: gesture.total(), friction: 3, tension: 60, useNativeDriver: true }).start();
+          Animated.spring(tilt, { toValue: gesture.total(), friction: 3, tension: 60, useNativeDriver: false }).start();
         },
         onPanResponderTerminate: () => {
           gesture.setTouch(0);
-          Animated.spring(tilt, { toValue: gesture.total(), friction: 3, tension: 60, useNativeDriver: true }).start();
+          Animated.spring(tilt, { toValue: gesture.total(), friction: 3, tension: 60, useNativeDriver: false }).start();
         },
       }),
     [tilt, gesture],
@@ -148,6 +152,11 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
   const wave = (amp: number) => `M0 ${amp + 4} Q${WAVE / 8} 4 ${WAVE / 4} ${amp + 4} T${WAVE / 2} ${amp + 4} T${(WAVE * 3) / 4} ${amp + 4} T${WAVE} ${amp + 4} V46 H0 Z`;
   const border = dark ? colors.inkOnBg : colors.ink;
+  // where the water's surface sits inside the orb (its top edge is 0, its bottom edge is S)
+  const level = rise.interpolate({ inputRange: [0, 1], outputRange: [S + 6, 4] });
+  const frontX = drift.interpolate({ inputRange: [0, 1], outputRange: [-WAVE * 2, -WAVE] });
+  const backX = drift2.interpolate({ inputRange: [0, 1], outputRange: [-WAVE, -WAVE * 2] });
+  const lean = tilt.interpolate({ inputRange: [-45, 45], outputRange: [-45, 45] });
 
   return (
     <View onLayout={onLayout} style={{ alignSelf: 'stretch', alignItems: 'center', gap: 14 }}>
@@ -166,34 +175,40 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
 
           <Pressable onPress={() => { if (gesture.takeDragged()) return; flipTo(i + 1); }} accessibilityRole="button" accessibilityLabel={`${m.label}: ${left} ${over ? m.overLabel : m.leftLabel}`}>
             <HardShadow offset={SHADOW_OFFSET} color={colors.shadowInk} radius={S / 2}>
-              <View style={{ width: S, height: S, borderRadius: S / 2, borderWidth: 4, borderColor: border, backgroundColor: colors.card, overflow: 'hidden' }}>
-                {/* the water: a big square, centred on the orb, that leans with the tilt */}
-                <Animated.View
-                  pointerEvents="none"
-                  style={{ position: 'absolute', left: -S / 2 - 4, top: -S / 2 - 4, width: S * 2, height: S * 2, transform: [{ rotate: tilt.interpolate({ inputRange: [-45, 45], outputRange: ['-45deg', '45deg'] }) }] }}
-                >
-                  <Animated.View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: S * 2, transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [S * 1.5 + 6, S * 0.5 + 2] }) }] }}>
-                    {/* the back wave, slower and fainter, for depth */}
-                    <Animated.View style={{ position: 'absolute', top: -10, left: S / 2 - WAVE, width: WAVE * 3, opacity: 0.45, transform: [{ translateX: drift2.interpolate({ inputRange: [0, 1], outputRange: [0, -WAVE] }) }] }}>
-                      <Svg width={WAVE * 3} height={46}>{[0, 1, 2].map((k) => <Path key={k} d={wave(11)} fill={back} transform={`translate(${k * WAVE} 0)`} />)}</Svg>
-                    </Animated.View>
-                    <Animated.View style={{ position: 'absolute', top: -2, left: S / 2 - WAVE * 2, width: WAVE * 3, transform: [{ translateX: drift.interpolate({ inputRange: [0, 1], outputRange: [0, WAVE] }) }] }}>
-                      <Svg width={WAVE * 3} height={46}>{[0, 1, 2].map((k) => <Path key={k} d={wave(9)} fill={fill} transform={`translate(${k * WAVE} 0)`} />)}</Svg>
-                    </Animated.View>
-                    <View style={{ position: 'absolute', top: 40, left: 0, right: 0, height: S * 2, backgroundColor: fill }} />
-                    {BUBBLES.map((b, k) => (
-                      <Animated.View
-                        key={k}
-                        style={{ position: 'absolute', left: S / 2 + b.x * S, top: S * 0.78, width: b.size, height: b.size, borderRadius: b.size, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(255,255,255,0.35)', opacity: bubbles[k].interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 0.9, 0.9, 0] }), transform: [{ translateY: bubbles[k].interpolate({ inputRange: [0, 1], outputRange: [0, -S * 0.7] }) }] }}
-                      />
-                    ))}
-                  </Animated.View>
-                </Animated.View>
-
-                {/* the glass: a soft highlight and a thin inner ring */}
-                <Svg width={S - 8} height={S - 8} style={StyleSheet.absoluteFill} pointerEvents="none">
-                  <Circle cx={(S - 8) / 2} cy={(S - 8) / 2} r={(S - 8) / 2 - 7} fill="none" stroke="#000" strokeOpacity={0.12} strokeWidth={1.5} />
+              <View style={{ width: S, height: S }}>
+                {/* the whole orb is one drawing: glass, water, bubbles and ring */}
+                <Svg width={S} height={S}>
+                  <Defs>
+                    <ClipPath id={clipId}>
+                      <Circle cx={C} cy={C} r={C - 3} />
+                    </ClipPath>
+                  </Defs>
+                  <Circle cx={C} cy={C} r={C - 2} fill={colors.card} />
+                  <G clipPath={`url(#${clipId})`}>
+                    <AnimatedG rotation={lean} origin={`${C}, ${C}`}>
+                      <AnimatedG translateY={level}>
+                        <AnimatedG translateX={backX} opacity={0.45}>
+                          {[0, 1, 2, 3].map((k) => <Path key={k} d={wave(11)} fill={fill} transform={`translate(${k * WAVE} -8)`} />)}
+                        </AnimatedG>
+                        <AnimatedG translateX={frontX}>
+                          {[0, 1, 2, 3].map((k) => <Path key={k} d={wave(9)} fill={fill} transform={`translate(${k * WAVE} 0)`} />)}
+                        </AnimatedG>
+                        <Rect x={-S} y={40} width={S * 3} height={S * 2} fill={fill} />
+                        {BUBBLES.map((b, k) => (
+                          <AnimatedG
+                            key={k}
+                            translateY={bubbles[k].interpolate({ inputRange: [0, 1], outputRange: [S * 0.8, S * 0.12] })}
+                            opacity={bubbles[k].interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 0.9, 0.9, 0] })}
+                          >
+                            <Circle cx={b.x * S} cy={0} r={b.size} fill="rgba(255,255,255,0.45)" stroke="rgba(255,255,255,0.95)" strokeWidth={1.2} />
+                          </AnimatedG>
+                        ))}
+                      </AnimatedG>
+                    </AnimatedG>
+                  </G>
+                  <Circle cx={C} cy={C} r={C - 9} fill="none" stroke="#000" strokeOpacity={0.12} strokeWidth={1.5} />
                   <Path d={`M ${S * 0.2} ${S * 0.38} A ${S * 0.34} ${S * 0.34} 0 0 1 ${S * 0.42} ${S * 0.13}`} fill="none" stroke="#FFFFFF" strokeOpacity={0.75} strokeWidth={6} strokeLinecap="round" />
+                  <Circle cx={C} cy={C} r={C - 2} fill="none" stroke={border} strokeWidth={4} />
                 </Svg>
 
                 <OnSurface>

@@ -9,8 +9,6 @@ import { Text } from './Text';
 
 export type HeroMetric = { key: string; label: string; value: number; goal: number; unit: string; leftLabel: string; overLabel: string };
 
-const WATER = '#C6E6F8'; // pastel light blue
-const WATER_OVER = '#F5B5C0'; // pastel pink when a target is passed
 const H = 176; // the TV screen
 const PAD = 10; // room for the calorie ring around the screen
 const WAVE_W = 240;
@@ -65,7 +63,7 @@ export function HeroTank({ metrics }: { metrics: HeroMetric[] }) {
   const rh = H + 2 * PAD - RING;
   const rr = 26;
   const perim = 2 * (rw + rh - 4 * rr) + 2 * Math.PI * rr;
-  const fillColor = over && m.key !== 'protein' ? WATER_OVER : WATER; // more protein is fine: only the keep-under numbers turn pink // soft pastel water: dark text stays readable on top of it
+  const fillColor = over && m.key !== 'protein' ? colors.waterOver : colors.water; // more protein is fine: only the keep-under numbers turn pink // soft pastel water: dark text stays readable on top of it
   const left = Math.round(Math.abs(m.goal - m.value));
 
   return (

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BRAND, THEMES } from '../src/config/app';
+import { isDarkColors } from '../src/palette';
 import { ACCENT_IDS, ACCENT_UNLOCK_LEVEL, Colors, baseColors, isAccentId, isAccentUnlocked, paletteFor } from '../src/palette';
 
 // ---- every colour is a real colour, and the palette comes from the config ----
@@ -38,7 +39,7 @@ for (const id of ACCENT_IDS) {
   for (const [fg, bg] of PAIRS) assert.ok(contrast(p[fg], p[bg]) >= 4.5, `${id}: ${fg} on ${bg} is only ${contrast(p[fg], p[bg]).toFixed(2)}:1`);
   assert.ok(contrast('#FFFFFF', p.strong) >= 7, `${id}: white on the rest-timer bar`);
   assert.equal(paletteFor(id), p, 'palettes are cached, so screens do not re-render for nothing');
-  assert.equal(p.card, baseColors.card, `${id}: a theme never changes cards`);
+  if (!isDarkColors(p)) assert.equal(p.card, baseColors.card, `${id}: a light theme never changes cards`);
 }
 assert.equal(THEMES.length, ACCENT_IDS.length);
 assert.equal(paletteFor('forest'), baseColors, 'the first theme is the base palette');
@@ -50,8 +51,11 @@ assert.ok(isAccentUnlocked('forest', 1) && !isAccentUnlocked('ocean', 2) && isAc
 // the saturated-fat colour must be tellable from the total-fat colour next to it
 assert.notEqual(baseColors.satFat, baseColors.fat);
 assert.ok(contrast(baseColors.satFat, baseColors.fat) > 1.5, 'saturated fat stands out from fat in the stacked bar');
-// the page is light (this app has no dark mode)
+// the default page is light; the Noir theme is the one dark page
 assert.ok(lum(baseColors.bg) > 0.5);
+assert.ok(isDarkColors(paletteFor('noir')) && !isDarkColors(baseColors));
+assert.ok(lum(paletteFor('noir').bg) < 0.05);
+for (const id of ACCENT_IDS) if (id !== 'noir') assert.ok(!isDarkColors(paletteFor(id)), `${id} stays light`);
 
 // ---- every screen follows the theme: nobody uses a fixed colour object or a fixed white background ----
 const files: string[] = [];

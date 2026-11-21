@@ -19,6 +19,7 @@ import { CloudProvider } from '../src/store/cloud';
 import { KabeProvider, useKabe } from '../src/store/kabe';
 import { KitchenProvider } from '../src/store/kitchen';
 import { TrackerProvider } from '../src/store/tracker';
+import { isDarkColors } from '../src/palette';
 import { ThemeProvider, useTheme } from '../src/theme';
 import { AlertHost } from '../src/components/AlertHost';
 import { CrashBoundary, CrashOverlay } from '../src/components/CrashScreen';
@@ -58,7 +59,7 @@ function Shell() {
   const navTheme = { ...base, colors: { ...base.colors, background: colors.bg, card: colors.card, border: colors.line, text: colors.ink, primary: colors.primary } };
   return (
     <NavThemeProvider value={navTheme}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDarkColors(colors) ? 'light' : 'dark'} />
       <StepCounter />
       <ReminderScheduler />
       <NotificationActions />

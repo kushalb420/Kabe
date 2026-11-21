@@ -2,6 +2,7 @@ import React, { useId } from 'react';
 import { StyleSheet } from 'react-native';
 import { DOTS } from '../config/app';
 import Svg, { Circle, Defs, Pattern, Rect } from 'react-native-svg';
+import { useColors } from '../theme';
 
 /**
  * The dot grid behind the pages (size and strength from DOTS in src/config/app.ts).
@@ -10,13 +11,14 @@ import Svg, { Circle, Defs, Pattern, Rect } from 'react-native-svg';
  */
 export function Dots() {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const colors = useColors();
   if (!DOTS.enabled) return null;
   const id = `kabe-dots-${uid}`;
   return (
     <Svg pointerEvents="none" style={StyleSheet.absoluteFill} width="100%" height="100%">
       <Defs>
         <Pattern id={id} width={DOTS.size} height={DOTS.size} patternUnits="userSpaceOnUse">
-          <Circle cx={DOTS.size / 2} cy={DOTS.size / 2} r={DOTS.radius} fill={DOTS.color} fillOpacity={DOTS.opacity} />
+          <Circle cx={DOTS.size / 2} cy={DOTS.size / 2} r={DOTS.radius} fill={colors.dot} fillOpacity={DOTS.opacity} />
         </Pattern>
       </Defs>
       <Rect width="100%" height="100%" fill={`url(#${id})`} />

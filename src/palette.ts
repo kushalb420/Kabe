@@ -25,6 +25,13 @@ export const baseColors = {
   fat: '#E86A92',
   satFat: '#8E1F4B', // the saturated part of fat
   fiber: '#7AB648',
+  dot: '#000000', // the dot grid on the page
+  water: '#C6E6F8', // the glass on the Today TV
+  waterOver: '#F5B5C0', // the glass once a keep-under number is passed
+  tagGoodBg: '#DDF3E6', // little tags (kitchen: you have it)
+  tagGoodLine: '#1B6B3A',
+  tagWarnBg: '#FFE9D6', // (kitchen: you need it)
+  tagWarnLine: '#B34A00',
 };
 
 export type Colors = typeof baseColors;
@@ -40,9 +47,50 @@ export const isAccentId = (v: unknown): v is AccentId => typeof v === 'string' &
 export const ACCENT_UNLOCK_LEVEL = Object.fromEntries(THEMES.map((t) => [t.id, t.level])) as Record<AccentId, number>;
 export const isAccentUnlocked = (id: AccentId, level: number): boolean => level >= ACCENT_UNLOCK_LEVEL[id];
 
+/** The dark theme: black page, white ink, the greenish-grey of the light theme for surfaces, and a burnt orange for accents and the hard shadows. */
+export const darkColors: Colors = {
+  ...baseColors,
+  bg: '#0D0F0E',
+  card: '#171C19',
+  cardBorder: '#E9EEEA',
+  ink: '#F3F5F1',
+  inkSoft: '#A8B3AD',
+  line: '#E9EEEA',
+  primary: '#F3F5F1',
+  onPrimary: '#0D0F0E',
+  primaryDark: '#FFFFFF',
+  primarySoft: '#2A332F',
+  strong: '#000000',
+  shadowInk: '#B5481A',
+  accent: '#F0661F',
+  warn: '#FFB383',
+  danger: '#FF8279',
+  good: '#7ED99B',
+  info: '#7FB9F2',
+  protein: '#6C95FF',
+  carbs: '#F5A623',
+  fat: '#F27AA2',
+  satFat: '#B83A66',
+  fiber: '#8CC85A',
+  dot: '#FFFFFF',
+  water: '#1F5666',
+  waterOver: '#7A2338',
+  tagGoodBg: '#15301F',
+  tagGoodLine: '#7ED99B',
+  tagWarnBg: '#3A2112',
+  tagWarnLine: '#FFB383',
+};
+
+/** True for a dark palette (its page is dark): used for the status bar and the logo colour. */
+export const isDarkColors = (c: Pick<Colors, 'bg'>): boolean => {
+  const n = parseInt(c.bg.slice(1), 16);
+  return 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) < 128;
+};
+
 const cache = new Map<string, Colors>();
 export const paletteFor = (accent: AccentId = 'forest'): Colors => {
   const theme = THEMES.find((t) => t.id === accent) ?? THEMES[0];
+  if ('dark' in theme && theme.dark) return darkColors;
   if (theme.bg === baseColors.bg && theme.soft === baseColors.primarySoft) return baseColors;
   let p = cache.get(theme.id);
   if (!p) {

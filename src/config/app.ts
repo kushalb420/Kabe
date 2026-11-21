@@ -24,6 +24,7 @@ export const THEMES = [
   { id: 'paper', level: 1, bg: '#F3F1EA', soft: '#DDE8D6' },
   { id: 'sand', level: 2, bg: '#EBDDBE', soft: '#C9E4D4' },
   { id: 'coral', level: 2, bg: '#FFA9A0', soft: '#FFF0B0' },
+  { id: 'noir', level: 1, bg: '#0D0F0E', soft: '#2A332F', dark: true }, // the dark theme: black page, white and greenish-grey, burnt orange
 ] as const;
 
 /** The dot pattern behind pages. */

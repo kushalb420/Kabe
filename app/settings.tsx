@@ -1,4 +1,5 @@
 import { Ionicons } from '../src/components/Ionicons';
+import { useHeroStyle } from '../src/lib/heroStyle';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -42,6 +43,7 @@ export default function Settings() {
   const notifCount = (['water', 'logFood', 'checkin', 'weigh'] as const).filter((id) => reminders[id].on).length + habits.filter((h) => h.remind).length + supplements.filter((x) => x.remind).length + customReminders.filter((r) => r.on).length + 0;
   const { resetKitchen, equipment, setEquipment } = useKitchen();
   const { accent, setAccent } = useTheme();
+  const [hero, setHero] = useHeroStyle();
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -77,6 +79,17 @@ export default function Settings() {
             <EquipmentPicker value={equipment} onChange={setEquipment} />
           </Card>
         )}
+        <Card style={{ gap: 10 }}>
+          <Text style={styles.h2}>{t('hero.title')}</Text>
+          <Text style={styles.sub}>{t('hero.sub')}</Text>
+          <View style={styles.wrap}>
+            {(['orb', 'tv'] as const).map((h) => (
+              <Pressable key={h} onPress={() => setHero(h)} style={[styles.seg, hero === h && styles.segOn]}>
+                <Text style={[styles.segText, hero === h && { color: colors.onPrimary }]}>{t(h === 'orb' ? 'hero.orb' : 'hero.tv')}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </Card>
         <Card style={{ gap: 10 }}>
           <Text style={styles.h2}>{t('theme.accent')}</Text>
           <View style={styles.wrap}>

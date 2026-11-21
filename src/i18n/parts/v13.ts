@@ -3,6 +3,10 @@ import { part } from '../define';
 /** After choosing a plate photo: say what you are having, then scan. */
 export const v13 = part({
   en: {
+    'hero.title': 'Today picture',
+    'hero.sub': 'The picture at the top of Today. Tap it to switch between calories and the macros.',
+    'hero.orb': 'Orb',
+    'hero.tv': 'TV',
     'theme.accent.noirwine': 'Noir Wine',
     'theme.accent.noir': 'Noir',
     'log.describeTitle': 'What are you having? (optional)',
@@ -11,6 +15,10 @@ export const v13 = part({
     'log.another': 'Choose a different photo',
   },
   hi: {
+    'hero.title': 'आज की तस्वीर',
+    'hero.sub': 'आज के पेज के ऊपर की तस्वीर। इसे छूकर कैलोरी और मैक्रो बदलें।',
+    'hero.orb': 'ऑर्ब',
+    'hero.tv': 'टीवी',
     'theme.accent.noirwine': 'नुआर वाइन',
     'theme.accent.noir': 'नुआर',
     'log.describeTitle': 'आप क्या खा रहे हैं? (वैकल्पिक)',
@@ -19,6 +27,10 @@ export const v13 = part({
     'log.another': 'दूसरी फ़ोटो चुनें',
   },
   te: {
+    'hero.title': 'ఈరోజు చిత్రం',
+    'hero.sub': 'ఈరోజు పేజీ పైన ఉండే చిత్రం. కేలరీలు, మాక్రోల మధ్య మారడానికి దాన్ని తాకండి.',
+    'hero.orb': 'ఆర్బ్',
+    'hero.tv': 'టీవీ',
     'theme.accent.noirwine': 'నోయిర్ వైన్',
     'theme.accent.noir': 'నోయిర్',
     'log.describeTitle': 'మీరు ఏమి తింటున్నారు? (ఐచ్ఛికం)',
@@ -27,6 +39,10 @@ export const v13 = part({
     'log.another': 'వేరే ఫోటో ఎంచుకోండి',
   },
   ta: {
+    'hero.title': 'இன்றைய படம்',
+    'hero.sub': 'இன்றைய பக்கத்தின் மேலே உள்ள படம். கலோரி, மேக்ரோக்களுக்கு இடையே மாற அதைத் தொடவும்.',
+    'hero.orb': 'ஆர்ப்',
+    'hero.tv': 'டிவி',
     'theme.accent.noirwine': 'நோயர் ஒயின்',
     'theme.accent.noir': 'நோயர்',
     'log.describeTitle': 'நீங்கள் என்ன சாப்பிடுகிறீர்கள்? (விருப்பம்)',

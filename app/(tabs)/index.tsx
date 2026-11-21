@@ -7,6 +7,8 @@ import { CountUp } from '../../src/components/Motion';
 import { Screen } from '../../src/components/Screen';
 import { Text } from '../../src/components/Text';
 import { HeroTank } from '../../src/components/HeroTank';
+import { HeroOrb } from '../../src/components/HeroOrb';
+import { useHeroStyle } from '../../src/lib/heroStyle';
 import { Button, Card, LinkRow, MacroBar } from '../../src/components/ui';
 import { NUTRITION } from '../../src/config/app';
 import { useT } from '../../src/i18n/useT';
@@ -92,6 +94,8 @@ export default function Home() {
     logFood: <Button title={t('today.logFood')} icon="add-circle" onPress={() => router.push({ pathname: '/add-food', params: { date: today } })} />,
   };
 
+  const [heroStyle] = useHeroStyle();
+  const Hero = heroStyle === 'tv' ? HeroTank : HeroOrb;
   const streak = (
     <Pressable onPress={() => router.push('/achievements')} style={styles.streak} accessibilityRole="button" accessibilityLabel={tn('today.streak', game.streaks.log.current)}>
       <OnSurface>
@@ -112,7 +116,7 @@ export default function Home() {
         />
       ) : null}
       <View style={{ gap: 6 }}>
-        <HeroTank
+        <Hero
           metrics={[
             { key: 'kcal', label: t('macro.kcal'), value: total.kcal, goal: goals.kcal, unit: 'kcal', leftLabel: t('today.left'), overLabel: t('today.over') },
             { key: 'protein', label: t('macro.protein'), value: total.protein, goal: goals.protein, unit: 'g', leftLabel: t('today.left'), overLabel: t('today.over') },

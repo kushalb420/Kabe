@@ -6,7 +6,7 @@ import { MICRO_SCHEMA, MicroRow, buildMicroPrompt, parseMicro } from './micro';
 import { AiInsights, INSIGHT_SCHEMA, InsightFacts, buildInsightPrompt, checkInsights } from './insights';
 import { NARRATIVE_SCHEMA, Narrative, WeekFacts, buildWeeklyPrompt, checkNarrative } from './weekly';
 import { ParsedMeal, buildAudioRequest, buildTextRequest, parseSpeechResponse } from './voice';
-import { MODELS, RawItem, buildRequest, parseResponse } from './photo';
+import { MODELS, PHOTO_MODELS, RawItem, buildRequest, parseResponse } from './photo';
 
 /** One AI request. The app's "key" is PROXY_KEY when the build has a backend (the request goes through it, with the person's session), otherwise a real Google key. */
 export async function callGemini(key: string, body: unknown): Promise<{ status: number; json: any }> {
@@ -28,12 +28,12 @@ export function friendlyError(status: number, json: any): Error {
 /** Send a plate photo; try each free model in turn if one isn't available. */
 export async function analyzePlate(key: string, base64: string, mime: string, databaseNames: string[]): Promise<{ items: RawItem[]; notes: string }> {
   let lastErr: Error | null = null;
-  for (const model of MODELS) {
+  for (const model of PHOTO_MODELS) {
     const { status, json } = await callGemini(key, buildRequest(model, base64, mime, databaseNames));
     if (status === 200) return parseResponse(json);
     const err = friendlyError(status, json);
     // a missing/unsupported model is worth trying the next one; anything else won't be fixed by switching
-    if (status === 404 || status === 503 || (status === 400 && /model/i.test(apiMessage(json)))) {
+    if (status === 404 || status === 503 || status === 429 || (status === 400 && /model/i.test(apiMessage(json)))) {
       lastErr = err;
       continue;
     }

@@ -13,6 +13,29 @@ import { Text } from './Text';
 
 const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
 const spark = (x: number, y: number, r: number) => `M${x} ${y - r} Q${x} ${y} ${x + r} ${y} Q${x} ${y} ${x} ${y + r} Q${x} ${y} ${x - r} ${y} Q${x} ${y} ${x} ${y - r} Z`;
+/** What the finger and the phone's sensor are each asking for, so one value drives the tilt of the water. */
+class Gesture {
+  dragged = false;
+  touch = 0;
+  sensor = 0;
+  markDragged() {
+    this.dragged = true;
+  }
+  takeDragged() {
+    const d = this.dragged;
+    this.dragged = false;
+    return d;
+  }
+  setTouch(v: number) {
+    this.touch = v;
+  }
+  setSensor(v: number) {
+    this.sensor = v;
+  }
+  total() {
+    return clamp(this.touch + this.sensor, -36, 36);
+  }
+}
 const BUBBLES = [
   { x: 0.28, size: 7, delay: 0, ms: 4200 },
   { x: 0.46, size: 10, delay: 900, ms: 5200 },
@@ -43,14 +66,12 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   const [rise] = useState(() => new Animated.Value(0));
   const [drift] = useState(() => new Animated.Value(0));
   const [drift2] = useState(() => new Animated.Value(0));
-  const gesture = useMemo(() => ({ dragged: false }), []); // a drag across the orb is not a tap
+  const [gesture] = useState(() => new Gesture()); // a drag across the orb is not a tap
   const [bob] = useState(() => new Animated.Value(0));
   const [pop] = useState(() => new Animated.Value(1));
   const [twinkle] = useState(() => new Animated.Value(0));
-  const [tiltTouch] = useState(() => new Animated.Value(0));
-  const [tiltSensor] = useState(() => new Animated.Value(0));
+  const [tilt] = useState(() => new Animated.Value(0)); // one value: the water's lean in degrees
   const bubbles = useMemo(() => BUBBLES.map(() => new Animated.Value(0)), []);
-  const tilt = useMemo(() => Animated.add(tiltTouch, tiltSensor), [tiltTouch, tiltSensor]);
 
   useEffect(() => {
     const a = MOTION.enabled ? Animated.spring(rise, { toValue: p, friction: 8, tension: 36, useNativeDriver: true }) : Animated.timing(rise, { toValue: p, duration: 0, useNativeDriver: true });
@@ -65,7 +86,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
       Animated.loop(Animated.timing(drift2, { toValue: 1, duration: 6400, easing: Easing.linear, useNativeDriver: true })),
       Animated.loop(Animated.sequence([Animated.timing(bob, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }), Animated.timing(bob, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.quad), useNativeDriver: true })])),
       Animated.loop(Animated.sequence([Animated.timing(twinkle, { toValue: 1, duration: 1600, useNativeDriver: true }), Animated.timing(twinkle, { toValue: 0, duration: 1600, useNativeDriver: true })])),
-      ...bubbles.map((b, k) => Animated.loop(Animated.sequence([Animated.delay(BUBBLES[k].delay), Animated.timing(b, { toValue: 1, duration: BUBBLES[k].ms, easing: Easing.out(Easing.quad), useNativeDriver: true }), Animated.timing(b, { toValue: 0, duration: 0, useNativeDriver: true })]))),
+      ...bubbles.map((b, k) => Animated.loop(Animated.sequence([Animated.timing(b, { toValue: 1, delay: BUBBLES[k].delay, duration: BUBBLES[k].ms, easing: Easing.out(Easing.quad), useNativeDriver: true }), Animated.timing(b, { toValue: 0, duration: 0, useNativeDriver: true })]))),
     ];
     loops.forEach((l) => l.start());
     return () => loops.forEach((l) => l.stop());
@@ -84,7 +105,8 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
         let smooth = 0;
         sub = Accelerometer.addListener(({ x }) => {
           smooth = smooth * 0.82 + clamp(x, -1, 1) * 45 * 0.18;
-          tiltSensor.setValue(clamp(smooth, -32, 32));
+          gesture.setSensor(clamp(smooth, -32, 32));
+          if (!gesture.dragged && gesture.touch === 0) tilt.setValue(gesture.total());
         });
       } catch {
         /* no motion sensor: dragging still works */
@@ -94,7 +116,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
       alive = false;
       sub?.remove();
     };
-  }, [tiltSensor]);
+  }, [tilt, gesture]);
 
   // a finger dragged across the orb tilts the water too (this is how it works in a browser)
   const pan = useMemo(
@@ -102,14 +124,20 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
       PanResponder.create({
         onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 6 && Math.abs(g.dx) > Math.abs(g.dy),
         onPanResponderMove: (_e, g) => {
-          // eslint-disable-next-line react-hooks/immutability -- a plain flag shared by the gesture handlers
-          gesture.dragged = true;
-          tiltTouch.setValue(clamp(g.dx / 4, -32, 32));
+          gesture.markDragged();
+          gesture.setTouch(clamp(g.dx / 4, -32, 32));
+          tilt.setValue(gesture.total());
         },
-        onPanResponderRelease: () => Animated.spring(tiltTouch, { toValue: 0, friction: 3, tension: 60, useNativeDriver: true }).start(),
-        onPanResponderTerminate: () => Animated.spring(tiltTouch, { toValue: 0, friction: 3, tension: 60, useNativeDriver: true }).start(),
+        onPanResponderRelease: () => {
+          gesture.setTouch(0);
+          Animated.spring(tilt, { toValue: gesture.total(), friction: 3, tension: 60, useNativeDriver: true }).start();
+        },
+        onPanResponderTerminate: () => {
+          gesture.setTouch(0);
+          Animated.spring(tilt, { toValue: gesture.total(), friction: 3, tension: 60, useNativeDriver: true }).start();
+        },
       }),
-    [tiltTouch, gesture],
+    [tilt, gesture],
   );
 
   const flipTo = (n: number) => {
@@ -135,8 +163,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
             <Svg width={16} height={16}><Path d={spark(8, 8, 6)} fill={colors.primaryOnBg} /></Svg>
           </Animated.View>
 
-          <Pressable onPress={() => { if (gesture.dragged) { gesture.dragged = false; return; } flipTo(i + 1); }} // eslint-disable-line react-hooks/immutability
-           accessibilityRole="button" accessibilityLabel={`${m.label}: ${left} ${over ? m.overLabel : m.leftLabel}`}>
+          <Pressable onPress={() => { if (gesture.takeDragged()) return; flipTo(i + 1); }} accessibilityRole="button" accessibilityLabel={`${m.label}: ${left} ${over ? m.overLabel : m.leftLabel}`}>
             <HardShadow offset={SHADOW_OFFSET} color={colors.shadowInk} radius={S / 2}>
               <View style={{ width: S, height: S, borderRadius: S / 2, borderWidth: 4, borderColor: border, backgroundColor: colors.card, overflow: 'hidden' }}>
                 {/* the water: a big square, centred on the orb, that leans with the tilt */}

@@ -1,10 +1,10 @@
-// Which picture sits at the top of Today: the glass orb (default) or the old TV. A device-only choice, kept in Settings.
+// Which picture sits at the top of Today: the old TV (default) or the glass orb. A device-only choice, kept in Settings.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 
 export type HeroStyle = 'orb' | 'tv';
 const KEY = 'kabe:hero:v1';
-let current: HeroStyle = 'orb';
+let current: HeroStyle = 'tv'; // the TV stays the default until the Orb is confirmed on the person's own phone
 let loaded = false;
 const listeners = new Set<(s: HeroStyle) => void>();
 

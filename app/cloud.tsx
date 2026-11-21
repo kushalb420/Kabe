@@ -128,7 +128,7 @@ export default function Cloud() {
         )}
 
         {/* ---------- 3. signed in ---------- */}
-        {c.config && c.user?.email && (
+        {c.config && !!c.user?.email && (
           <>
             <Card style={{ gap: 8 }}>
               <Text style={styles.h2}>{t('cloud.signedIn')}</Text>

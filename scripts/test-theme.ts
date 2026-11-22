@@ -47,11 +47,12 @@ for (const id of ACCENT_IDS) {
 }
 assert.equal(THEMES.length, ACCENT_IDS.length);
 assert.equal(paletteFor('forest'), baseColors, 'the first theme is the base palette');
-assert.notEqual(paletteFor('ocean').bg, baseColors.bg, 'a theme tints the page');
+assert.notEqual(paletteFor('noir').bg, baseColors.bg, 'a theme tints the page');
 assert.equal(paletteFor('nonsense' as never), baseColors, 'an unknown theme falls back to the first');
-assert.ok(isAccentId('berry') && !isAccentId('pink') && !isAccentId(null));
+assert.ok(isAccentId('noir') && isAccentId('noirwine') && !isAccentId('berry') && !isAccentId('pink') && !isAccentId(null));
+assert.deepEqual([...ACCENT_IDS], ['forest', 'noir', 'noirwine'], 'three themes only');
 assert.equal(ACCENT_UNLOCK_LEVEL.forest, 1);
-assert.ok(isAccentUnlocked('forest', 1) && !isAccentUnlocked('ocean', 2) && isAccentUnlocked('ocean', 3) && isAccentUnlocked('berry', 7) && !isAccentUnlocked('berry', 6));
+assert.ok(isAccentUnlocked('forest', 1) && isAccentUnlocked('noir', 1) && isAccentUnlocked('noirwine', 1));
 // the saturated-fat colour must be tellable from the total-fat colour next to it
 assert.notEqual(baseColors.satFat, baseColors.fat);
 assert.ok(contrast(baseColors.satFat, baseColors.fat) > 1.5, 'saturated fat stands out from fat in the stacked bar');

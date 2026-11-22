@@ -1,3 +1,4 @@
+import { useIsFocused } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Animated, Easing, LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { Pressable } from './Pressable';
@@ -41,8 +42,9 @@ export function HeroTank({ metrics }: { metrics: HeroMetric[] }) {
     a.start();
     return () => a.stop();
   }, [p, rise]);
+  const focused = useIsFocused(); // the tabs all stay mounted: only animate while this screen is the one in front
   useEffect(() => {
-    if (!MOTION.enabled) return;
+    if (!MOTION.enabled || !focused) return;
     const loop = Animated.loop(Animated.timing(drift, { toValue: 1, duration: 3200, easing: Easing.linear, useNativeDriver: true }));
     const wiggle = Animated.loop(Animated.sequence([Animated.timing(bob, { toValue: 1, duration: 1400, easing: Easing.inOut(Easing.quad), useNativeDriver: true }), Animated.timing(bob, { toValue: 0, duration: 1400, easing: Easing.inOut(Easing.quad), useNativeDriver: true })]));
     loop.start();
@@ -51,7 +53,7 @@ export function HeroTank({ metrics }: { metrics: HeroMetric[] }) {
       loop.stop();
       wiggle.stop();
     };
-  }, [drift, bob]);
+  }, [drift, bob, focused]);
 
   const flip = () => {
     setI((x) => (x + 1) % metrics.length);

@@ -1,3 +1,4 @@
+import { useIsFocused } from 'expo-router';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { Animated, Easing, LayoutChangeEvent, PanResponder, Platform, StyleSheet, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Path, Rect } from 'react-native-svg';
@@ -39,11 +40,9 @@ class Gesture {
   }
 }
 const BUBBLES = [
-  { x: 0.28, size: 3.5, delay: 0, ms: 4200 },
-  { x: 0.46, size: 5, delay: 900, ms: 5200 },
-  { x: 0.62, size: 3, delay: 1800, ms: 3800 },
-  { x: 0.74, size: 4.5, delay: 600, ms: 4800 },
-  { x: 0.38, size: 2.5, delay: 2600, ms: 3500 },
+  { x: 0.3, size: 3.5, delay: 0, ms: 4200 },
+  { x: 0.5, size: 5, delay: 1100, ms: 5200 },
+  { x: 0.7, size: 3, delay: 2200, ms: 3800 },
 ];
 
 /**
@@ -71,7 +70,6 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   const [gesture] = useState(() => new Gesture()); // a drag across the orb is not a tap
   const [rise] = useState(() => new Animated.Value(0));
   const [drift] = useState(() => new Animated.Value(0));
-  const [drift2] = useState(() => new Animated.Value(0));
   const [bob] = useState(() => new Animated.Value(0));
   const [pop] = useState(() => new Animated.Value(1));
   const [twinkle] = useState(() => new Animated.Value(0));
@@ -84,22 +82,22 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
     return () => a.stop();
   }, [p, rise]);
 
+  const focused = useIsFocused(); // the tabs all stay mounted: only animate while this screen is the one in front
   useEffect(() => {
-    if (!MOTION.enabled) return;
+    if (!MOTION.enabled || !focused) return;
     const loops = [
       Animated.loop(Animated.timing(drift, { toValue: 1, duration: 4200, easing: Easing.linear, useNativeDriver: false })),
-      Animated.loop(Animated.timing(drift2, { toValue: 1, duration: 6400, easing: Easing.linear, useNativeDriver: false })),
       Animated.loop(Animated.sequence([Animated.timing(bob, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }), Animated.timing(bob, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.quad), useNativeDriver: true })])),
       Animated.loop(Animated.sequence([Animated.timing(twinkle, { toValue: 1, duration: 1600, useNativeDriver: true }), Animated.timing(twinkle, { toValue: 0, duration: 1600, useNativeDriver: true })])),
       ...bubbles.map((b, k) => Animated.loop(Animated.sequence([Animated.timing(b, { toValue: 1, delay: BUBBLES[k].delay, duration: BUBBLES[k].ms, easing: Easing.out(Easing.quad), useNativeDriver: false }), Animated.timing(b, { toValue: 0, duration: 0, useNativeDriver: false })]))),
     ];
     loops.forEach((l) => l.start());
     return () => loops.forEach((l) => l.stop());
-  }, [drift, drift2, bob, twinkle, bubbles]);
+  }, [drift, bob, twinkle, bubbles, focused]);
 
   // the phone's tilt (a phone only): the water leans the way the phone does and settles back
   useEffect(() => {
-    if (Platform.OS === 'web' || !MOTION.enabled) return;
+    if (Platform.OS === 'web' || !MOTION.enabled || !focused) return;
     let alive = true;
     let sub: { remove: () => void } | null = null;
     (async () => {
@@ -121,7 +119,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
       alive = false;
       sub?.remove();
     };
-  }, [tilt, gesture]);
+  }, [tilt, gesture, focused]);
 
   // a finger dragged across the orb tilts the water too (this is how it works in a browser)
   const pan = useMemo(
@@ -155,7 +153,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   // where the water's surface sits inside the orb (its top edge is 0, its bottom edge is S)
   const level = rise.interpolate({ inputRange: [0, 1], outputRange: [S + 6, 4] });
   const frontX = drift.interpolate({ inputRange: [0, 1], outputRange: [-WAVE * 2, -WAVE] });
-  const backX = drift2.interpolate({ inputRange: [0, 1], outputRange: [-WAVE, -WAVE * 2] });
+  const backX = drift.interpolate({ inputRange: [0, 1], outputRange: [-WAVE, -WAVE * 2] }); // the back wave runs the other way on the same clock: one animation drives both
   const lean = tilt.interpolate({ inputRange: [-45, 45], outputRange: [-45, 45] });
 
   return (

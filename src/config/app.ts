@@ -15,15 +15,6 @@ export const BRAND = {
 /** Page tints the person can unlock (Settings → Colour theme). `level` = the level that unlocks it. */
 export const THEMES = [
   { id: 'forest', level: 1, bg: BRAND.yellow, soft: BRAND.sage },
-  { id: 'ocean', level: 3, bg: BRAND.sage, soft: BRAND.yellow },
-  { id: 'sunset', level: 5, bg: '#FFB98F', soft: BRAND.yellow },
-  { id: 'berry', level: 7, bg: '#F6B8D4', soft: BRAND.yellow },
-  { id: 'mint', level: 1, bg: '#BFF0D4', soft: '#FFF0B0' },
-  { id: 'lavender', level: 1, bg: '#DCD0FF', soft: '#FFF0B0' },
-  { id: 'sky', level: 1, bg: '#BFE3FF', soft: '#FFF0B0' },
-  { id: 'paper', level: 1, bg: '#F3F1EA', soft: '#DDE8D6' },
-  { id: 'sand', level: 2, bg: '#EBDDBE', soft: '#C9E4D4' },
-  { id: 'coral', level: 2, bg: '#FFA9A0', soft: '#FFF0B0' },
   { id: 'noir', level: 1, bg: '#0D0F0E', soft: '#2A332F', dark: true }, // the dark theme: black page, off-white cards, greenish-grey, burnt orange
   { id: 'noirwine', level: 1, bg: '#0D0F0E', soft: '#2A332F', dark: true }, // the same dark theme with red wine in place of every orange
   // (the dark themes are the ones with dark: true)

@@ -9,6 +9,14 @@ import { useColors } from '../theme';
  */
 export const Pressable = React.forwardRef<React.ComponentRef<typeof RNPressable>, PressableProps>(function Pressable({ style, children, ...rest }, ref) {
   const c = useColors();
+  if (c.inkOnBg === c.ink) {
+    // a light page (the usual themes): nothing to do, so no extra work
+    return (
+      <RNPressable ref={ref} style={style} {...rest}>
+        {children}
+      </RNPressable>
+    );
+  }
   const flat = typeof style === 'function' ? undefined : (StyleSheet.flatten(style as never) as { backgroundColor?: unknown } | undefined);
   const fills: unknown[] = [c.card, c.chip, c.primarySoft, c.primary];
   const light = !!flat && fills.includes(flat.backgroundColor);

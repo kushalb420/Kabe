@@ -161,6 +161,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
   return (
     <View onLayout={onLayout} style={{ alignSelf: 'stretch', alignItems: 'center', gap: 14 }}>
       {width > 0 && (
+        <View style={{ height: S + SHADOW_OFFSET + 14, alignItems: 'center', justifyContent: 'center' }}>
         <Animated.View
           {...pan.panHandlers}
           style={{ transform: [{ scale: pop }, { translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [-3, 3] }) }] }}
@@ -222,6 +223,7 @@ export function HeroOrb({ metrics }: { metrics: HeroMetric[] }) {
             </HardShadow>
           </Pressable>
         </Animated.View>
+        </View>
       )}
 
       {/* the names underneath: tap one to jump to it */}

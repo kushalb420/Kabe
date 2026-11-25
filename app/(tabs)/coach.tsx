@@ -1,4 +1,5 @@
 import { Ionicons } from '../../src/components/Ionicons';
+import { explain } from '../../src/lib/netError';
 import React, { useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, ScrollViewInstance, StyleSheet, View } from 'react-native';
 import { Pressable } from '../../src/components/Pressable';
@@ -105,7 +106,7 @@ export default function Coach() {
       tk.addCoachMessage({ id: `${nowMs()}-c`, role: 'coach', text: splitGoalProposal(reply).text });
     } catch (e) {
       // keep the technical detail (it is often an API message) after a message in the user's language
-      setError(e instanceof Error && e.message ? `${t('coach.failed')} (${e.message})` : t('coach.failed'));
+      setError(e instanceof Error && e.message ? `${t('coach.failed')} (${explain(e.message, t('net.offline'))})` : t('coach.failed'));
     } finally {
       setBusy(false);
       setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 150);

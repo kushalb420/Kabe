@@ -1,4 +1,5 @@
 import { Ionicons } from '../src/components/Ionicons';
+import { explain } from '../src/lib/netError';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
@@ -55,7 +56,7 @@ export default function Account() {
         else setWaiting(true);
       }
     } catch (e) {
-      setMsg(e instanceof Error && e.message ? e.message : t('cloud.wrong'));
+      setMsg(e instanceof Error && e.message ? explain(e.message, t('net.offline')) : t('cloud.wrong'));
     } finally {
       setBusy(false);
     }
@@ -92,7 +93,7 @@ export default function Account() {
             <Card style={{ gap: 8 }}>
               <Text style={styles.h2}>{t('account.signedAs', { email: c.user!.email })}</Text>
               <Text style={styles.body}>{t('account.backedUp')}</Text>
-              {c.error ? <Text style={styles.err}>{c.error}</Text> : null}
+              {c.error ? <Text style={styles.err}>{explain(c.error, t('net.offline'))}</Text> : null}
               <Button title={t('cloud.syncNow')} icon="sync" disabled={c.status === 'syncing'} onPress={() => void c.syncNow()} />
               <Button title={t('cloud.signOut')} variant="ghost" onPress={() => void c.signOut().then(() => { k.setWelcomed(false); goHome(); })} />
             </Card>

@@ -1,4 +1,5 @@
 import { Ionicons } from '../src/components/Ionicons';
+import { explain } from '../src/lib/netError';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
@@ -56,7 +57,7 @@ export default function LabelScan() {
   const [calculated, setCalculated] = useState(false);
   const [savedFood, setSavedFood] = useState<{ food: ReturnType<typeof k.addCustomFood>; sig: string } | null>(null); // set after 'Save to my foods': the page stays so it can still be logged
 
-  const withDetail = (key: Key, e: unknown) => (e instanceof Error && e.message ? `${t(key)} (${e.message})` : t(key));
+  const withDetail = (key: Key, e: unknown) => (e instanceof Error && e.message ? `${t(key)} (${explain(e.message, t('net.offline'))})` : t(key));
 
   // everything below is worked out from what is in the boxes, so editing any box updates it at once
   const values = boxesToValues(boxes);

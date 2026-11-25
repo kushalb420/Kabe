@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildMealPhotoPrompt, itemGrams, mergeMealItems, type MealItem } from '../src/lib/gemFood';
+import { buildMealPhotoPrompt, itemGrams, itemNutrients, mergeMealItems, setNutrient, type MealItem } from '../src/lib/gemFood';
 import { analyzeMealPhoto } from '../src/lib/mealAi';
 import { PHOTO_MODELS, RawItem, buildPrompt, mergeDuplicates, parseResponse } from '../src/lib/photo';
 
@@ -75,3 +75,14 @@ void (async () => {
   assert.deepEqual(scanned.items.map((i) => i.name), ['chicken biryani']);
   console.log('Plate tests passed.');
 })();
+
+// the person's own nutrition numbers, before adding to the diary
+{
+  const item = mi('dal', 'g', 1, 200);
+  const edited = setNutrient(item, 'protein', 30);
+  assert.equal(edited.per100.protein, 15, 'stored per 100 g');
+  assert.equal(itemNutrients(edited).protein, 30, 'shows the number typed for this amount');
+  assert.equal(itemNutrients(setNutrient(item, 'kcal', 333)).kcal, 333);
+  assert.equal(setNutrient(mi('x', 'g', 1, 0), 'fat', 5).per100.fat, 8, 'no amount: nothing changes');
+  assert.equal(setNutrient(item, 'fat', -1), item);
+}

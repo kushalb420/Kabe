@@ -1,4 +1,5 @@
 import { Ionicons } from '../src/components/Ionicons';
+import { explain } from '../src/lib/netError';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
@@ -54,7 +55,7 @@ export default function Restaurant() {
   const runId = useRef(0);
   useEffect(() => () => void runId.current++, []);
 
-  const withDetail = (key: Key, e: unknown) => (e instanceof Error && e.message ? `${t(key)} (${e.message})` : t(key));
+  const withDetail = (key: Key, e: unknown) => (e instanceof Error && e.message ? `${t(key)} (${explain(e.message, t('net.offline'))})` : t(key));
 
   // what is left of today, to rank dishes for a meal that fits
   const eaten = useMemo(() => sumMacros(k.entries.filter((e) => e.date === today)), [k.entries, today]);

@@ -49,6 +49,7 @@ export const MOTION = {
 /** Meal logging and AI. */
 export const AI = {
   models: ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.5-flash'], // tried in this order (the next one is used when a model is missing or overloaded)
+  photoThinking: 'minimal', // how much the model "thinks" about a photo: less is faster
   photoModels: ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'], // plate photos need the strongest eyes, so the full model goes first and the lighter ones are the fallback
   retryOn503: true,
   retryDelayMs: 1500,

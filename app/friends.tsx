@@ -1,4 +1,5 @@
 import { Ionicons } from '../src/components/Ionicons';
+import { explain } from '../src/lib/netError';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
@@ -43,11 +44,11 @@ export default function Friends() {
     try {
       await fn();
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : '');
+      setMsg(e instanceof Error ? explain(e.message, t('net.offline')) : '');
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [t]);
 
   const saveName = () =>
     run(async () => {

@@ -1,4 +1,5 @@
 import { Ionicons } from '../src/components/Ionicons';
+import { explain } from '../src/lib/netError';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Pressable } from '../src/components/Pressable';
@@ -74,7 +75,7 @@ export default function Stats() {
       if (out) setAiText(out);
       else setAiError(t('week.aiRejected'));
     } catch (e) {
-      setAiError(`${t('photo.errAnalyze')}${e instanceof Error && e.message ? ` (${e.message})` : ''}`);
+      setAiError(`${t('photo.errAnalyze')}${e instanceof Error && e.message ? ` (${explain(e.message, t('net.offline'))})` : ''}`);
     } finally {
       setBusy(false);
     }

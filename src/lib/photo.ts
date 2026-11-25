@@ -61,6 +61,8 @@ export const UNCERTAINTY: Record<Confidence, number> = { high: 0.2, medium: 0.3,
 
 export const MODELS: string[] = AI.models; // from src/config/app.ts
 export const PHOTO_MODELS: string[] = AI.photoModels; // strongest model first, for plate photos
+/** Photos are answered with as little "thinking" as the model allows: measured about a third faster. */
+export const PHOTO_EXTRA = { generation_config: { thinking_level: AI.photoThinking } };
 
 export const buildPrompt = (databaseNames: string[]) =>
   [

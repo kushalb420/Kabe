@@ -4,11 +4,11 @@ import type { Food } from '../data/foods';
 import { FOOD_SCHEMA, MEAL_SCHEMA, MealItem, buildFoodPrompt, buildMealPhotoPrompt, mergeMealItems, buildMealTextPrompt, itemGrams, parseFood, parseMeal, setGrams, withStatedAmounts } from './gemFood';
 import { FoodMemory, Known, memKey, parseClause, resolveText } from './foodMemory';
 import { CacheClient, getSharedFoods, putSharedFood } from './sharedCache';
-import { PHOTO_MODELS } from './photo';
+import { PHOTO_EXTRA, PHOTO_MODELS } from './photo';
 import { askJson } from './vision';
 
 /** Photos get the strongest model first (the lighter ones are the fallback). */
-const askPhoto: Ask = (key, input, schema) => askJson(key, input, schema, undefined, PHOTO_MODELS);
+const askPhoto: Ask = (key, input, schema) => askJson(key, input, schema, undefined, PHOTO_MODELS, PHOTO_EXTRA);
 
 export type MealResult = { items: MealItem[]; meal: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null };
 type Ask = (key: string, input: unknown, schema: object) => Promise<unknown>;

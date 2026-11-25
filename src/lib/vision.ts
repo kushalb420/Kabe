@@ -98,10 +98,14 @@ export async function askJson(
   schema: object,
   call: (body: unknown) => Promise<{ status: number; json: any }> = (b) => callGemini(key, b),
   models: string[] = MODELS,
+  extra: object = {},
 ): Promise<any> {
   let lastErr: Error | null = null;
   for (const model of models) {
-    const { status, json } = await call({ model, input, response_format: { type: 'text', mime_type: 'application/json', schema } });
+    const body = { model, input, response_format: { type: 'text', mime_type: 'application/json', schema } };
+    let { status, json } = await call({ ...body, ...extra });
+    // a model that does not know a speed setting is simply asked again without it
+    if (status === 400 && /thinking|generation_config/i.test(apiMessage(json))) ({ status, json } = await call(body));
     if (status === 200) {
       const text = ((json?.steps ?? []) as any[])
         .filter((s) => s.type === 'model_output')

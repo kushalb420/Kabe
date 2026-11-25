@@ -1,6 +1,10 @@
 # Changelog
 
 ## 7.0.4 update — Typed meals, supplement schedules, permissions (2026-11-11)
+- **Orb without the motion sensor:** the tilt (and drag to tilt) is gone, and its movement now runs on the phone's animation thread, so it stays smooth.
+- **Faster photo logging:** the AI is asked to think less about photos (measured about a third faster on a test picture) and the photo is uploaded as a smaller file.
+- **Edit nutrition before saving:** each food in a scan, voice or typed meal has Edit nutrition: change its calories, protein, carbs and fat for the amount shown, then add it to the diary.
+- **Connection problems in plain words:** instead of a technical message, Kabe now says it could not reach the internet and what to try.
 - **Smoother app:** the animated Today picture (TV or Orb) only moves while Today is the screen in front, instead of running all the time behind every other screen. The Orb uses fewer animations, and ordinary light themes skip the extra work the dark themes need.
 - **Fewer themes:** only Forest (the original yellow), Noir and Noir Wine remain. If you had picked one of the removed colours, the app goes back to Forest.
 - **A new Today picture, the Orb:** a round glass vessel of water that fills as you eat, with a rolling surface, rising bubbles and a soft glass highlight. Tilt your phone and the water leans with it (or drag a finger across it); tap it, or a name underneath, to switch between calories and the macros. The TV stays the default picture; choose the Orb in Settings → Today picture.

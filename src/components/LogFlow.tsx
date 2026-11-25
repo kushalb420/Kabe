@@ -1,4 +1,5 @@
 import { Ionicons } from './Ionicons';
+import { explain } from '../lib/netError';
 import { RecordingPresets, getRecordingPermissionsAsync, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Key } from '../i18n';
 import { useT } from '../i18n/useT';
 import { Command, parseCommand } from '../lib/commands';
-import { MealItem, foodFromItem, isMeasure, itemGrams, itemNutrients, mealTotals, setCount, setGrams, stepFor } from '../lib/gemFood';
+import { MealItem, foodFromItem, isMeasure, itemGrams, itemNutrients, mealTotals, setCount, setGrams, setNutrient, stepFor } from '../lib/gemFood';
 import { MealResult, analyzeMealAudio, analyzeMealPhoto, analyzeMealTextSmart, refineItem, swapItem } from '../lib/mealAi';
 import { FoodMemory, learnFoods } from '../lib/foodMemory';
 import { loadFoodMemory, saveFoodMemory } from '../lib/foodMemoryStore';
@@ -23,6 +24,7 @@ import { MEALS, MealType, useKabe } from '../store/kabe';
 import { useTracker } from '../store/tracker';
 import { BORDER, radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { Calculating } from './Calculating';
+import { NumBox } from './NumBox';
 import { WebCamera } from './WebCamera';
 import { Dots } from './Dots';
 import { NutrientGrid } from './NutrientGrid';
@@ -59,6 +61,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
   const [refining, setRefining] = useState<string | null>(null);
   const [photoNote, setPhotoNote] = useState(''); // what the person says about the photo before it is scanned
   const [gramText, setGramText] = useState<Record<string, string>>({}); // what is being typed in an item's grams box, so it can be cleared or zeroed
+  const [editing, setEditing] = useState<Record<string, boolean>>({}); // which items are showing their nutrition boxes
   const [swapping, setSwapping] = useState<Record<string, string | undefined>>({}); // 'Change food' box per item (undefined = closed)
   const [swapBusy, setSwapBusy] = useState<string | null>(null);
   const portions = useRef<PortionMemory>({}); // Kabe's own memory of the person's usual amounts (no AI)
@@ -109,12 +112,13 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
     setListening(true);
   };
 
-  const friendly = (e: unknown) => (e instanceof Error && e.message ? e.message : t('log.empty'));
+  const friendly = (e: unknown) => (e instanceof Error && e.message ? explain(e.message, t('net.offline')) : t('log.empty'));
 
   const finish = (r: MealResult, src: 'photo' | 'voice', hint = '') => {
     if (r.meal) setMeal(r.meal);
     setItems(applyPortions(portions.current, r.items, hint));
     setGramText({});
+    setEditing({});
     setSwapping({});
     setSource(src);
     setStage('review');
@@ -173,7 +177,7 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
           return setError(t('photo.errCamera'));
         }
       }
-      const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.7, base64: true }; // detail matters for judging portions
+      const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.4, base64: true }; // smaller file, quicker upload: the AI reads photos at a modest detail anyway
       const res = src === 'camera' ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
       if (res.canceled) return;
       asset = res.assets?.[0];
@@ -464,6 +468,22 @@ export function LogFlow({ mode, embedded }: { mode: Mode; embedded?: boolean }) 
                       <Text style={styles.sub}>
                         {t('macro.protein')} {n.protein} g · {t('macro.carbs')} {n.carbs} g · {t('macro.fat')} {n.fat} g
                       </Text>
+                      <Pressable onPress={() => setEditing((m) => ({ ...m, [it.id]: !m[it.id] }))} disabled={itemGrams(it) <= 0} accessibilityRole="button" style={{ flexDirection: 'row', gap: 6, alignItems: 'center', alignSelf: 'flex-start', opacity: itemGrams(it) > 0 ? 1 : 0.4 }}>
+                        <Ionicons name={editing[it.id] ? 'checkmark-circle-outline' : 'create-outline'} size={18} color={colors.primary} />
+                        <Text style={styles.editLink}>{t(editing[it.id] ? 'log.editDone' : 'log.editMacros')}</Text>
+                      </Pressable>
+                      {editing[it.id] && itemGrams(it) > 0 ? (
+                        <>
+                          {([[['kcal', 'macro.kcal', n.kcal], ['protein', 'macro.protein', n.protein]], [['carbs', 'macro.carbs', n.carbs], ['fat', 'macro.fat', n.fat]]] as const).map((row, r) => (
+                            <View key={r} style={{ flexDirection: 'row', gap: 8 }}>
+                              {row.map(([key, label, value]) => (
+                                <NumBox key={key} label={t(label)} value={value} live onCommit={(v) => setItems((l) => l.map((x) => (x.id === it.id ? setNutrient(x, key, v) : x)))} />
+                              ))}
+                            </View>
+                          ))}
+                          <Text style={styles.sub}>{t('log.editHint')}</Text>
+                        </>
+                      ) : null}
                       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                         <TextInput
                           value={detail[it.id] ?? ''}
@@ -554,6 +574,7 @@ const makeStyles = (colors: Colors) => StyleSheet.create({
   sub: { fontSize: 12, color: colors.inkSoft, lineHeight: 17 },
   err: { fontSize: 13, color: colors.danger },
   link: { fontSize: 13, fontWeight: '700', color: colors.primary },
+  editLink: { fontSize: 13, fontWeight: '800', color: colors.primary },
   note: { fontSize: 12, color: colors.ink, lineHeight: 17, fontStyle: 'italic' },
   photoBig: { width: '100%', height: 240, borderRadius: radius.md, borderWidth: BORDER, borderColor: colors.cardBorder },
   photo: { width: '100%', height: 150, borderRadius: radius.md, borderWidth: BORDER, borderColor: colors.cardBorder },

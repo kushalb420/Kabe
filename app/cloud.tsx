@@ -1,4 +1,5 @@
 import { Ionicons } from '../src/components/Ionicons';
+import { explain } from '../src/lib/netError';
 import React, { useState } from 'react';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
 import { Pressable } from '../src/components/Pressable';
@@ -46,7 +47,7 @@ export default function Cloud() {
       await fn();
     } catch (e) {
       // the technical detail (often from the server) stays in English
-      setMsg(e instanceof Error && e.message ? e.message : t('cloud.wrong'));
+      setMsg(e instanceof Error && e.message ? explain(e.message, t('net.offline')) : t('cloud.wrong'));
     } finally {
       setBusy(false);
     }
@@ -140,7 +141,7 @@ export default function Cloud() {
                   when: ago(c.lastSyncedAt),
                 })}
               </Text>
-              {c.error ? <Text style={styles.err}>{c.error}</Text> : null}
+              {c.error ? <Text style={styles.err}>{explain(c.error, t('net.offline'))}</Text> : null}
               <Button title={t('cloud.syncNow')} icon="sync" disabled={c.status === 'syncing'} onPress={() => run(() => c.syncNow())} />
               <Text style={styles.sub}>{t('cloud.auto')}</Text>
             </Card>

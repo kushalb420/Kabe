@@ -51,6 +51,13 @@ export type MealItem = {
 
 export const itemGrams = (it: MealItem): number => Math.round(it.count * it.unitGrams);
 
+/** The person's own number for one nutrient, for the amount chosen: stored per 100 g so it keeps scaling if the amount changes. */
+export function setNutrient(it: MealItem, key: NutrientKey, total: number): MealItem {
+  const grams = itemGrams(it);
+  if (grams <= 0 || !isFinite(total) || total < 0) return it;
+  return { ...it, per100: { ...it.per100, [key]: Math.round((total * 100 * 100) / grams) / 100 } };
+}
+
 /** Grams and millilitres are typed amounts (the number is the amount), everything else is a count of units. */
 export const isMeasure = (it: Pick<MealItem, 'unit'>): boolean => it.unit === 'g' || it.unit === 'ml';
 

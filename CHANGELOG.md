@@ -1,6 +1,8 @@
 # Changelog
 
 ## 7.0.4 update — Typed meals, supplement schedules, permissions (2026-11-11)
+- **Your own exercises:** in Activity → Log a session, tap + Add my own, type the name (Badminton, Yoga, anything), and it is remembered as a button next time. In workouts, Add your own exercise is now a clear button at the top of the list.
+- **Today is lighter:** the numbers show at once instead of counting up, and the macro bars slide on the phone's animation thread, so the screen is no longer re-drawn many times a second.
 - **Orb without the motion sensor:** the tilt (and drag to tilt) is gone, and its movement now runs on the phone's animation thread, so it stays smooth.
 - **Faster photo logging:** the AI is asked to think less about photos (measured about a third faster on a test picture) and the photo is uploaded as a smaller file.
 - **Edit nutrition before saving:** each food in a scan, voice or typed meal has Edit nutrition: change its calories, protein, carbs and fat for the amount shown, then add it to the diary.

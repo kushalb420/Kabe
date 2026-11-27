@@ -49,10 +49,9 @@ export function useAnimatedNumber(target: number, ms: number = MOTION.countMs): 
   return MOTION.enabled ? shown : target;
 }
 
-/** Text that counts up to a whole number. */
+/** A whole number. It shows at once: counting up re-drew the screen on every frame, which made busy screens lag. */
 export function CountUp({ value, style, format }: { value: number; style?: TextStyle | TextStyle[]; format?: (n: number) => string }) {
-  const n = useAnimatedNumber(value);
-  return <Text style={style}>{format ? format(n) : String(Math.round(n))}</Text>;
+  return <Text style={style}>{format ? format(value) : String(Math.round(value))}</Text>;
 }
 
 /** A tappable area that squeezes a little while pressed and springs back (cards, rows, tiles). */

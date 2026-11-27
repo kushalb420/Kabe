@@ -43,6 +43,9 @@ export default function ActivityScreen() {
   const [minutes, setMinutes] = useState('');
   const [km, setKm] = useState('');
   const [effort, setEffort] = useState<number | undefined>();
+  const [own, setOwn] = useState(''); // the name of the person's own exercise (kept in the session's note)
+  const [naming, setNaming] = useState(false);
+  const ownNames = useMemo(() => [...new Set(tk.activities.filter((a) => a.type === 'other' && a.note).map((a) => a.note as string).reverse())].slice(0, 12), [tk.activities]);
   const typeName = (x: ActivityType) => t(`act.type.${x}` as Key);
   const dayName = (key: string) => t(`day.${new Date(key + 'T00:00:00').getDay()}` as Key);
 
@@ -54,12 +57,13 @@ export default function ActivityScreen() {
 
   const mins = parseFloat(minutes.replace(',', '.'));
   const dist = parseFloat(km.replace(',', '.'));
-  const canAdd = mins > 0 && mins <= 600 && (!km.trim() || (dist > 0 && dist <= 300));
+  const canAdd = mins > 0 && mins <= 600 && (!km.trim() || (dist > 0 && dist <= 300)) && (!naming || !!own.trim());
+  const sessionName = (a: { type: ActivityType; note?: string }) => (a.type === 'other' && a.note ? a.note : typeName(a.type));
   const steps = tk.steps[date] ?? 0;
   const preview = canAdd ? kcalBurned({ type, minutes: mins, km: dist > 0 ? dist : undefined, effort }, weightKg) : null;
 
   const add = () => {
-    tk.addActivity({ date, type, minutes: mins, km: dist > 0 ? dist : undefined, effort: type === 'cardio' || type === 'other' ? effort : undefined });
+    tk.addActivity({ date, type, minutes: mins, km: dist > 0 ? dist : undefined, effort: type === 'cardio' || type === 'other' ? effort : undefined, ...(naming && own.trim() ? { note: own.trim().slice(0, 40) } : {}) });
     setMinutes('');
     setKm('');
   };
@@ -112,11 +116,20 @@ export default function ActivityScreen() {
           <Text style={styles.h2}>{t('act.log')}</Text>
           <View style={styles.chips}>
             {TYPES.map((x) => (
-              <Pressable key={x} onPress={() => setType(x)} style={[styles.chip, type === x && styles.chipOn]}>
-                <Text style={[styles.chipText, type === x && { color: colors.onPrimary }]}>{typeName(x)}</Text>
+              <Pressable key={x} onPress={() => { setType(x); setNaming(false); setOwn(''); }} style={[styles.chip, !naming && type === x && styles.chipOn]}>
+                <Text style={[styles.chipText, !naming && type === x && { color: colors.onPrimary }]}>{typeName(x)}</Text>
               </Pressable>
             ))}
+            {ownNames.map((n) => (
+              <Pressable key={`own-${n}`} onPress={() => { setType('other'); setNaming(true); setOwn(n); }} style={[styles.chip, naming && own === n && styles.chipOn]}>
+                <Text style={[styles.chipText, naming && own === n && { color: colors.onPrimary }]}>{n}</Text>
+              </Pressable>
+            ))}
+            <Pressable onPress={() => { setType('other'); setNaming(true); setOwn(''); }} style={[styles.chip, naming && !ownNames.includes(own) && styles.chipOn]}>
+              <Text style={[styles.chipText, naming && !ownNames.includes(own) && { color: colors.onPrimary }]}>{t('act.addOwn')}</Text>
+            </Pressable>
           </View>
+          {naming && <TextInput value={own} onChangeText={setOwn} maxLength={40} placeholder={t('act.ownPh')} placeholderTextColor={colors.inkSoft} style={styles.input} />}
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TextInput value={minutes} onChangeText={setMinutes} keyboardType="decimal-pad" placeholder={t('act.minutes')} placeholderTextColor={colors.inkSoft} style={[styles.input, { flex: 1, minWidth: 0 }]} />
             <TextInput value={km} onChangeText={setKm} keyboardType="decimal-pad" placeholder={t('act.distance')} placeholderTextColor={colors.inkSoft} style={[styles.input, { flex: 1.4 }]} />
@@ -175,7 +188,7 @@ export default function ActivityScreen() {
               <View key={a.id} style={styles.row}>
                 <Pressable style={{ flex: 1 }} disabled={!cardable(a)} onPress={() => router.push({ pathname: '/route-view', params: { id: a.id } })} accessibilityRole={cardable(a) ? 'button' : undefined}>
                   <Text style={styles.name}>
-                    {t('act.sessionLine', { type: typeName(a.type), min: a.minutes })}
+                    {t('act.sessionLine', { type: sessionName(a), min: a.minutes })}
                     {a.km ? t('act.sessionKm', { km: a.km }) : ''}
                   </Text>
                   <Text style={styles.sub}>
@@ -186,7 +199,7 @@ export default function ActivityScreen() {
                 </Pressable>
                 <Pressable
                   hitSlop={8}
-                  onPress={() => Alert.alert(t('act.deleteQ'), `${typeName(a.type)} · ${a.date}`, [{ text: t('common.cancel'), style: 'cancel' }, { text: t('common.delete'), style: 'destructive', onPress: () => tk.removeActivity(a.id) }])}
+                  onPress={() => Alert.alert(t('act.deleteQ'), `${sessionName(a)} · ${a.date}`, [{ text: t('common.cancel'), style: 'cancel' }, { text: t('common.delete'), style: 'destructive', onPress: () => tk.removeActivity(a.id) }])}
                 >
                   <Ionicons name="trash-outline" size={20} color={colors.inkSoft} />
                 </Pressable>

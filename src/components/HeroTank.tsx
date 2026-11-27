@@ -6,7 +6,7 @@ import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { MOTION } from '../config/app';
 import { SHADOW_OFFSET, radius, useColors, useThemedStyles, type Colors } from '../theme';
 import { HardShadow } from './HardShadow';
-import { CountUp, useAnimatedNumber } from './Motion';
+import { CountUp } from './Motion';
 import { Text } from './Text';
 import { OnSurface } from './Surface';
 import { isDarkColors } from '../palette';
@@ -62,7 +62,7 @@ export function HeroTank({ metrics }: { metrics: HeroMetric[] }) {
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
   // the ring around the screen always shows today's calories, whichever number the screen is showing
   const kc = metrics.find((x) => x.key === 'kcal') ?? metrics[0];
-  const ringP = useAnimatedNumber(kc.goal > 0 ? Math.max(0, Math.min(1, kc.value / kc.goal)) : 0, MOTION.ringMs);
+  const ringP = kc.goal > 0 ? Math.max(0, Math.min(1, kc.value / kc.goal)) : 0;
   const [cw, setCw] = useState(0);
   const RING = 6;
   const rw = Math.max(0, cw - RING);

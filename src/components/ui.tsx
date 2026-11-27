@@ -1,6 +1,6 @@
 import { Ionicons } from './Ionicons';
-import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, Easing, StyleSheet, View, ViewStyle } from 'react-native';
 import { Pressable } from './Pressable';
 import { Text } from './Text';
 import Svg, { Circle } from 'react-native-svg';
@@ -104,7 +104,15 @@ export function MacroBar({
 }) {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const pct = useAnimatedNumber(goal > 0 ? Math.min(1, value / goal) : 0, MOTION.barMs);
+  const target = goal > 0 ? Math.max(0, Math.min(1, value / goal)) : 0;
+  const [barW, setBarW] = useState(0);
+  const [slide] = useState(() => new Animated.Value(MOTION.enabled ? 0 : target));
+  useEffect(() => {
+    // only a slide on the phone's animation thread: the screen is not re-drawn while the bar moves
+    const a = Animated.timing(slide, { toValue: target, duration: MOTION.enabled ? MOTION.barMs : 0, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    a.start();
+    return () => a.stop();
+  }, [slide, target]);
   const partPct = part && value > 0 ? Math.min(1, Math.max(0, part.value / value)) : 0; // share of the filled bar
   return (
     <View style={{ marginBottom: 14 }}>
@@ -122,10 +130,13 @@ export function MacroBar({
           </Text>
         </Text>
       </View>
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${pct * 100}%`, backgroundColor: color, flexDirection: 'row' }]}>
-          {part && partPct > 0 ? <View style={{ width: `${partPct * 100}%`, height: '100%', backgroundColor: part.color }} /> : null}
-        </View>
+      <View style={styles.track} onLayout={(e) => setBarW(Math.round(e.nativeEvent.layout.width) - 2 * BORDER)}>
+        {barW > 0 ? (
+          <Animated.View style={[styles.fill, { width: barW, backgroundColor: color, transform: [{ translateX: slide.interpolate({ inputRange: [0, 1], outputRange: [-barW, 0] }) }] }]}>
+            {/* the filled part is the right-hand end of this bar, so the second colour sits at its start */}
+            {part && partPct > 0 ? <View style={{ position: 'absolute', left: (1 - target) * barW, width: partPct * target * barW, height: '100%', backgroundColor: part.color }} /> : null}
+          </Animated.View>
+        ) : null}
       </View>
     </View>
   );

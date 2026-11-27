@@ -64,9 +64,9 @@ export default function PickExercise() {
         contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 40 }}
         ListHeaderComponent={
           !formOpen ? (
-            <Pressable style={styles.custom} onPress={() => setShowOwn(true)} accessibilityRole="button">
-              <Text style={styles.itemName}>{t('pick.addOwn')}</Text>
-            </Pressable>
+            <View style={styles.custom}>
+              <Button title={t('pick.addOwn')} icon="add-circle" onPress={() => setShowOwn(true)} />
+            </View>
           ) : (
             <View style={styles.custom}>
               <TextInput value={ownName || q} onChangeText={setOwnName} placeholder={t('pick.ownName')} placeholderTextColor={colors.inkSoft} style={{ paddingVertical: 10, fontSize: 15, color: colors.ink, borderBottomWidth: 1, borderBottomColor: colors.line }} />
